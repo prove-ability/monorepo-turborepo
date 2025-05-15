@@ -14,7 +14,8 @@ export const Button = ({ children, className, appName }: ButtonProps) => {
       className={className}
       onClick={() => alert(`Hello from your ${appName} app!`)}
     >
-      {children}
+      q23
+      {children}123
     </button>
   );
 };
