@@ -27,12 +27,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <Providers>
-        <ThemeToggle />
-        <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <Providers>
+          <ThemeToggle />
           {children}
-        </body>
-      </Providers>
+        </Providers>
+      </body>
     </html>
   );
 }
