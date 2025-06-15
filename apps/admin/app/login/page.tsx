@@ -1,13 +1,10 @@
-import { redirect } from "next/navigation";
 import { createClientByServerSide } from "@repo/utils";
 import { Button } from "@repo/ui";
+import { env } from "../../env";
 
 export default async function LoginPage() {
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!baseUrl || !anonKey) {
-    throw new Error("Missing environment variables for Supabase client.");
-  }
+  const baseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   const {
     data: { session },
@@ -15,9 +12,7 @@ export default async function LoginPage() {
     await createClientByServerSide(baseUrl, anonKey)
   ).auth.getSession();
 
-  if (session) {
-    redirect("/dashboard");
-  }
+  console.log("session", session);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
