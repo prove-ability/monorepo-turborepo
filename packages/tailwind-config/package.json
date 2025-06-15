@@ -1,0 +1,9 @@
+{
+  "name": "@repo/tailwind-config",
+  "version": "0.1.0",
+  "private": true,
+  "main": "tailwind.config.js",
+  "exports": {
+    "./tailwind.config.js": "./tailwind.config.js"
+  }
+}
