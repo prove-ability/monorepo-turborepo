@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { ThemeProvider } from "./providers";
+import Providers from "./providers";
 
 import "reset-css";
 import "./globals.css";
@@ -26,16 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
+      <Providers>
         <body className={`${geistSans.variable} ${geistMono.variable}`}>
           {children}
         </body>
-      </ThemeProvider>
+      </Providers>
     </html>
   );
 }
