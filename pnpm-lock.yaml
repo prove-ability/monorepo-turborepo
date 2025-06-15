@@ -73,6 +73,9 @@ importers:
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@repo/tailwind-config':
+        specifier: workspace:*
+        version: link:../../packages/tailwind-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -89,6 +92,9 @@ importers:
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@repo/tailwind-config':
+        specifier: workspace:*
+        version: link:../../packages/tailwind-config
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -128,6 +134,8 @@ importers:
       typescript-eslint:
         specifier: ^8.32.0
         version: 8.34.0(eslint@9.29.0)(typescript@5.8.2)
+
+  packages/tailwind-config: {}
 
   packages/typescript-config: {}
 

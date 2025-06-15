@@ -1,5 +1,4 @@
-
-import sharedConfig from '@repo/tailwind-config/tailwind.config.js';
+import sharedConfig from "@repo/tailwind-config/tailwind.config.js";
 
 /** @type {import('tailwindcss').Config} */
 const config = {

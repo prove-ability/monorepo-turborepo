@@ -1,0 +1,21 @@
+// middleware.ts
+
+import { updateSession } from "@repo/utils";
+import { type NextRequest } from "next/server";
+
+export async function middleware(request: NextRequest) {
+  return await updateSession(request);
+}
+
+// 미들웨어가 실행될 경로 설정
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
+};
