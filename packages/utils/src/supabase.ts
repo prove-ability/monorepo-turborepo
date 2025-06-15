@@ -1,9 +1,12 @@
-import { createServerClient } from "@supabase/ssr";
-import { createClient as createClientPrimitive } from "@supabase/supabase-js";
+import {
+  type CookieOptions,
+  createServerClient,
+  createBrowserClient,
+} from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export function createClientByClientSide(baseUrl: string, anonKey: string) {
-  const supabase = createClientPrimitive(baseUrl, anonKey);
+  const supabase = createBrowserClient(baseUrl, anonKey);
   return supabase;
 }
 
@@ -23,20 +26,19 @@ export async function updateSession(
       get(name: string) {
         return request.cookies.get(name)?.value;
       },
-      set(name: string, value: string, options) {
-        request.cookies.set({ name, value, ...options });
-        response = NextResponse.next({
-          request: {
-            headers: request.headers,
-          },
+      set(name: string, value: string, options: CookieOptions) {
+        response.cookies.set({
+          name,
+          value,
+          ...options,
         });
       },
-      remove(name: string, options) {
-        request.cookies.set({ name, value: "", ...options });
-        response = NextResponse.next({
-          request: {
-            headers: request.headers,
-          },
+      remove(name: string, options: CookieOptions) {
+        response.cookies.set({
+          name,
+          value: "", // 값을 비우고
+          ...options,
+          maxAge: 0, // 만료 시간을 0으로 설정하여 즉시 삭제
         });
       },
     },
@@ -45,6 +47,8 @@ export async function updateSession(
   const {
     data: { session },
   } = await supabase.auth.getSession();
+
+  console.log("세션 정보:", session);
 
   // 로그인 페이지가 아닌데, 세션이 없는 경우 로그인 페이지로 리디렉션
   if (!session && request.nextUrl.pathname !== "/login") {

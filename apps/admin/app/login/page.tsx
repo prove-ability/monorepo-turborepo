@@ -17,18 +17,33 @@ export default function LoginPage() {
     const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+    console.log("--- 클라이언트 환경 변수 확인 ---");
+    console.log("Supabase URL:", baseUrl);
+    console.log("Supabase Anon Key:", anonKey);
+
+    if (!baseUrl || !anonKey) {
+      setError("Supabase URL 또는 Anon Key가 설정되지 않았습니다.");
+      return;
+    }
+
     const supabase = createClientByClientSide(baseUrl, anonKey);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    console.log("--- 로그인 시도 결과 ---");
+    console.log("에러 객체:", error);
+    console.log("데이터 객체:", data);
+    console.log("세션 객체 존재?:", data.session ? "✅" : "❌ NULL");
 
     if (error) {
       setError(error.message);
     } else {
       // 로그인 성공 시 관리자 대시보드로 이동
-      router.push("/admin/dashboard");
+      console.log("로그인 성공:", data);
+      router.push("/dashboard");
       router.refresh(); // 서버 상태를 최신화하기 위해 refresh 호출
     }
   };
