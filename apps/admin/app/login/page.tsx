@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { supabase } from "@repo/utils";
-import { Button } from "@repo/ui/button";
+import { Button } from "@repo/ui";
 
 export default async function LoginPage() {
   const {

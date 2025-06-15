@@ -4,7 +4,7 @@
   "description": "",
   "private": true,
   "exports": {
-    ".": "./src/supabase.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "build": "tsc",
