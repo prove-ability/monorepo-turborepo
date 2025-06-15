@@ -3,9 +3,17 @@ import { createClientByServerSide } from "@repo/utils";
 import { Button } from "@repo/ui";
 
 export default async function LoginPage() {
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!baseUrl || !anonKey) {
+    throw new Error("Missing environment variables for Supabase client.");
+  }
+
   const {
     data: { session },
-  } = await (await createClientByServerSide()).auth.getSession();
+  } = await (
+    await createClientByServerSide(baseUrl, anonKey)
+  ).auth.getSession();
 
   if (session) {
     redirect("/dashboard");
