@@ -4,7 +4,14 @@ import { updateSession } from "@repo/utils";
 import { type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_BASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!baseUrl || !anonKey) {
+    throw new Error("Missing environment variables for Supabase client.");
+  }
+
+  return await updateSession(baseUrl, anonKey, request);
 }
 
 // 미들웨어가 실행될 경로 설정
