@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Providers from "./providers";
+import { ThemeToggle } from "@repo/ui";
 
 import "reset-css";
 import "./globals.css";
@@ -27,6 +28,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <Providers>
+        <ThemeToggle />
         <body className={`${geistSans.variable} ${geistMono.variable}`}>
           {children}
         </body>

@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@repo/ui": "workspace:*",
-    "@repo/utils": "workspace:*"
+    "@repo/utils": "workspace:*",
+    "@repo/hooks": "workspace:*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
