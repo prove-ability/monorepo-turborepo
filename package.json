@@ -12,18 +12,15 @@
     "@types/node": "^24.0.1",
     "@types/react": "19.1.0",
     "@types/react-dom": "19.1.1",
-    "autoprefixer": "^10.4.21",
     "eslint": "^9.26.0",
     "eslint-config-next": "^15.3.3",
-    "postcss": "^8.5.5",
     "prettier": "^3.5.3",
-    "tailwindcss": "^4.1.10",
     "turbo": "^2.5.4",
     "typescript": "5.8.2"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
