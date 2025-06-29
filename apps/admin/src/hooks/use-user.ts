@@ -16,7 +16,6 @@ export function useUser() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      console.log("2", user);
       setUser(user);
       setIsLoading(false);
     };
