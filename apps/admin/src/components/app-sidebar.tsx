@@ -33,8 +33,8 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "hy",
+      title: "고객사 관리",
+      url: "clients",
       icon: IconListDetails,
     },
     // {
