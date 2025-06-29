@@ -5,7 +5,10 @@ import {
 } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export function createClientByClientSide(baseUrl: string, anonKey: string) {
+export function createClientByClientSide() {
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
   const supabase = createBrowserClient(baseUrl, anonKey);
   return supabase;
 }

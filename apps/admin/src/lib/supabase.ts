@@ -1,11 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function createClientByServerSide() {
-  const cookieStore = await cookies();
+const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function createClientByServerSide(): Promise<any> {
+  const cookieStore = await cookies();
 
   return createServerClient(baseUrl, anonKey, {
     cookies: {
