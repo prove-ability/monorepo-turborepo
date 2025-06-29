@@ -5,13 +5,17 @@ import Providers from "./providers";
 import "reset-css";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
+// NanumSquareNeo 폰트 등록
+const nanumSquareNeo = localFont({
+  src: [
+    {
+      path: "./fonts/NanumSquareNeo-Variable.woff2",
+      weight: "100 900",
+      style: "normal",
+    },
+  ],
+  variable: "--font-nanum-square-neo",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${nanumSquareNeo.variable}`}>
         <Providers>{children}</Providers>
       </body>
     </html>
