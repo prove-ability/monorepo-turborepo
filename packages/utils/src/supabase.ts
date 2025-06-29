@@ -15,7 +15,7 @@ export async function updateSession(
   anonKey: string,
   request: NextRequest
 ) {
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -47,8 +47,6 @@ export async function updateSession(
   const {
     data: { session },
   } = await supabase.auth.getSession();
-
-  console.log("세션 정보:", session);
 
   // 로그인 페이지가 아닌데, 세션이 없는 경우 로그인 페이지로 리디렉션
   if (!session && request.nextUrl.pathname !== "/login") {
