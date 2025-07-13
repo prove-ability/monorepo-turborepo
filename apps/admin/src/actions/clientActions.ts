@@ -27,11 +27,11 @@ const clientSchema = z.object({
 
 /**
  * CREATE: 새로운 고객사를 생성하는 서버 액션
- * @param prevState - useFormState 훅에서 사용하는 이전 상태 값 (현재는 사용하지 않음)
+ * @param _prevState - useFormState 훅에서 사용하는 이전 상태 값 (현재는 사용하지 않음)
  * @param formData - 클라이언트의 form으로부터 전달된 데이터
  * @returns 성공 또는 에러 메시지를 포함한 객체
  */
-export async function createClientAction(formData: FormData) {
+export async function createClientAction(_prevState: any, formData: FormData) {
   // FormData를 일반 객체로 변환
   const rawData = Object.fromEntries(formData.entries());
 

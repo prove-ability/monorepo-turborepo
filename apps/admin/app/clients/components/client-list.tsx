@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useActionState } from "react";
 import { type Client } from "@/types/client";
 import { type Manager } from "@/types/manager";
-// ... (폼과 액션 import)
+import { createClientAction } from "@/actions/clientActions";
+import { CreateClientModal } from "@/components/dialog/create-client-modal";
 
 // page.tsx에서 내려준 타입 (Client와 Manager 배열을 포함)
 type ClientWithManagers = Client & {
@@ -18,6 +19,12 @@ export function ClientList({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [clients, setClients] = useState(initialClients);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false);
+
+  const [formState, formAction] = useActionState(createClientAction, {
+    message: "",
+    errors: null,
+  });
 
   const toggleManagers = (clientId: string) => {
     setSelectedClientId(selectedClientId === clientId ? null : clientId);
@@ -25,11 +32,14 @@ export function ClientList({
 
   return (
     <div className="space-y-4">
-      {/* 신규 고객사 추가 버튼 */}
-      <button className="p-2 bg-blue-600 text-white rounded-lg">
-        신규 고객사 추가
-      </button>
-
+      <CreateClientModal
+        isOpen={isCreateClientModalOpen}
+        setIsOpen={setIsCreateClientModalOpen}
+        formAction={formAction}
+        formState={
+          formState as { errors: Record<string, string>; message: string }
+        }
+      />
       {clients.map((client) => (
         <div key={client.id} className="border rounded-lg shadow-sm">
           {/* 고객사 정보 헤더 */}
