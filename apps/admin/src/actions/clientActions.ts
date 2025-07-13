@@ -32,6 +32,9 @@ const clientSchema = z.object({
  * @returns 성공 또는 에러 메시지를 포함한 객체
  */
 export async function createClientAction(_prevState: any, formData: FormData) {
+  console.log("_prevState", _prevState);
+  console.log("formData", formData);
+
   // FormData를 일반 객체로 변환
   const rawData = Object.fromEntries(formData.entries());
 

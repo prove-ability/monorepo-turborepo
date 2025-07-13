@@ -16,7 +16,8 @@
     "@turbo/gen": "^2.5.0"
   },
   "dependencies": {
+    "@repo/hooks": "workspace:*",
     "@repo/utils": "workspace:*",
-    "@repo/hooks": "workspace:*"
+    "tailwind-merge": "^3.3.1"
   }
 }

@@ -4,7 +4,10 @@ import { useState, useActionState } from "react";
 import { type Client } from "@/types/client";
 import { type Manager } from "@/types/manager";
 import { createClientAction } from "@/actions/clientActions";
-import { CreateClientModal } from "@/components/dialog/create-client-modal";
+import {
+  CreateClientInputs,
+  CreateClientModal,
+} from "@/components/dialog/create-client-modal";
 
 // page.tsx에서 내려준 타입 (Client와 Manager 배열을 포함)
 type ClientWithManagers = Client & {
@@ -21,13 +24,12 @@ export function ClientList({
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false);
 
-  const [formState, formAction] = useActionState(createClientAction, {
-    message: "",
-    errors: null,
-  });
-
   const toggleManagers = (clientId: string) => {
     setSelectedClientId(selectedClientId === clientId ? null : clientId);
+  };
+
+  const handleCreateClient = (data: CreateClientInputs) => {
+    console.log("data", data);
   };
 
   return (
@@ -35,10 +37,7 @@ export function ClientList({
       <CreateClientModal
         isOpen={isCreateClientModalOpen}
         setIsOpen={setIsCreateClientModalOpen}
-        formAction={formAction}
-        formState={
-          formState as { errors: Record<string, string>; message: string }
-        }
+        handleCreateClient={handleCreateClient}
       />
       {clients.map((client) => (
         <div key={client.id} className="border rounded-lg shadow-sm">
