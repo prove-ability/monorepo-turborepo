@@ -31,8 +31,7 @@ const clientSchema = z.object({
  * @param formData - 클라이언트의 form으로부터 전달된 데이터
  * @returns 성공 또는 에러 메시지를 포함한 객체
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function createClientAction(prevState: any, formData: FormData) {
+export async function createClientAction(formData: FormData) {
   // FormData를 일반 객체로 변환
   const rawData = Object.fromEntries(formData.entries());
 
