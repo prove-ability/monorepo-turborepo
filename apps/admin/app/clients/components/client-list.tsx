@@ -1,13 +1,9 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState } from "react";
 import { type Client } from "@/types/client";
 import { type Manager } from "@/types/manager";
-import { createClientAction } from "@/actions/clientActions";
-import {
-  CreateClientInputs,
-  CreateClientModal,
-} from "@/components/dialog/create-client-modal";
+import { CreateClientModal } from "@/components/dialog/create-client-modal";
 
 // page.tsx에서 내려준 타입 (Client와 Manager 배열을 포함)
 type ClientWithManagers = Client & {
@@ -28,16 +24,11 @@ export function ClientList({
     setSelectedClientId(selectedClientId === clientId ? null : clientId);
   };
 
-  const handleCreateClient = (data: CreateClientInputs) => {
-    console.log("data", data);
-  };
-
   return (
     <div className="space-y-4">
       <CreateClientModal
         isOpen={isCreateClientModalOpen}
         setIsOpen={setIsCreateClientModalOpen}
-        handleCreateClient={handleCreateClient}
       />
       {clients.map((client) => (
         <div key={client.id} className="border rounded-lg shadow-sm">
