@@ -12,7 +12,7 @@ type ClientWithManagers = Client & {
   managers: Manager[];
 };
 
-function ManagerAddForm({ clientId }: { clientId: string }) {
+function ManagerAddForm({ clientId, onManagerAdded }: { clientId: string; onManagerAdded: (manager: Manager) => void }) {
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
@@ -47,6 +47,10 @@ function ManagerAddForm({ clientId }: { clientId: string }) {
       setName("");
       setMobile("");
       setEmail("");
+      // 새로 추가된 매니저를 부모 컴포넌트에 전달
+      if (result && result.manager) {
+        onManagerAdded(result.manager);
+      }
     }
   };
 
@@ -88,13 +92,22 @@ export function ClientList({
 }: {
   initialClients: ClientWithManagers[];
 }) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [clients, setClients] = useState(initialClients);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false);
 
   const toggleManagers = (clientId: string) => {
     setSelectedClientId(selectedClientId === clientId ? null : clientId);
+  };
+
+  const handleManagerAdded = (clientId: string, newManager: Manager) => {
+    setClients(prevClients => 
+      prevClients.map(client => 
+        client.id === clientId 
+          ? { ...client, managers: [...client.managers, newManager] }
+          : client
+      )
+    );
   };
 
   return (
@@ -152,7 +165,10 @@ export function ClientList({
                 </p>
               )}
               {/* 신규 매니저 추가 폼 */}
-              <ManagerAddForm clientId={client.id} />
+              <ManagerAddForm 
+                clientId={client.id} 
+                onManagerAdded={(manager) => handleManagerAdded(client.id, manager)}
+              />
             </div>
           )}
         </div>
