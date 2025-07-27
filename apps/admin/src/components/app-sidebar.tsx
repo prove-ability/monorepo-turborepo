@@ -37,6 +37,11 @@ const data = {
       url: "clients",
       icon: IconListDetails,
     },
+    {
+      title: "클래스 관리",
+      url: "classes",
+      icon: IconListDetails,
+    },
     // {
     //   title: "Analytics",
     //   url: "#",
