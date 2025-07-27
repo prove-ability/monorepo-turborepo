@@ -1,14 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { createManager } from "@/actions/managerActions";
+import { useState, FormEvent } from "react";
 import { type Client } from "@/types/client";
 import { type Manager } from "@/types/manager";
 import { CreateClientModal } from "@/components/dialog/create-client-modal";
+import { Button } from "@repo/ui";
 
 // page.tsx에서 내려준 타입 (Client와 Manager 배열을 포함)
 type ClientWithManagers = Client & {
   managers: Manager[];
 };
+
+function ManagerAddForm({ clientId }: { clientId: string }) {
+  const [name, setName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMsg(null);
+    setError(null);
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("mobile_phone", mobile);
+    formData.append("email", email);
+    const result: any = await createManager(clientId, formData);
+    setLoading(false);
+    if (
+      result &&
+      typeof result === "object" &&
+      "error" in result &&
+      result.error
+    ) {
+      setError(
+        typeof result.error === "string"
+          ? result.error
+          : Object.values(result.error).flat().join(", ")
+      );
+    } else {
+      setMsg("매니저가 추가되었습니다.");
+      setName("");
+      setMobile("");
+      setEmail("");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2 mt-4">
+      <input
+        className="border p-1 rounded"
+        placeholder="이름"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+      />
+      <input
+        className="border p-1 rounded"
+        placeholder="연락처"
+        value={mobile}
+        onChange={(e) => setMobile(e.target.value)}
+      />
+      <input
+        className="border p-1 rounded"
+        placeholder="이메일"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <Button
+        type="submit"
+        disabled={loading}
+      >
+        {loading ? "저장 중..." : "매니저 저장"}
+      </Button>
+      {msg && <div className="text-green-600 text-sm mt-1">{msg}</div>}
+      {error && <div className="text-red-600 text-sm mt-1">{error}</div>}
+    </form>
+  );
+}
 
 export function ClientList({
   initialClients,
@@ -44,8 +117,8 @@ export function ClientList({
               </p>
             </div>
             <div className="flex gap-2">
-              <button className="text-sm text-blue-500">수정</button>
-              <button className="text-sm text-red-500">삭제</button>
+              <Button className="text-sm text-blue-500">수정</Button>
+              <Button className="text-sm text-red-500">삭제</Button>
               <span>{selectedClientId === client.id ? "▲" : "▼"}</span>
             </div>
           </div>
@@ -65,8 +138,8 @@ export function ClientList({
                         {manager.name} ({manager.mobile_phone})
                       </span>
                       <div className="flex gap-2">
-                        <button className="text-xs text-blue-500">수정</button>
-                        <button className="text-xs text-red-500">삭제</button>
+                        <Button className="text-xs text-blue-500">수정</Button>
+                        <Button className="text-xs text-red-500">삭제</Button>
                       </div>
                     </li>
                   ))}
@@ -76,10 +149,8 @@ export function ClientList({
                   등록된 매니저가 없습니다.
                 </p>
               )}
-              {/* 신규 매니저 추가 폼 버튼 */}
-              <button className="mt-4 text-sm p-2 bg-gray-200 rounded">
-                매니저 추가
-              </button>
+              {/* 신규 매니저 추가 폼 */}
+              <ManagerAddForm clientId={client.id} />
             </div>
           )}
         </div>
