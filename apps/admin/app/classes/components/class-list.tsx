@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Button } from "@repo/ui";
+import type { Class } from "@/types/class";
 import { CreateClassModal } from "./create-class-modal";
 import { EditClassModal } from "./edit-class-modal";
+import { ClassListItem } from "./class-list-item";
 import { deleteClass } from "@/actions/classActions";
 
 interface ClassWithRelations {
@@ -41,27 +43,10 @@ export function ClassList({ initialClasses }: ClassListProps) {
     );
   };
 
-  const handleDeleteClass = async (classId: string, className: string) => {
-    if (!confirm(`"${className}" 수업을 삭제하시겠습니까?`)) {
-      return;
-    }
-
-    setDeletingClassId(classId);
-    try {
-      const result = await deleteClass(classId);
-      if (result.error) {
-        const errorMessage =
-          "_form" in result.error ? result.error._form?.[0] : "알 수 없는 오류";
-        alert("삭제 실패: " + errorMessage);
-      } else {
-        alert(result.message);
-        setClasses((prev) => prev.filter((cls) => cls.id !== classId));
-      }
-    } catch (error) {
-      alert("삭제 중 오류가 발생했습니다.");
-    } finally {
-      setDeletingClassId(null);
-    }
+  const onClassUpdated = () => {
+    // 클래스 목록을 새로고침하기 위해 부모 컴포넌트에서 다시 데이터를 가져와야 함
+    // 여기서는 간단히 페이지 새로고침을 사용하거나, 부모에서 refetch 함수를 전달받아야 함
+    window.location.reload();
   };
 
   return (
@@ -89,56 +74,12 @@ export function ClassList({ initialClasses }: ClassListProps) {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {classes.map((classItem) => (
-            <div
+            <ClassListItem
               key={classItem.id}
-              className="border rounded-lg shadow-sm p-6 bg-white"
-            >
-              <div className="mb-4">
-                <h3 className="text-lg font-bold text-gray-900">
-                  {classItem.name}
-                </h3>
-                <div className="text-sm text-gray-600 space-y-1 mt-2">
-                  <p>
-                    <span className="font-medium">클라이언트:</span>{" "}
-                    {classItem.clients?.name || "데이터 없음"}
-                  </p>
-                  <p>
-                    <span className="font-medium">담당 매니저:</span>{" "}
-                    {classItem.managers?.name || "데이터 없음"}
-                  </p>
-                  <p>
-                    <span className="font-medium">시작일:</span>{" "}
-                    {new Date(classItem.start_date).toLocaleDateString("ko-KR")}
-                  </p>
-                  {classItem.end_date && (
-                    <p>
-                      <span className="font-medium">종료일:</span>{" "}
-                      {new Date(classItem.end_date).toLocaleDateString("ko-KR")}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex gap-2 justify-end">
-                <Button
-                  onClick={() => setEditingClass(classItem)}
-                  className="text-xs text-blue-500 hover:bg-blue-50"
-                  variant="ghost"
-                >
-                  수정
-                </Button>
-                <Button
-                  onClick={() =>
-                    handleDeleteClass(classItem.id, classItem.name)
-                  }
-                  disabled={deletingClassId === classItem.id}
-                  className="text-xs text-red-500 hover:bg-red-50"
-                  variant="ghost"
-                >
-                  {deletingClassId === classItem.id ? "삭제 중..." : "삭제"}
-                </Button>
-              </div>
-            </div>
+              classItem={classItem}
+              onClassUpdated={onClassUpdated}
+              onEditClass={(classItem) => setEditingClass(classItem)}
+            />
           ))}
         </div>
       )}
