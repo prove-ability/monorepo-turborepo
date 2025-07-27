@@ -5,7 +5,6 @@ import {
   ThemeProvider as MuiThemeProvider,
   createTheme,
 } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   // 기본 라이트 테마 사용
@@ -21,7 +20,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <MuiThemeProvider theme={theme}>
-      <CssBaseline />
+      {/* <CssBaseline /> */}
       {children}
     </MuiThemeProvider>
   );
