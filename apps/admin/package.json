@@ -33,7 +33,6 @@
     "@tailwindcss/postcss": "^4.1.11",
     "@tanstack/react-table": "^8.21.3",
     "lucide-react": "^0.525.0",
-    "next-themes": "^0.4.6",
     "postcss": "^8.5.6",
     "recharts": "^3.0.2",
     "sonner": "^2.0.5",
