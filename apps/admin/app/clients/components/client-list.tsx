@@ -136,6 +136,8 @@ export function ClientList({
                     >
                       <span>
                         {manager.name} ({manager.mobile_phone})
+                        <br/>
+                        {manager.email}
                       </span>
                       <div className="flex gap-2">
                         <Button className="text-xs text-blue-500">수정</Button>
