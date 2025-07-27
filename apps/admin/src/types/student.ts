@@ -1,5 +1,6 @@
 export interface Student {
   id: string;
+  login_id: string;
   password: string;
   nickname: string;
   name: string;
@@ -22,8 +23,7 @@ export interface Student {
 }
 
 export interface CreateStudentData {
-  password: string;
-  nickname: string;
+  nickname: null;
   name: string;
   phone: string;
   grade: number;

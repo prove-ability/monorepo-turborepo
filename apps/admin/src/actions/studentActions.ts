@@ -5,10 +5,44 @@ import { z } from "zod";
 import { createClientByServerSide } from "@/lib/supabase";
 import type { CreateStudentData, UpdateStudentData } from "@/types/student";
 
-// 학생 데이터 검증 스키마
+// 자동 로그인 ID 생성 함수
+async function generateLoginId(): Promise<string> {
+  const supabase = await createClientByServerSide();
+
+  // 현재 학생 수를 조회하여 다음 번호 결정
+  const { count } = await supabase
+    .from("students")
+    .select("*", { count: "exact", head: true });
+
+  const nextNumber = (count || 0) + 1;
+  return `user${nextNumber.toString().padStart(3, "0")}`; // user001, user002, ...
+}
+
+// 자동 비밀번호 생성 함수 (영문 + 숫자 4자리)
+function generatePassword(): string {
+  const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+
+  let password = "";
+  // 영문 2자리
+  for (let i = 0; i < 2; i++) {
+    password += letters.charAt(Math.floor(Math.random() * letters.length));
+  }
+  // 숫자 2자리
+  for (let i = 0; i < 2; i++) {
+    password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+  }
+
+  // 섞기
+  return password
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
+}
+
+// 학생 데이터 검증 스키마 (ID와 비밀번호는 자동 생성되므로 제외)
 const studentSchema = z.object({
-  password: z.string().min(1, "비밀번호는 필수입니다"),
-  nickname: z.string().min(1, "닉네임은 필수입니다"),
+  nickname: z.null(),
   name: z.string().min(1, "이름은 필수입니다"),
   phone: z.string().min(1, "전화번호는 필수입니다"),
   grade: z.number().min(1).max(12, "학년은 1-12 사이여야 합니다"),
@@ -18,7 +52,9 @@ const studentSchema = z.object({
 });
 
 // CREATE: 새 학생 생성
-export async function createStudent(data: CreateStudentData) {
+export async function createStudent(
+  data: Omit<CreateStudentData, "login_id" | "password">
+) {
   const validation = studentSchema.safeParse(data);
 
   if (!validation.success) {
@@ -27,32 +63,50 @@ export async function createStudent(data: CreateStudentData) {
     };
   }
 
-  const supabase = await createClientByServerSide();
+  try {
+    // 자동으로 로그인 ID와 비밀번호 생성
+    const login_id = await generateLoginId();
+    const password = generatePassword();
 
-  const { error, data: studentData } = await supabase
-    .from("students")
-    .insert(validation.data)
-    .select(
+    const supabase = await createClientByServerSide();
+
+    const studentData = {
+      ...validation.data,
+      login_id,
+      password,
+    };
+
+    const { error, data: createdStudent } = await supabase
+      .from("students")
+      .insert(studentData)
+      .select(
+        `
+        *,
+        clients!students_client_id_fkey (
+          id,
+          name
+        ),
+        classes!students_class_id_fkey (
+          id,
+          name
+        )
       `
-      *,
-      clients!students_client_id_fkey (
-        id,
-        name
-      ),
-      classes!students_class_id_fkey (
-        id,
-        name
       )
-    `
-    )
-    .single();
+      .single();
 
-  if (error) {
-    return { error: { _form: [error.message] } };
+    if (error) {
+      return { error: { _form: [error.message] } };
+    }
+
+    revalidatePath("/admin/students");
+    return {
+      message: `학생이 성공적으로 등록되었습니다.\n로그인 ID: ${login_id}\n비밀번호: ${password}`,
+      data: createdStudent,
+      credentials: { login_id, password }, // 생성된 계정 정보 반환
+    };
+  } catch (error) {
+    return { error: { _form: ["학생 등록 중 오류가 발생했습니다."] } };
   }
-
-  revalidatePath("/admin/students");
-  return { message: "학생이 성공적으로 등록되었습니다.", data: studentData };
 }
 
 // READ: 모든 학생 조회 (클라이언트, 클래스 정보 포함)

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@repo/ui";
 import { deleteClass } from "@/actions/classActions";
+import { CreateStudentModal } from "./create-student-modal";
 
 interface ClassWithRelations {
   id: string;
@@ -29,6 +30,7 @@ export function ClassListItem({
   onEditClass,
 }: ClassListItemProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
 
   const handleDeleteClass = async (classId: string, className: string) => {
     if (!confirm(`"${className}" 수업을 삭제하시겠습니까?`)) {
@@ -78,6 +80,13 @@ export function ClassListItem({
 
       <div className="flex gap-2 justify-end">
         <Button
+          variant="ghost"
+          onClick={() => setIsStudentModalOpen(true)}
+          className="text-xs text-green-500 hover:bg-green-50"
+        >
+          학생 추가
+        </Button>
+        <Button
           onClick={() => onEditClass(classItem)}
           className="text-xs text-blue-500 hover:bg-blue-50"
           variant="ghost"
@@ -93,6 +102,14 @@ export function ClassListItem({
           {isDeleting ? "삭제 중..." : "삭제"}
         </Button>
       </div>
+
+      <CreateStudentModal
+        isOpen={isStudentModalOpen}
+        setIsOpen={setIsStudentModalOpen}
+        classId={classItem.id}
+        clientId={classItem.client_id}
+        onStudentCreated={onClassUpdated}
+      />
     </div>
   );
 }
