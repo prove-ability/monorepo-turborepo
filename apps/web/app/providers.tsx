@@ -1,4 +1,3 @@
-// components/MuiThemeProvider.tsx
 "use client";
 
 import * as React from "react";
