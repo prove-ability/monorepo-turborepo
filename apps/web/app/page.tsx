@@ -30,6 +30,7 @@ export default function Home() {
         if (studentData) {
           setStudent(JSON.parse(studentData));
         } else {
+          console.log("Student not found in localStorage");
           // 로그인되지 않은 경우 로그인 페이지로 리다이렉트
           router.push("/login");
           return;
@@ -48,17 +49,14 @@ export default function Home() {
   // 마운트되지 않았거나 로딩 중이거나 학생 정보가 없으면 로딩 표시
   if (!isMounted || isLoading || !student) {
     return (
-      <div
-        className="flex h-screen items-center justify-center"
-        suppressHydrationWarning
-      >
+      <div className="flex h-screen items-center justify-center">
         <div className="text-lg">로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8" suppressHydrationWarning>
+    <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
