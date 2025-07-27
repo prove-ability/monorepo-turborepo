@@ -23,6 +23,7 @@ export function CreateClientModal({
 }: CreateClientModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
     register,
@@ -34,6 +35,7 @@ export function CreateClientModal({
   const onSubmit: SubmitHandler<CreateClientInputs> = async (data) => {
     setIsLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     // FormData 객체로 변환하여 서버 액션에 전달
     const formData = new FormData();
@@ -44,13 +46,29 @@ export function CreateClientModal({
     try {
       const result = await createClientAction(null, formData);
 
-      if (result.errors) {
-        setError(result.message || "고객사 생성 중 오류가 발생했습니다.");
-      } else {
-        // 성공 시 모달 닫기 및 폼 초기화
-        setIsOpen(false);
+      if (result.success) {
+        // 성공 메시지 표시
+        setSuccessMessage(
+          result.message || "고객사가 성공적으로 추가되었습니다."
+        );
+
+        // 폼 초기화
         reset();
-        setError(null);
+
+        // 1초 후 모달 닫기 및 페이지 새로고침
+        setTimeout(() => {
+          setIsOpen(false);
+          setSuccessMessage(null);
+          window.location.reload();
+        }, 1000);
+      } else {
+        // 에러 처리
+        setError(result.message || "고객사 생성 중 오류가 발생했습니다.");
+
+        // 필드별 에러가 있는 경우 콘솔에 출력
+        if (result.errors) {
+          console.error("Field errors:", result.errors);
+        }
       }
     } catch (error) {
       console.error("Error creating client:", error);
@@ -66,6 +84,7 @@ export function CreateClientModal({
     if (!open) {
       reset();
       setError(null);
+      setSuccessMessage(null);
     }
   };
 
@@ -88,6 +107,13 @@ export function CreateClientModal({
           {error && (
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
               {error}
+            </div>
+          )}
+
+          {/* 성공 메시지 표시 */}
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+              {successMessage}
             </div>
           )}
 

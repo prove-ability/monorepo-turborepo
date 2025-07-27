@@ -47,29 +47,64 @@ export async function createClientAction(_prevState: any, formData: FormData) {
       "Validation Error:",
       validatedFields.error.flatten().fieldErrors
     );
+
+    // 필드별 에러 메시지를 더 명확하게 처리
+    const fieldErrors = validatedFields.error.flatten().fieldErrors;
+    const errorMessages = Object.entries(fieldErrors)
+      .map(([field, messages]) => `${field}: ${messages?.join(", ")}`)
+      .join("; ");
+
     return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: "입력 값에 오류가 있습니다.",
+      errors: fieldErrors,
+      message: `입력 값에 오류가 있습니다: ${errorMessages}`,
+      success: false,
     };
   }
 
   try {
     const supabase = await createClientByServerSide();
+
     // 유효성 검사를 통과한 데이터를 Supabase에 삽입
     const { error } = await supabase
       .from("clients")
       .insert(validatedFields.data);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Database Error:", error);
+
+      // 데이터베이스 에러 메시지를 더 친화적으로 처리
+      let errorMessage = "데이터베이스 작업 중 오류가 발생했습니다.";
+
+      if (error.code === "23505") {
+        errorMessage = "이미 존재하는 고객사입니다.";
+      } else if (error.code === "23503") {
+        errorMessage = "관련된 데이터가 있어 삭제할 수 없습니다.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      return {
+        message: errorMessage,
+        errors: null,
+        success: false,
+      };
+    }
 
     // 데이터가 성공적으로 추가되면, 관련 경로의 캐시를 무효화하여 화면을 갱신
     revalidatePath("/admin/clients");
 
-    return { message: "고객사가 성공적으로 추가되었습니다.", errors: null };
-  } catch (error: any) {
     return {
-      message: error.message || "데이터베이스 작업 중 오류가 발생했습니다.",
+      message: "고객사가 성공적으로 추가되었습니다.",
       errors: null,
+      success: true,
+    };
+  } catch (error: any) {
+    console.error("Unexpected Error:", error);
+
+    return {
+      message: error.message || "예상치 못한 오류가 발생했습니다.",
+      errors: null,
+      success: false,
     };
   }
 }
@@ -85,15 +120,21 @@ export async function updateClientAction(
   prevState: any,
   formData: FormData
 ) {
-  if (!id) return { message: "고객사 ID가 필요합니다." };
+  if (!id) return { message: "고객사 ID가 필요합니다.", success: false };
 
   const rawData = Object.fromEntries(formData.entries());
   const validatedFields = clientSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
+    const fieldErrors = validatedFields.error.flatten().fieldErrors;
+    const errorMessages = Object.entries(fieldErrors)
+      .map(([field, messages]) => `${field}: ${messages?.join(", ")}`)
+      .join("; ");
+
     return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: "입력 값에 오류가 있습니다.",
+      errors: fieldErrors,
+      message: `입력 값에 오류가 있습니다: ${errorMessages}`,
+      success: false,
     };
   }
 
@@ -104,17 +145,27 @@ export async function updateClientAction(
       .update(validatedFields.data)
       .eq("id", id); // 특정 id를 가진 행만 수정
 
-    if (error) throw error;
+    if (error) {
+      console.error("Database Error:", error);
+      return {
+        message: error.message || "데이터베이스 작업 중 오류가 발생했습니다.",
+        errors: null,
+        success: false,
+      };
+    }
 
     revalidatePath("/admin/clients");
     return {
       message: "고객사 정보가 성공적으로 수정되었습니다.",
       errors: null,
+      success: true,
     };
   } catch (error: any) {
+    console.error("Unexpected Error:", error);
     return {
-      message: error.message || "데이터베이스 작업 중 오류가 발생했습니다.",
+      message: error.message || "예상치 못한 오류가 발생했습니다.",
       errors: null,
+      success: false,
     };
   }
 }
@@ -124,19 +175,30 @@ export async function updateClientAction(
  * @param id - 삭제할 고객사의 UUID
  */
 export async function deleteClientAction(id: string) {
-  if (!id) return { message: "고객사 ID가 필요합니다." };
+  if (!id) return { message: "고객사 ID가 필요합니다.", success: false };
 
   try {
     const supabase = await createClientByServerSide();
     const { error } = await supabase.from("clients").delete().eq("id", id);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Database Error:", error);
+      return {
+        message: error.message || "데이터베이스 작업 중 오류가 발생했습니다.",
+        success: false,
+      };
+    }
 
     revalidatePath("/admin/clients");
-    return { message: "고객사가 성공적으로 삭제되었습니다." };
-  } catch (error: any) {
     return {
-      message: error.message || "데이터베이스 작업 중 오류가 발생했습니다.",
+      message: "고객사가 성공적으로 삭제되었습니다.",
+      success: true,
+    };
+  } catch (error: any) {
+    console.error("Unexpected Error:", error);
+    return {
+      message: error.message || "예상치 못한 오류가 발생했습니다.",
+      success: false,
     };
   }
 }
