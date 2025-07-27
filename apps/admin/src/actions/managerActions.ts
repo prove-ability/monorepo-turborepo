@@ -23,22 +23,27 @@ export async function createManager(clientId: string, formData: FormData) {
   };
 
   const validation = managerSchema.safeParse(rawData);
+
   if (!validation.success) {
     return { error: validation.error.flatten().fieldErrors };
   }
 
   const supabase = await createClientByServerSide();
-  const { error } = await supabase.from("managers").insert({
-    ...validation.data,
-    client_id: clientId, // 어떤 고객사 소속인지 명시
-  });
+  const { error, data } = await supabase
+    .from("managers")
+    .insert({
+      ...validation.data,
+      client_id: clientId, // 어떤 고객사 소속인지 명시
+    })
+    .select("*")
+    .single();
 
   if (error) {
     return { error: { _form: [error.message] } };
   }
 
   revalidatePath("/admin/clients");
-  return { data: "매니저가 추가되었습니다." };
+  return { message: "매니저가 추가되었습니다.", data };
 }
 
 // ... updateManager, deleteManager 등도 위와 유사한 패턴으로 생성 ...

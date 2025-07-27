@@ -12,7 +12,13 @@ type ClientWithManagers = Client & {
   managers: Manager[];
 };
 
-function ManagerAddForm({ clientId, onManagerAdded }: { clientId: string; onManagerAdded: (manager: Manager) => void }) {
+function ManagerAddForm({
+  clientId,
+  onManagerAdded,
+}: {
+  clientId: string;
+  onManagerAdded: (manager: Manager) => void;
+}) {
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
@@ -43,13 +49,14 @@ function ManagerAddForm({ clientId, onManagerAdded }: { clientId: string; onMana
           : Object.values(result.error).flat().join(", ")
       );
     } else {
-      setMsg("매니저가 추가되었습니다.");
+      console.log("result", result);
+      setMsg(result.message);
       setName("");
       setMobile("");
       setEmail("");
       // 새로 추가된 매니저를 부모 컴포넌트에 전달
-      if (result && result.manager) {
-        onManagerAdded(result.manager);
+      if (result && result.data) {
+        onManagerAdded(result.data);
       }
     }
   };
@@ -75,10 +82,7 @@ function ManagerAddForm({ clientId, onManagerAdded }: { clientId: string; onMana
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <Button
-        type="submit"
-        disabled={loading}
-      >
+      <Button type="submit" disabled={loading}>
         {loading ? "저장 중..." : "매니저 저장"}
       </Button>
       {msg && <div className="text-green-600 text-sm mt-1">{msg}</div>}
@@ -101,9 +105,9 @@ export function ClientList({
   };
 
   const handleManagerAdded = (clientId: string, newManager: Manager) => {
-    setClients(prevClients => 
-      prevClients.map(client => 
-        client.id === clientId 
+    setClients((prevClients) =>
+      prevClients.map((client) =>
+        client.id === clientId
           ? { ...client, managers: [...client.managers, newManager] }
           : client
       )
@@ -139,7 +143,9 @@ export function ClientList({
           {/* 매니저 목록 (선택된 고객사일 경우 보임) */}
           {selectedClientId === client.id && (
             <div className="p-4 border-t">
-              <h4 className="font-semibold mb-2">담당 매니저</h4>
+              <h4 className="font-semibold mb-2">
+                담당 매니저 ({client.managers.length})
+              </h4>
               {client.managers.length > 0 ? (
                 <ul className="space-y-2">
                   {client.managers.map((manager) => (
@@ -149,7 +155,7 @@ export function ClientList({
                     >
                       <span>
                         {manager.name} ({manager.mobile_phone})
-                        <br/>
+                        <br />
                         {manager.email}
                       </span>
                       <div className="flex gap-2">
@@ -165,9 +171,11 @@ export function ClientList({
                 </p>
               )}
               {/* 신규 매니저 추가 폼 */}
-              <ManagerAddForm 
-                clientId={client.id} 
-                onManagerAdded={(manager) => handleManagerAdded(client.id, manager)}
+              <ManagerAddForm
+                clientId={client.id}
+                onManagerAdded={(manager) =>
+                  handleManagerAdded(client.id, manager)
+                }
               />
             </div>
           )}
