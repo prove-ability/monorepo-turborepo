@@ -46,4 +46,48 @@ export async function createManager(clientId: string, formData: FormData) {
   return { message: "매니저가 추가되었습니다.", data };
 }
 
-// ... updateManager, deleteManager 등도 위와 유사한 패턴으로 생성 ...
+// UPDATE: 매니저 정보 수정
+export async function updateManager(managerId: string, formData: FormData) {
+  const rawData = {
+    name: formData.get("name"),
+    mobile_phone: formData.get("mobile_phone"),
+    email: formData.get("email"),
+  };
+
+  const validation = managerSchema.safeParse(rawData);
+
+  if (!validation.success) {
+    return { error: validation.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClientByServerSide();
+  const { error, data } = await supabase
+    .from("managers")
+    .update(validation.data)
+    .eq("id", managerId)
+    .select("*")
+    .single();
+
+  if (error) {
+    return { error: { _form: [error.message] } };
+  }
+
+  revalidatePath("/admin/clients");
+  return { message: "매니저 정보가 수정되었습니다.", data };
+}
+
+// DELETE: 매니저 삭제
+export async function deleteManager(managerId: string) {
+  const supabase = await createClientByServerSide();
+  const { error } = await supabase
+    .from("managers")
+    .delete()
+    .eq("id", managerId);
+
+  if (error) {
+    return { error: { _form: [error.message] } };
+  }
+
+  revalidatePath("/admin/clients");
+  return { message: "매니저가 삭제되었습니다." };
+}
