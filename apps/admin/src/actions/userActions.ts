@@ -97,16 +97,17 @@ const userSchema = z.object({
 export async function createUser(
   data: Omit<CreateUserData, "login_id" | "password">
 ) {
+  let authDataObject;
+
   try {
+    const adminSupabase = await createAdminClient();
+
     // 데이터 검증
     const validatedData = userSchema.parse(data);
 
     // 자동으로 로그인 ID와 비밀번호 생성
     const loginId = await generateLoginId();
     const password = generatePassword();
-
-    const adminSupabase = await createAdminClient();
-    const supabase = await createClientByServerSide();
 
     // Supabase Auth에 사용자 생성 (서비스 역할 키 사용)
     const email = `${loginId}@student.local`;
@@ -118,14 +119,26 @@ export async function createUser(
         email_confirm: true,
       });
 
+    authDataObject = authData;
+
     if (signUpError || !authData.user) {
       return {
         error: { _form: [`인증 사용자 생성 실패: ${signUpError?.message}`] },
       };
     }
 
-    // users 테이블에 사용자 정보 저장 (password 포함)
-    const { error: insertError } = await supabase.from("users").insert({
+    // if (true) {
+    //   return {
+    //     error: {
+    //       _form: [
+    //         `${authData.user?.id} ${loginId} ${password} ${validatedData.name} ${validatedData.phone} ${validatedData.grade} ${validatedData.school_name} ${validatedData.class_id} ${validatedData.client_id}   ${validatedData.nickname} `,
+    //       ],
+    //     },
+    //   };
+    // }
+
+    // users 테이블에 사용자 정보 저장 (password 포함) - 관리자 권한으로 실행
+    const { error: insertError } = await adminSupabase.from("users").insert({
       user_id: authData.user.id,
       login_id: loginId,
       password: password, // 관리용 비밀번호 저장
@@ -139,7 +152,7 @@ export async function createUser(
 
     if (insertError) {
       // Auth 사용자 삭제 (롤백)
-      await supabase.auth.admin.deleteUser(authData.user.id);
+      await adminSupabase.auth.admin.deleteUser(authData.user.id);
       return {
         error: { _form: [`사용자 정보 저장 실패: ${insertError.message}`] },
       };
@@ -163,6 +176,8 @@ export async function createUser(
           }
         }
       });
+      const adminSupabase = await createAdminClient();
+      await adminSupabase.auth.admin.deleteUser(authDataObject?.user?.id!);
       return { error: fieldErrors };
     }
 
