@@ -29,8 +29,9 @@ export function CreateUserModal({
     setErrors({});
 
     const formData = new FormData(e.currentTarget);
+    const nickname = formData.get("nickname") as string;
     const userData: CreateUserData = {
-      nickname: null,
+      nickname: nickname.trim() === "" ? null : nickname,
       name: formData.get("name") as string,
       phone: formData.get("phone") as string,
       grade: parseInt(formData.get("grade") as string),
@@ -41,6 +42,7 @@ export function CreateUserModal({
 
     try {
       const result = await createUser(userData);
+      console.log(result);
       if (result.error) {
         if ("_form" in result.error) {
           alert("등록 실패: " + result.error._form?.[0]);
@@ -95,6 +97,25 @@ export function CreateUserModal({
             />
             {errors.name && (
               <p className="text-red-500 text-xs mt-1">{errors.name[0]}</p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="nickname"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              닉네임
+            </label>
+            <input
+              type="text"
+              id="nickname"
+              name="nickname"
+              placeholder="선택사항 - 별명이나 호칭"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.nickname && (
+              <p className="text-red-500 text-xs mt-1">{errors.nickname[0]}</p>
             )}
           </div>
 

@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClientByServerSide } from "@/lib/supabase";
+import { createClientByServerSide, createAdminClient } from "@/lib/supabase";
 // 타입 정의를 인라인으로 추가
 interface CreateUserData {
-  nickname: null;
+  nickname: string | null;
   name: string;
   phone: string;
   grade: number;
@@ -49,7 +49,7 @@ function generatePassword(): string {
 
 // 사용자 데이터 검증 스키마 (ID와 비밀번호는 자동 생성되므로 제외)
 const userSchema = z.object({
-  nickname: z.null(),
+  nickname: z.string().nullable(),
   name: z.string().min(1, "이름은 필수입니다"),
   phone: z.string().min(1, "전화번호는 필수입니다"),
   grade: z.number().min(1).max(12),
@@ -70,15 +70,17 @@ export async function createUser(
     const loginId = await generateLoginId();
     const password = generatePassword();
 
+    const adminSupabase = await createAdminClient();
     const supabase = await createClientByServerSide();
 
-    // Supabase Auth에 사용자 생성
+    // Supabase Auth에 사용자 생성 (서비스 역할 키 사용)
     const email = `${loginId}@student.local`;
-    const { data: authData, error: signUpError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    });
+    const { data: authData, error: signUpError } =
+      await adminSupabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
 
     if (signUpError || !authData.user) {
       return {
@@ -119,7 +121,7 @@ export async function createUser(
       error.errors.forEach((err) => {
         if (err.path && err.path.length > 0) {
           const fieldName = err.path[0];
-          if (typeof fieldName === 'string') {
+          if (typeof fieldName === "string") {
             fieldErrors[fieldName] = [err.message];
           }
         }
@@ -140,7 +142,8 @@ export async function getUsers() {
 
     const { data, error } = await supabase
       .from("users")
-      .select(`
+      .select(
+        `
         *,
         classes (
           id,
@@ -150,7 +153,8 @@ export async function getUsers() {
             name
           )
         )
-      `)
+      `
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -173,7 +177,8 @@ export async function getUsersByClass(classId: string) {
 
     const { data, error } = await supabase
       .from("users")
-      .select(`
+      .select(
+        `
         *,
         classes (
           id,
@@ -183,7 +188,8 @@ export async function getUsersByClass(classId: string) {
             name
           )
         )
-      `)
+      `
+      )
       .eq("class_id", classId)
       .order("created_at", { ascending: false });
 
@@ -201,10 +207,7 @@ export async function getUsersByClass(classId: string) {
 }
 
 // UPDATE: 사용자 정보 수정
-export async function updateUser(
-  userId: string,
-  data: UpdateUserData
-) {
+export async function updateUser(userId: string, data: UpdateUserData) {
   try {
     const supabase = await createClientByServerSide();
 
