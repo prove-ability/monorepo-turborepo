@@ -42,7 +42,7 @@ export function CreateUserModal({
 
     try {
       const result = await createUser(userData);
-      console.log(result);
+
       if (result.error) {
         if ("_form" in result.error) {
           alert("등록 실패: " + result.error._form?.[0]);
