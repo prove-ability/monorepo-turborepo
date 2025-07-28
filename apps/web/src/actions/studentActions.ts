@@ -10,6 +10,10 @@ export interface LoginResult {
     user_id: string;
     name: string;
     login_id: string;
+    nickname: string | null;
+    phone: string;
+    grade: number | null;
+    school_name: string;
     class_id: string;
   };
 }
@@ -40,37 +44,14 @@ export async function loginStudent(
     // users 테이블에서 사용자 정보 가져오기
     const { data: user, error: userError } = await supabase
       .from("users")
-      .select("user_id, name, login_id, class_id")
+      .select("user_id, name, login_id, nickname, phone, grade, school_name, class_id")
       .eq("user_id", authData.user.id)
       .single();
 
     if (userError || !user) {
-      // users 테이블에 데이터가 없으면 생성
-      const { error: insertError } = await supabase.from("users").insert({
-        user_id: authData.user.id,
-        name: authData.user.user_metadata?.name || loginId,
-        login_id: loginId,
-        class_id: authData.user.user_metadata?.class_id || "class1",
-      });
-
-      if (insertError) {
-        console.error("Insert user error:", insertError);
-        return {
-          success: false,
-          message: "사용자 정보 생성 중 오류가 발생했습니다.",
-        };
-      }
-
-      // 새로 생성된 사용자 정보 반환
       return {
-        success: true,
-        message: "로그인 성공",
-        user: {
-          user_id: authData.user.id,
-          name: authData.user.user_metadata?.name || loginId,
-          login_id: loginId,
-          class_id: authData.user.user_metadata?.class_id || "class1",
-        },
+        success: false,
+        message: "사용자 정보를 찾을 수 없습니다. 관리자에게 문의하세요.",
       };
     }
 
@@ -82,6 +63,10 @@ export async function loginStudent(
         user_id: user.user_id,
         name: user.name,
         login_id: user.login_id,
+        nickname: user.nickname,
+        phone: user.phone,
+        grade: user.grade,
+        school_name: user.school_name,
         class_id: user.class_id,
       },
     };
