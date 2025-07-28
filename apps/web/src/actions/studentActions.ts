@@ -21,81 +21,61 @@ export async function loginStudent(
   try {
     const supabase = await createClientByServerSide();
 
-    // 1. users 테이블에서 사용자 정보 확인
+    // Supabase Auth로 직접 로그인 시도
+    // 사용자의 login_id를 이메일 형식으로 변환
+    const email = `${loginId}@student.local`;
+    const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError || !authData.user) {
+      return {
+        success: false,
+        message: "로그인 ID 또는 비밀번호가 올바르지 않습니다.",
+      };
+    }
+
+    // users 테이블에서 사용자 정보 가져오기
     const { data: user, error: userError } = await supabase
       .from("users")
-      .select("user_id, name, login_id, class_id, pw")
-      .eq("login_id", loginId)
+      .select("user_id, name, login_id, class_id")
+      .eq("user_id", authData.user.id)
       .single();
 
     if (userError || !user) {
+      // users 테이블에 데이터가 없으면 생성
+      const { error: insertError } = await supabase
+        .from("users")
+        .insert({
+          user_id: authData.user.id,
+          name: authData.user.user_metadata?.name || loginId,
+          login_id: loginId,
+          class_id: authData.user.user_metadata?.class_id || 'class1',
+        });
+
+      if (insertError) {
+        console.error('Insert user error:', insertError);
+        return {
+          success: false,
+          message: "사용자 정보 생성 중 오류가 발생했습니다.",
+        };
+      }
+
+      // 새로 생성된 사용자 정보 반환
       return {
-        success: false,
-        message: "로그인 ID 또는 비밀번호가 올바르지 않습니다.",
-      };
-    }
-
-    // 2. 비밀번호 확인
-    if (user.pw !== password) {
-      return {
-        success: false,
-        message: "로그인 ID 또는 비밀번호가 올바르지 않습니다.",
-      };
-    }
-
-    // 3. Supabase Auth에 로그인 (세션 생성)
-    // 사용자의 login_id를 이메일 형식으로 변환하여 Supabase Auth 사용
-    const email = `${loginId}@student.local`;
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password: user.user_id, // user_id를 패스워드로 사용
-    });
-
-    // 4. 만약 사용자가 존재하지 않으면 생성
-    if (signInError?.message?.includes('Invalid login credentials')) {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password: user.user_id,
-        options: {
-          data: {
-            user_id: user.user_id,
-            name: user.name,
-            login_id: user.login_id,
-            class_id: user.class_id,
-          },
+        success: true,
+        message: "로그인 성공",
+        user: {
+          user_id: authData.user.id,
+          name: authData.user.user_metadata?.name || loginId,
+          login_id: loginId,
+          class_id: authData.user.user_metadata?.class_id || 'class1',
         },
-      });
-
-      if (signUpError) {
-        console.error('SignUp error:', signUpError);
-        return {
-          success: false,
-          message: "인증 시스템 오류가 발생했습니다.",
-        };
-      }
-
-      // 생성 후 다시 로그인
-      const { error: retrySignInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: user.user_id,
-      });
-
-      if (retrySignInError) {
-        console.error('Retry SignIn error:', retrySignInError);
-        return {
-          success: false,
-          message: "로그인 중 오류가 발생했습니다.",
-        };
-      }
-    } else if (signInError) {
-      console.error('SignIn error:', signInError);
-      return {
-        success: false,
-        message: "로그인 중 오류가 발생했습니다.",
       };
     }
 
-    // 5. 로그인 성공
+    // 기존 사용자 정보 반환
     return {
       success: true,
       message: "로그인 성공",
