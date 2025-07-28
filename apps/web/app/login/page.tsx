@@ -22,7 +22,7 @@ export default function LoginPage() {
       if (result.success) {
         // Supabase 세션이 생성되었으므로 middleware가 자동으로 리다이렉트 처리
         // 페이지를 새로고침하여 middleware가 세션을 확인하도록 함
-        window.location.href = "/";
+        router.push("/");
       } else {
         setError(result.message);
       }
