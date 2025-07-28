@@ -1,6 +1,6 @@
 // middleware.ts
 
-import { updateSession } from "@repo/utils";
+import { updateSessionByAdmin } from "@repo/utils";
 import { type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
   console.log("Supabase URL 로드됨?:", baseUrl ? "✅" : "❌ UNDEFINED");
   console.log("Supabase Key 로드됨?:", anonKey ? "✅" : "❌ UNDEFINED");
 
-  return await updateSession(baseUrl, anonKey, request);
+  return await updateSessionByAdmin(baseUrl, anonKey, request);
 }
 
 // 미들웨어가 실행될 경로 설정
