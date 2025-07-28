@@ -105,15 +105,11 @@ export async function createUser(
     const loginId = await generateLoginId();
     const password = generatePassword();
 
-    console.log("loginId", loginId);
-    console.log("password", password);
-
     const adminSupabase = await createAdminClient();
     const supabase = await createClientByServerSide();
 
     // Supabase Auth에 사용자 생성 (서비스 역할 키 사용)
     const email = `${loginId}@student.local`;
-    console.log("email", email);
 
     const { data: authData, error: signUpError } =
       await adminSupabase.auth.admin.createUser({
