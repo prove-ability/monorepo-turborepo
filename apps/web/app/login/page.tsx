@@ -1,20 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { loginStudent } from "../../src/actions/studentActions";
+import { loginStudent } from "../../src/actions/userActions";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [loginId, setLoginId] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+
+    const formData = new FormData(e.currentTarget);
+    const loginId = formData.get("loginId") as string;
+    const password = formData.get("password") as string;
 
     try {
       const result = await loginStudent(loginId, password);
@@ -55,8 +57,6 @@ export default function LoginPage() {
                 name="loginId"
                 type="text"
                 required
-                value={loginId}
-                onChange={(e) => setLoginId(e.target.value)}
                 className="relative block w-full rounded-t-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 placeholder="로그인 ID"
               />
@@ -70,8 +70,6 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 className="relative block w-full rounded-b-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 placeholder="비밀번호"
               />

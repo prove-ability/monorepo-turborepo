@@ -44,7 +44,9 @@ export async function loginStudent(
     // users 테이블에서 사용자 정보 가져오기
     const { data: user, error: userError } = await supabase
       .from("users")
-      .select("user_id, name, login_id, nickname, phone, grade, school_name, class_id")
+      .select(
+        "user_id, name, login_id, nickname, phone, grade, school_name, class_id"
+      )
       .eq("user_id", authData.user.id)
       .single();
 

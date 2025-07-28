@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClientByClientSide } from "@repo/utils";
-import { logoutStudent } from "../src/actions/studentActions";
+import { logoutStudent } from "../src/actions/userActions";
 
 interface User {
   user_id: string;
@@ -26,8 +26,10 @@ export default function Home() {
     const getUserFromSession = async () => {
       try {
         const supabase = createClientByClientSide();
-        const { data: { session } } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
         if (session?.user) {
           // 세션에서 사용자 정보 가져오기
           const userData = session.user.user_metadata;
@@ -43,9 +45,9 @@ export default function Home() {
             const { data: userData } = await supabase
               .from("users")
               .select("user_id, name, login_id, class_id")
-              .eq("login_id", session.user.email?.split('@')[0])
+              .eq("login_id", session.user.email?.split("@")[0])
               .single();
-            
+
             if (userData) {
               setUser(userData);
             }
