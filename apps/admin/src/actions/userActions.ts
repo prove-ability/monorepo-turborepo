@@ -16,17 +16,30 @@ interface CreateUserData {
 
 interface UpdateUserData extends Partial<CreateUserData> {}
 
-// 자동 로그인 ID 생성 함수
+// 자동 로그인 ID 생성 함수 (중복 방지)
 async function generateLoginId(): Promise<string> {
   const supabase = await createClientByServerSide();
 
-  // 현재 사용자 수를 조회하여 다음 번호 결정
-  const { count } = await supabase
+  // 기존 login_id들을 모두 조회
+  const { data: existingUsers } = await supabase
     .from("users")
-    .select("*", { count: "exact", head: true });
+    .select("login_id")
+    .order("login_id");
 
-  const nextNumber = (count || 0) + 1;
-  return `user${nextNumber.toString().padStart(3, "0")}`; // user001, user002, ...
+  const existingIds = new Set(
+    existingUsers?.map((user) => user.login_id) || []
+  );
+
+  // user001부터 시작하여 중복되지 않는 ID 찾기
+  let counter = 1;
+  let newLoginId: string;
+
+  do {
+    newLoginId = `user${counter.toString().padStart(3, "0")}`;
+    counter++;
+  } while (existingIds.has(newLoginId));
+
+  return newLoginId;
 }
 
 // 자동 비밀번호 생성 함수 (영문 + 숫자 4자리)
