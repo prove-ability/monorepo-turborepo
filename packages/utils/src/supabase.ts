@@ -48,16 +48,17 @@ export async function updateSessionByAdmin(
   });
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  // 로그인 페이지가 아닌데, 세션이 없는 경우 로그인 페이지로 리디렉션
-  if (!session && request.nextUrl.pathname !== "/login") {
+  // 로그인 페이지가 아닌데, 사용자가 없는 경우 로그인 페이지로 리디렉션
+  if ((!user || userError) && request.nextUrl.pathname !== "/login") {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 로그인 페이지인데, 세션이 있는 경우 대시보드 홈으로 리디렉션
-  if (session && request.nextUrl.pathname === "/login") {
+  // 로그인 페이지인데, 사용자가 있는 경우 대시보드 홈으로 리디렉션
+  if (user && !userError && request.nextUrl.pathname === "/login") {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -99,17 +100,63 @@ export async function updateSessionByUser(
   });
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  // 로그인 페이지가 아닌데, 세션이 없는 경우 로그인 페이지로 리디렉션
-  if (!session && request.nextUrl.pathname !== "/login") {
+  // User(학생)용 세션 처리 로직
+
+  // 1. 로그인 페이지가 아닌데 사용자가 없는 경우 로그인 페이지로 리디렉션
+  if ((!user || userError) && request.nextUrl.pathname !== "/login") {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 로그인 페이지인데, 세션이 있는 경우 대시보드 홈으로 리디렉션
-  if (session && request.nextUrl.pathname === "/login") {
+  // 2. 로그인 페이지인데 사용자가 있는 경우 학생 홈으로 리디렉션
+  if (user && !userError && request.nextUrl.pathname === "/login") {
     return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  // 3. 사용자가 있는 경우 학생 인증 상태 확인
+  if (user && !userError) {
+    try {
+      // 사용자가 학생인지 확인 (이메일이 @student.local로 끝나는지 확인)
+      const userEmail = user.email;
+      if (userEmail && !userEmail.endsWith("@student.local")) {
+        // 학생이 아닌 사용자는 로그아웃 후 로그인 페이지로 리디렉션
+        await supabase.auth.signOut();
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+
+      // users 테이블에 사용자 정보가 있는지 확인
+      const { data: userData, error } = await supabase
+        .from("users")
+        .select("user_id, name, login_id, class_id")
+        .eq("user_id", user.id)
+        .single();
+
+      // users 테이블에 데이터가 없는 경우 로그인 페이지로 리디렉션
+      if (error || !userData) {
+        await supabase.auth.signOut();
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+
+      // 세션에 사용자 정보 업데이트 (메타데이터가 비어있는 경우)
+      if (!user.user_metadata?.user_id) {
+        await supabase.auth.updateUser({
+          data: {
+            user_id: userData.user_id,
+            name: userData.name,
+            login_id: userData.login_id,
+            class_id: userData.class_id,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("User session validation error:", error);
+      // 오류 발생 시 로그아웃 후 로그인 페이지로 리디렉션
+      await supabase.auth.signOut();
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
   }
 
   return response;

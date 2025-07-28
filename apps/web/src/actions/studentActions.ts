@@ -24,10 +24,11 @@ export async function loginStudent(
     // Supabase Auth로 직접 로그인 시도
     // 사용자의 login_id를 이메일 형식으로 변환
     const email = `${loginId}@student.local`;
-    const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data: authData, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     if (signInError || !authData.user) {
       return {
@@ -45,17 +46,15 @@ export async function loginStudent(
 
     if (userError || !user) {
       // users 테이블에 데이터가 없으면 생성
-      const { error: insertError } = await supabase
-        .from("users")
-        .insert({
-          user_id: authData.user.id,
-          name: authData.user.user_metadata?.name || loginId,
-          login_id: loginId,
-          class_id: authData.user.user_metadata?.class_id || 'class1',
-        });
+      const { error: insertError } = await supabase.from("users").insert({
+        user_id: authData.user.id,
+        name: authData.user.user_metadata?.name || loginId,
+        login_id: loginId,
+        class_id: authData.user.user_metadata?.class_id || "class1",
+      });
 
       if (insertError) {
-        console.error('Insert user error:', insertError);
+        console.error("Insert user error:", insertError);
         return {
           success: false,
           message: "사용자 정보 생성 중 오류가 발생했습니다.",
@@ -70,7 +69,7 @@ export async function loginStudent(
           user_id: authData.user.id,
           name: authData.user.user_metadata?.name || loginId,
           login_id: loginId,
-          class_id: authData.user.user_metadata?.class_id || 'class1',
+          class_id: authData.user.user_metadata?.class_id || "class1",
         },
       };
     }
@@ -98,5 +97,5 @@ export async function loginStudent(
 export async function logoutStudent() {
   const supabase = await createClientByServerSide();
   await supabase.auth.signOut();
-  redirect('/login');
+  redirect("/login");
 }
