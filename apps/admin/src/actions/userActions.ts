@@ -16,22 +16,44 @@ interface CreateUserData {
 
 interface UpdateUserData extends Partial<CreateUserData> {}
 
-// 자동 로그인 ID 생성 함수 (중복 방지)
+// 자동 로그인 ID 생성 함수 (중복 방지 - Auth 시스템 포함)
 async function generateLoginId(): Promise<string> {
-  const supabase = await createClientByServerSide();
+  const adminSupabase = await createAdminClient();
 
-  // 기존 login_id들을 모두 조회
-  const { data: existingUsers } = await supabase
+  // public.users 테이블의 기존 login_id들 조회
+  const { data: existingUsers } = await adminSupabase
     .from("users")
     .select("login_id")
     .order("login_id");
+
+  // Auth 시스템의 모든 사용자 조회
+  const { data: authUsers } = await adminSupabase.auth.admin.listUsers();
 
   const existingIds = new Set(
     existingUsers?.map((user) => user.login_id) || []
   );
 
+  // Auth 시스템에서 student.local 도메인 사용자들의 login_id 추가
+  authUsers?.users?.forEach((authUser) => {
+    if (authUser.email && authUser.email.endsWith("@student.local")) {
+      const loginId = authUser.email.split("@")[0];
+      existingIds.add(loginId);
+    }
+  });
+
+  console.log("existingIds", existingIds);
+
   // user001부터 시작하여 중복되지 않는 ID 찾기
-  let counter = 1;
+  // 더 높은 번호부터 시작하여 기존 사용자와 충돌 방지
+  let counter =
+    Math.max(
+      ...Array.from(existingIds).map((id) => {
+        const match = id.match(/user(\d+)/);
+        return match ? parseInt(match[1]) : 0;
+      }),
+      0
+    ) + 1;
+
   let newLoginId: string;
 
   do {
@@ -83,11 +105,16 @@ export async function createUser(
     const loginId = await generateLoginId();
     const password = generatePassword();
 
+    console.log("loginId", loginId);
+    console.log("password", password);
+
     const adminSupabase = await createAdminClient();
     const supabase = await createClientByServerSide();
 
     // Supabase Auth에 사용자 생성 (서비스 역할 키 사용)
     const email = `${loginId}@student.local`;
+    console.log("email", email);
+
     const { data: authData, error: signUpError } =
       await adminSupabase.auth.admin.createUser({
         email,
