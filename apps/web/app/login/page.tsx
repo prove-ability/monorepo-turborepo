@@ -20,10 +20,9 @@ export default function LoginPage() {
       const result = await loginStudent(loginId, password);
 
       if (result.success) {
-        // 로그인 성공 시 세션 저장 (localStorage 사용)
-        localStorage.setItem("student", JSON.stringify(result.student));
-        // 메인 페이지로 리다이렉트
-        router.push("/");
+        // Supabase 세션이 생성되었으므로 middleware가 자동으로 리다이렉트 처리
+        // 페이지를 새로고침하여 middleware가 세션을 확인하도록 함
+        window.location.href = "/";
       } else {
         setError(result.message);
       }
