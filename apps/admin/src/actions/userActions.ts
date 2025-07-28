@@ -124,10 +124,11 @@ export async function createUser(
       };
     }
 
-    // users 테이블에 사용자 정보 저장
+    // users 테이블에 사용자 정보 저장 (password 포함)
     const { error: insertError } = await supabase.from("users").insert({
       user_id: authData.user.id,
       login_id: loginId,
+      password: password, // 관리용 비밀번호 저장
       name: validatedData.name,
       phone: validatedData.phone,
       grade: validatedData.grade,
