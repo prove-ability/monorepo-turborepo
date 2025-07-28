@@ -2,24 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@repo/ui";
-import { createStudent } from "@/actions/studentActions";
-import type { CreateStudentData } from "@/types/student";
+import { createUser } from "@/actions/userActions";
+import type { CreateUserData } from "@/types/user";
 
-interface CreateStudentModalProps {
+interface CreateUserModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   classId: string;
   clientId: string;
-  onStudentCreated: () => void;
+  onUserCreated: () => void;
 }
 
-export function CreateStudentModal({
+export function CreateUserModal({
   isOpen,
   setIsOpen,
   classId,
   clientId,
-  onStudentCreated,
-}: CreateStudentModalProps) {
+  onUserCreated,
+}: CreateUserModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
@@ -29,7 +29,7 @@ export function CreateStudentModal({
     setErrors({});
 
     const formData = new FormData(e.currentTarget);
-    const studentData: CreateStudentData = {
+    const userData: CreateUserData = {
       nickname: null,
       name: formData.get("name") as string,
       phone: formData.get("phone") as string,
@@ -40,7 +40,7 @@ export function CreateStudentModal({
     };
 
     try {
-      const result = await createStudent(studentData);
+      const result = await createUser(userData);
       if (result.error) {
         if ("_form" in result.error) {
           alert("등록 실패: " + result.error._form?.[0]);
@@ -51,7 +51,7 @@ export function CreateStudentModal({
         // 생성된 계정 정보를 표시
         alert(result.message);
         setIsOpen(false);
-        onStudentCreated();
+        onUserCreated();
         // 폼 초기화
         (e.target as HTMLFormElement).reset();
       }

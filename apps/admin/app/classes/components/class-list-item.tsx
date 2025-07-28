@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@repo/ui";
 import { deleteClass } from "@/actions/classActions";
-import { CreateStudentModal } from "./create-student-modal";
+import { CreateUserModal } from "./create-user-modal";
 
 interface ClassWithRelations {
   id: string;
@@ -103,12 +103,12 @@ export function ClassListItem({
         </Button>
       </div>
 
-      <CreateStudentModal
+      <CreateUserModal
         isOpen={isStudentModalOpen}
         setIsOpen={setIsStudentModalOpen}
         classId={classItem.id}
         clientId={classItem.client_id}
-        onStudentCreated={onClassUpdated}
+        onUserCreated={onClassUpdated}
       />
     </div>
   );

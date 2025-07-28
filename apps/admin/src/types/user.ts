@@ -1,13 +1,11 @@
-export interface Student {
-  id: string;
+export interface User {
+  user_id: string;
   login_id: string;
-  password: string;
   nickname: string;
   name: string;
   phone: string;
   grade: number;
   school_name: string;
-  client_id: string;
   class_id: string;
   created_at: string;
   updated_at: string;
@@ -22,7 +20,7 @@ export interface Student {
   };
 }
 
-export interface CreateStudentData {
+export interface CreateUserData {
   nickname: null;
   name: string;
   phone: string;
@@ -32,4 +30,4 @@ export interface CreateStudentData {
   class_id: string;
 }
 
-export interface UpdateStudentData extends Partial<CreateStudentData> {}
+export interface UpdateUserData extends Partial<CreateUserData> {}
