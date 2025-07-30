@@ -57,6 +57,35 @@ export async function updateSessionByAdmin(
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // 학생 계정(@student.local)이 admin에 접근하는 것을 차단
+  if (user && !userError) {
+    const userEmail = user.email;
+    if (userEmail && userEmail.endsWith("@student.local")) {
+      // 학생 계정은 로그아웃 후 로그인 페이지로 리디렉션
+      await supabase.auth.signOut();
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    // admins 테이블에서 관리자 권한 확인
+    try {
+      const { data: adminData, error: adminError } = await supabase
+        .from("admins")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .single();
+
+      // 관리자가 아닌 경우 로그아웃 후 로그인 페이지로 리디렉션
+      if (adminError || !adminData) {
+        await supabase.auth.signOut();
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+    } catch (error) {
+      console.error("Admin validation error:", error);
+      await supabase.auth.signOut();
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  }
+
   // 로그인 페이지인데, 사용자가 있는 경우 대시보드 홈으로 리디렉션
   if (user && !userError && request.nextUrl.pathname === "/login") {
     return NextResponse.redirect(new URL("/", request.url));

@@ -25,6 +25,14 @@ export async function loginStudent(
   try {
     const supabase = await createClientByServerSide();
 
+    // 관리자 계정 형식 차단 (일반 이메일 형식)
+    if (loginId.includes("@") && !loginId.endsWith("@student.local")) {
+      return {
+        success: false,
+        message: "관리자 계정으로는 학생 페이지에 접근할 수 없습니다.",
+      };
+    }
+
     // Supabase Auth로 직접 로그인 시도
     // 사용자의 login_id를 이메일 형식으로 변환
     const email = `${loginId}@student.local`;

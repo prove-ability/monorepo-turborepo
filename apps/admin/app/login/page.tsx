@@ -26,7 +26,13 @@ export default function LoginPage() {
       return;
     }
 
-    const supabase = createClientByClientSide(baseUrl, anonKey);
+    const supabase = createClientByClientSide();
+
+    // 학생 계정 이메일 형식 차단
+    if (email.endsWith("@student.local")) {
+      setError("학생 계정으로는 관리자 페이지에 접근할 수 없습니다.");
+      return;
+    }
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -40,11 +46,30 @@ export default function LoginPage() {
 
     if (error) {
       setError(error.message);
-    } else {
-      // 로그인 성공 시 관리자 대시보드로 이동
-      console.log("로그인 성공:", data);
-      router.push("/dashboard");
-      router.refresh(); // 서버 상태를 최신화하기 위해 refresh 호출
+    } else if (data.user) {
+      // 로그인 성공 후 관리자 권한 검증
+      try {
+        const { data: adminData, error: adminError } = await supabase
+          .from("admins")
+          .select("user_id")
+          .eq("user_id", data.user.id)
+          .single();
+
+        if (adminError || !adminData) {
+          // 관리자가 아닌 경우 로그아웃 후 에러 표시
+          await supabase.auth.signOut();
+          setError("관리자 권한이 없습니다.");
+          return;
+        }
+
+        // 관리자 권한 확인 완료 - 대시보드로 이동
+        console.log("관리자 로그인 성공:", data);
+        router.push("/dashboard");
+        router.refresh();
+      } catch (err) {
+        await supabase.auth.signOut();
+        setError("권한 확인 중 오류가 발생했습니다.");
+      }
     }
   };
 
