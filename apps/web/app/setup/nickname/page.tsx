@@ -33,10 +33,10 @@ export default function NicknameSetupPage() {
     try {
       // TODO: 닉네임 업데이트 API 호출
       // const result = await updateNickname(nicknameValue);
-      
+
       // 임시로 성공 처리
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // 메인 페이지로 이동
       router.push("/");
     } catch (err) {
@@ -57,14 +57,16 @@ export default function NicknameSetupPage() {
           </h2>
           <p className="mt-4 text-sm text-gray-600">
             다른 참가자들에게 보여질 닉네임을 설정해주세요.
-            <br />
-            언제든지 변경할 수 있습니다.
+            <br />한 번 설정하면 변경할 수 없어요.
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="nickname"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               닉네임
             </label>
             <input
@@ -78,9 +80,7 @@ export default function NicknameSetupPage() {
               className="block w-full rounded-md border-0 py-3 px-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               placeholder="닉네임을 입력하세요"
             />
-            <p className="mt-1 text-xs text-gray-500">
-              {nickname.length}/10자
-            </p>
+            <p className="mt-1 text-xs text-gray-500">{nickname.length}/10자</p>
           </div>
 
           {error && (
@@ -99,7 +99,7 @@ export default function NicknameSetupPage() {
             </button>
           </div>
         </form>
-        
+
         <p className="text-xs text-gray-500 text-center">
           닉네임은 2-10자 사이로 입력해주세요.
           <br />
