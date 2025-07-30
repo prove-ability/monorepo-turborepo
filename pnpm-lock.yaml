@@ -190,6 +190,15 @@ importers:
       '@repo/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@tailwindcss/postcss':
+        specifier: ^4.1.11
+        version: 4.1.11
+      postcss:
+        specifier: ^8.5.6
+        version: 8.5.6
+      tailwindcss:
+        specifier: ^4.1.11
+        version: 4.1.11
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*

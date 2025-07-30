@@ -26,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Providers>{children}</Providers>
+        <div className="h-screen max-w-4xl mx-auto bg-red-400">
+          <Providers>{children}</Providers>
+        </div>
       </body>
     </html>
   );
