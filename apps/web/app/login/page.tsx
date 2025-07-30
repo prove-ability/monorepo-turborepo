@@ -22,6 +22,11 @@ export default function LoginPage() {
       const result = await loginStudent(loginId, password);
 
       if (result.success) {
+        if (!result.user?.nickname) {
+          router.push("/setup/nickname");
+          return;
+        }
+
         // Supabase 세션이 생성되었으므로 middleware가 자동으로 리다이렉트 처리
         // 페이지를 새로고침하여 middleware가 세션을 확인하도록 함
         router.push("/");
@@ -36,15 +41,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
+    <div className="h-screen flex items-center justify-center">
       <div className="w-full max-w-md space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            학생 로그인
+          <h2 className="text-left text-3xl font-bold tracking-tight text-gray-900">
+            투자 대회를
+            <br />
+            시작해 볼까요?
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            로그인 ID와 비밀번호를 입력해주세요
-          </p>
+          <figure>
+            <img
+              src="/images/login/logo.jpeg"
+              alt="Login"
+              className="w-full h-auto"
+            />
+          </figure>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="-space-y-px rounded-md shadow-sm">
@@ -88,10 +99,14 @@ export default function LoginPage() {
               disabled={isLoading}
               className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "로그인 중..." : "로그인"}
+              {isLoading ? "로그인 중..." : "로그인 하기"}
             </button>
           </div>
         </form>
+        <p className="text-sm text-gray-600">
+          로그인 시 자동 로그인 설정됩니다.
+          <br />내 폰이 아니라면 로그인하지 마세요!
+        </p>
       </div>
     </div>
   );
