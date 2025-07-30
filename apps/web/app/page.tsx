@@ -6,9 +6,9 @@ import { logoutStudent } from "../src/actions/userActions";
 
 interface User {
   user_id: string;
-  name: string;
   login_id: string;
   class_id: string;
+  nickname: string | null;
 }
 
 export default function Home() {
@@ -32,25 +32,17 @@ export default function Home() {
 
         if (session?.user) {
           // 세션에서 사용자 정보 가져오기
-          const userData = session.user.user_metadata;
-          if (userData.user_id) {
-            setUser({
-              user_id: userData.user_id,
-              name: userData.name,
-              login_id: userData.login_id,
-              class_id: userData.class_id,
-            });
-          } else {
-            // 메타데이터가 없으면 users 테이블에서 직접 조회
-            const { data: userData } = await supabase
-              .from("users")
-              .select("user_id, name, login_id, class_id")
-              .eq("login_id", session.user.email?.split("@")[0])
-              .single();
+          // const userData = session.user.user_metadata;
 
-            if (userData) {
-              setUser(userData);
-            }
+          // 메타데이터가 없으면 users 테이블에서 직접 조회
+          const { data: userData } = await supabase
+            .from("users")
+            .select("user_id, login_id, class_id, nickname")
+            .eq("login_id", session.user.email?.split("@")[0])
+            .single();
+
+          if (userData) {
+            setUser(userData);
           }
         }
       } catch (error) {
@@ -86,7 +78,7 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            환영합니다, {user.name}님!
+            환영합니다, {user.nickname}님!
           </h1>
           <div className="space-y-2 text-gray-600">
             <p>

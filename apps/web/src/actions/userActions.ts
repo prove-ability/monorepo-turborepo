@@ -89,6 +89,98 @@ export async function loginStudent(
   }
 }
 
+export interface UpdateNicknameResult {
+  success: boolean;
+  message: string;
+  nickname?: string;
+}
+
+export async function updateNickname(
+  nickname: string
+): Promise<UpdateNicknameResult> {
+  try {
+    const supabase = await createClientByServerSide();
+
+    // 현재 로그인된 사용자 확인
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        message: "로그인이 필요합니다.",
+      };
+    }
+
+    // 닉네임 유효성 검사
+    if (!nickname.trim()) {
+      return {
+        success: false,
+        message: "닉네임을 입력해주세요.",
+      };
+    }
+
+    if (nickname.length < 2 || nickname.length > 10) {
+      return {
+        success: false,
+        message: "닉네임은 2-10자 사이로 입력해주세요.",
+      };
+    }
+
+    // 닉네임 중복 확인
+    const { data: existingUser, error: checkError } = await supabase
+      .from("users")
+      .select("user_id")
+      .eq("nickname", nickname.trim())
+      .neq("user_id", user.id)
+      .single();
+
+    if (checkError && checkError.code !== "PGRST116") {
+      // PGRST116은 "no rows returned" 에러로, 중복이 없다는 의미
+      console.error("Nickname check error:", checkError);
+      return {
+        success: false,
+        message: "닉네임 확인 중 오류가 발생했습니다.",
+      };
+    }
+
+    if (existingUser) {
+      return {
+        success: false,
+        message: "이미 사용 중인 닉네임입니다. 다른 닉네임을 선택해주세요.",
+      };
+    }
+
+    // users 테이블에서 닉네임 업데이트
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ nickname: nickname.trim() })
+      .eq("user_id", user.id);
+
+    if (updateError) {
+      console.error("Nickname update error:", updateError);
+      return {
+        success: false,
+        message: "닉네임 설정 중 오류가 발생했습니다.",
+      };
+    }
+
+    return {
+      success: true,
+      message: "닉네임이 성공적으로 설정되었습니다.",
+      nickname: nickname.trim(),
+    };
+  } catch (error) {
+    console.error("Update nickname error:", error);
+    return {
+      success: false,
+      message: "닉네임 설정 중 오류가 발생했습니다.",
+    };
+  }
+}
+
 export async function logoutStudent() {
   const supabase = await createClientByServerSide();
   await supabase.auth.signOut();

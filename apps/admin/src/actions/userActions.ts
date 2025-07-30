@@ -5,7 +5,6 @@ import { z } from "zod";
 import { createClientByServerSide, createAdminClient } from "@/lib/supabase";
 // 타입 정의를 인라인으로 추가
 interface CreateUserData {
-  nickname: string | null;
   name: string;
   phone: string;
   grade: number;
@@ -84,7 +83,6 @@ function generatePassword(): string {
 
 // 사용자 데이터 검증 스키마 (ID와 비밀번호는 자동 생성되므로 제외)
 const userSchema = z.object({
-  nickname: z.string().nullable(),
   name: z.string().min(1, "이름은 필수입니다"),
   phone: z.string().min(1, "전화번호는 필수입니다"),
   grade: z.number().min(1).max(12),
@@ -147,7 +145,6 @@ export async function createUser(
       grade: validatedData.grade,
       school_name: validatedData.school_name,
       class_id: validatedData.class_id,
-      nickname: validatedData.nickname,
     });
 
     if (insertError) {

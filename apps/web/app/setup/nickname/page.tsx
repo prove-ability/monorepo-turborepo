@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { updateNickname } from "../../../src/actions/userActions";
 
 export default function NicknameSetupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,14 +32,14 @@ export default function NicknameSetupPage() {
     }
 
     try {
-      // TODO: 닉네임 업데이트 API 호출
-      // const result = await updateNickname(nicknameValue);
+      const result = await updateNickname(nicknameValue);
 
-      // 임시로 성공 처리
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // 메인 페이지로 이동
-      router.push("/");
+      if (result.success) {
+        // 메인 페이지로 이동
+        router.push("/");
+      } else {
+        setError(result.message);
+      }
     } catch (err) {
       setError("닉네임 설정 중 오류가 발생했습니다.");
     } finally {

@@ -21,7 +21,6 @@ export interface User {
 }
 
 export interface CreateUserData {
-  nickname: string | null;
   name: string;
   phone: string;
   grade: number;
