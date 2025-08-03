@@ -46,6 +46,8 @@ export function CreateClientModal({
     try {
       const result = await createClientAction(null, formData);
 
+      console.log("result", result);
+
       if (result.success) {
         // 성공 메시지 표시
         setSuccessMessage(

@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const classSchema = z.object({
-  id: z.string(),
   name: z.string().min(1, "수업명은 필수입니다."),
   start_date: z.string().min(1, "시작일은 필수입니다."),
   end_date: z.string().optional().or(z.literal("")),

@@ -71,6 +71,7 @@ export function CreateClassModal({
     try {
       const result = await createClass(formData);
       if (result.error) {
+        console.log("result", result);
         if ("_form" in result.error) {
           alert("생성 실패: " + result.error._form?.[0]);
         } else {
