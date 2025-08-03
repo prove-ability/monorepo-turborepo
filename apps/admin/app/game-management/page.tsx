@@ -34,6 +34,7 @@ export default function GameManagementPage() {
     totalPrices: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [gameProgressLoading, setGameProgressLoading] = useState(false);
 
   useEffect(() => {
     loadInitialData();
@@ -69,11 +70,14 @@ export default function GameManagementPage() {
   const loadGameProgress = async () => {
     if (!selectedClass) return;
 
+    setGameProgressLoading(true);
     try {
       const progress = await getGameProgress(selectedClass);
       setGameProgress(progress);
     } catch (error) {
       console.error("게임 진행 상황 로드 실패:", error);
+    } finally {
+      setGameProgressLoading(false);
     }
   };
 
@@ -135,29 +139,52 @@ export default function GameManagementPage() {
             ))}
           </div>
 
-          {gameProgress && (
+          {selectedClass && (
             <div className="mt-4 p-4 bg-muted rounded-lg">
               <h4 className="font-semibold mb-2">게임 진행 상황</h4>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">최대 Day:</span>
-                  <span className="ml-2 font-medium">
-                    {gameProgress.maxDay}
-                  </span>
+              {gameProgressLoading ? (
+                // 스켈레톤 로딩 UI
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <div className="h-5 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-5 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-5 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">총 뉴스:</span>
-                  <span className="ml-2 font-medium">
-                    {gameProgress.totalNews}개
-                  </span>
+              ) : gameProgress ? (
+                // 실제 데이터 표시
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">최대 Day:</span>
+                    <span className="ml-2 font-medium">
+                      {gameProgress.maxDay}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">총 뉴스:</span>
+                    <span className="ml-2 font-medium">
+                      {gameProgress.totalNews}개
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">
+                      총 가격 데이터:
+                    </span>
+                    <span className="ml-2 font-medium">
+                      {gameProgress.totalPrices}개
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">총 가격 데이터:</span>
-                  <span className="ml-2 font-medium">
-                    {gameProgress.totalPrices}개
-                  </span>
+              ) : (
+                // 데이터가 없을 때
+                <div className="text-sm text-muted-foreground">
+                  게임 데이터가 없습니다.
                 </div>
-              </div>
+              )}
             </div>
           )}
         </CardContent>
