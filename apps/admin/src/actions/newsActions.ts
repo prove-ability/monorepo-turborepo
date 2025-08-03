@@ -9,7 +9,7 @@ export interface News {
   title: string;
   content: string;
   related_stock_ids?: string[];
-  admin_id?: string;
+  class_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -19,7 +19,7 @@ export interface CreateNewsData {
   title: string;
   content: string;
   related_stock_ids?: string[];
-  admin_id?: string;
+  class_id: string;
 }
 
 export interface UpdateNewsData extends CreateNewsData {
@@ -74,7 +74,7 @@ export async function updateNews(newsData: UpdateNewsData): Promise<News> {
       title: newsData.title,
       content: newsData.content,
       related_stock_ids: newsData.related_stock_ids,
-      admin_id: newsData.admin_id,
+      class_id: newsData.class_id,
       updated_at: new Date().toISOString(),
     })
     .eq("id", newsData.id)

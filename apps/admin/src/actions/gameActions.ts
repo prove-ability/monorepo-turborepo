@@ -135,45 +135,54 @@ export async function createGameDay(gameData: GameData): Promise<void> {
   const supabase = await createClientByServerSide();
 
   try {
-    // 트랜잭션 시작
-    const { data: session } = await supabase.auth.getSession();
-    const adminId = session?.session?.user?.id;
-
     // 1. 뉴스 생성
     const newsPromises = gameData.news.map(async (news) => {
+      const newsData = {
+        day: gameData.day,
+        title: news.title,
+        content: news.content,
+        related_stock_ids: news.related_stock_ids || [],
+        class_id: gameData.class_id,
+      };
+
+      console.log("뉴스 삽입 데이터:", newsData);
+
       const { data, error } = await supabase
         .from("news")
-        .insert([
-          {
-            day: gameData.day,
-            title: news.title,
-            content: news.content,
-            related_stock_ids: news.related_stock_ids,
-            admin_id: adminId,
-          },
-        ])
+        .insert([newsData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("뉴스 삽입 에러:", error);
+        throw error;
+      }
       return data;
     });
 
     const createdNews = await Promise.all(newsPromises);
+    console.log("생성된 뉴스:", createdNews);
 
     // 2. 주식 가격 생성
     const pricePromises = gameData.stocks.map(async (stock) => {
-      const { error } = await supabase.from("class_stock_prices").insert([
-        {
-          class_id: gameData.class_id,
-          stock_id: stock.stock_id,
-          day: gameData.day,
-          price: stock.price,
-          news_id: createdNews[0]?.id, // 첫 번째 뉴스와 연결
-        },
-      ]);
+      const priceData = {
+        class_id: gameData.class_id,
+        stock_id: stock.stock_id,
+        day: gameData.day,
+        price: stock.price,
+        news_id: createdNews[0]?.id, // 첫 번째 뉴스와 연결
+      };
 
-      if (error) throw error;
+      console.log("주식 가격 삽입 데이터:", priceData);
+
+      const { error } = await supabase
+        .from("class_stock_prices")
+        .insert([priceData]);
+
+      if (error) {
+        console.error("주식 가격 삽입 에러:", error);
+        throw error;
+      }
     });
 
     await Promise.all(pricePromises);
