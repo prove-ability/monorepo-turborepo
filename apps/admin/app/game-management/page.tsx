@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { getClasses, type Class } from "@/actions/classActions";
 import { getStocks, type Stock } from "@/actions/stockActions";
-import { getNews, type News } from "@/actions/newsActions";
 import {
   getClassStockPrices,
   getGameProgress,
@@ -21,13 +20,11 @@ import {
 } from "@/actions/gameActions";
 import StockManagement from "@/components/game/StockManagement";
 import GameDayManagement from "@/components/game/GameDayManagement";
-import NewsManagement from "@/components/game/NewsManagement";
 import PriceManagement from "@/components/game/PriceManagement";
 
 export default function GameManagementPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [stocks, setStocks] = useState<Stock[]>([]);
-  const [news, setNews] = useState<News[]>([]);
   const [prices, setPrices] = useState<ClassStockPrice[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [selectedDay, setSelectedDay] = useState<number>(1);
@@ -51,15 +48,13 @@ export default function GameManagementPage() {
 
   const loadInitialData = async () => {
     try {
-      const [classesData, stocksData, newsData] = await Promise.all([
+      const [classesData, stocksData] = await Promise.all([
         getClasses(),
         getStocks(),
-        getNews(),
       ]);
 
       setClasses(classesData);
       setStocks(stocksData);
-      setNews(newsData);
 
       if (classesData.length > 0) {
         setSelectedClass(classesData[0].id);
@@ -196,10 +191,9 @@ export default function GameManagementPage() {
 
       {/* 관리 탭 */}
       <Tabs defaultValue="stocks" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="stocks">주식 관리</TabsTrigger>
           <TabsTrigger value="game-day">게임 Day 관리</TabsTrigger>
-          <TabsTrigger value="news">뉴스 관리</TabsTrigger>
           <TabsTrigger value="prices">가격 관리</TabsTrigger>
         </TabsList>
 
@@ -210,15 +204,6 @@ export default function GameManagementPage() {
         <TabsContent value="game-day">
           <GameDayManagement
             selectedClass={selectedClass}
-            selectedDay={selectedDay}
-            stocks={stocks}
-            onRefresh={refreshData}
-          />
-        </TabsContent>
-
-        <TabsContent value="news">
-          <NewsManagement
-            news={news.filter((n) => n.day === selectedDay)}
             selectedDay={selectedDay}
             stocks={stocks}
             onRefresh={refreshData}

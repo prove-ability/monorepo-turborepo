@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -51,6 +51,11 @@ export default function GameDayManagement({
   const [newsItems, setNewsItems] = useState<NewsInput[]>([
     { title: "", content: "", related_stock_ids: [] },
   ]);
+
+  // 클래스나 Day가 변경될 때마다 상태 초기화
+  useEffect(() => {
+    resetForm();
+  }, [selectedClass, selectedDay]);
 
   const addNewsItem = () => {
     setNewsItems([
