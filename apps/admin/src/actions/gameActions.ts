@@ -175,13 +175,17 @@ export async function createGameDay(gameData: GameData): Promise<void> {
 
       console.log("주식 가격 삽입 데이터:", priceData);
 
-      const { error } = await supabase
+      // UPSERT 방식으로 변경 (기존 데이터가 있으면 업데이트, 없으면 삽입)
+      const { error: priceError } = await supabase
         .from("class_stock_prices")
-        .insert([priceData]);
+        .upsert(priceData, {
+          onConflict: "class_id,stock_id,day",
+          ignoreDuplicates: false
+        });
 
-      if (error) {
-        console.error("주식 가격 삽입 에러:", error);
-        throw error;
+      if (priceError) {
+        console.log("주식 가격 삽입 에러:", priceError);
+        throw new Error(`주식 가격 저장 실패: ${priceError.message}`);
       }
     });
 
