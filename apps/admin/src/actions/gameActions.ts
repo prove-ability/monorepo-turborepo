@@ -221,10 +221,11 @@ export async function getGameProgress(classId: string): Promise<{
 
   const maxDay = maxDayData?.[0]?.day || 0;
 
-  // 뉴스 개수 조회
+  // 뉴스 개수 조회 (클래스별 필터링)
   const { count: newsCount, error: newsError } = await supabase
     .from("news")
     .select("*", { count: "exact", head: true })
+    .eq("class_id", classId)
     .lte("day", maxDay);
 
   if (newsError) {
