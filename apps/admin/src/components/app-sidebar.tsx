@@ -42,6 +42,11 @@ const data = {
       url: "classes",
       icon: IconListDetails,
     },
+    {
+      title: "게임 관리",
+      url: "game-management",
+      icon: IconFileAi,
+    },
     // {
     //   title: "Analytics",
     //   url: "#",

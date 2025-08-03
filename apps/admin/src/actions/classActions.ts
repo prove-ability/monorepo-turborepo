@@ -5,12 +5,15 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const classSchema = z.object({
+  id: z.string(),
   name: z.string().min(1, "수업명은 필수입니다."),
   start_date: z.string().min(1, "시작일은 필수입니다."),
   end_date: z.string().optional().or(z.literal("")),
   manager_id: z.string().min(1, "매니저 선택은 필수입니다."),
   client_id: z.string().min(1, "클라이언트 선택은 필수입니다."),
 });
+
+export type Class = z.infer<typeof classSchema>;
 
 // CREATE: 새로운 클래스 생성
 export async function createClass(formData: FormData) {
