@@ -306,9 +306,14 @@ export default function GameDayManagement({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Day {selectedDay} 뉴스 관리</CardTitle>
+              <CardTitle>
+                Day {selectedDay} 종료 후 뉴스 (→ Day {selectedDay + 1} 가격
+                영향)
+              </CardTitle>
               <CardDescription>
-                기존 뉴스를 확인하고 새로운 뉴스를 작성하세요
+                📰 이 뉴스들은{" "}
+                <strong>다음 거래일(Day {selectedDay + 1})</strong> 주식 가격
+                변동에 영향을 줍니다
               </CardDescription>
             </div>
             <Button variant="outline" size="sm" onClick={addNewsItem}>
@@ -341,9 +346,14 @@ export default function GameDayManagement({
                     >
                       <CardHeader>
                         <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">
-                            뉴스 {index + 1} (저장됨)
-                          </CardTitle>
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="text-base">
+                              뉴스 {index + 1} (저장됨)
+                            </CardTitle>
+                            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                              → Day {selectedDay + 1} 영향
+                            </span>
+                          </div>
                           <div className="flex gap-2">
                             <Button
                               variant="outline"
@@ -352,18 +362,28 @@ export default function GameDayManagement({
                                 // TODO: 수정 모달 열기
                                 console.log("뉴스 수정:", news.id);
                               }}
-                              disabled={editingNewsId === news.id || deletingNewsId === news.id}
+                              disabled={
+                                editingNewsId === news.id ||
+                                deletingNewsId === news.id
+                              }
                             >
-                              {editingNewsId === news.id ? "수정 중..." : "수정"}
+                              {editingNewsId === news.id
+                                ? "수정 중..."
+                                : "수정"}
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleDeleteNews(news.id)}
                               className="text-red-500 hover:text-red-700"
-                              disabled={editingNewsId === news.id || deletingNewsId === news.id}
+                              disabled={
+                                editingNewsId === news.id ||
+                                deletingNewsId === news.id
+                              }
                             >
-                              {deletingNewsId === news.id ? "삭제 중..." : "삭제"}
+                              {deletingNewsId === news.id
+                                ? "삭제 중..."
+                                : "삭제"}
                             </Button>
                           </div>
                         </div>
@@ -428,9 +448,14 @@ export default function GameDayManagement({
                     <Card key={index} className="border-l-4 border-l-blue-500">
                       <CardHeader>
                         <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">
-                            뉴스 {index + 1}
-                          </CardTitle>
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="text-base">
+                              뉴스 {index + 1}
+                            </CardTitle>
+                            <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
+                              → Day {selectedDay + 1} 영향
+                            </span>
+                          </div>
                           <div className="flex gap-2">
                             <Button
                               variant="default"
@@ -442,7 +467,9 @@ export default function GameDayManagement({
                                 !news.content.trim()
                               }
                             >
-                              {savingNewsIndex === index ? "저장 중..." : "저장"}
+                              {savingNewsIndex === index
+                                ? "저장 중..."
+                                : "저장"}
                             </Button>
                             {newsItems.length > 1 && (
                               <Button

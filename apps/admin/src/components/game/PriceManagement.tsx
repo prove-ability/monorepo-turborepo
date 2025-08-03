@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,6 +37,7 @@ import {
   type UpdateStockPriceData,
 } from "@/actions/gameActions";
 import { type Stock } from "@/actions/stockActions";
+import { getNews, type News } from "@/actions/newsActions";
 
 interface PriceManagementProps {
   prices: ClassStockPrice[];
@@ -59,12 +60,41 @@ export default function PriceManagement({
     null
   );
   const [loading, setLoading] = useState(false);
+  const [previousDayNews, setPreviousDayNews] = useState<News[]>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
   const [formData, setFormData] = useState<CreateStockPriceData>({
     class_id: selectedClass,
     stock_id: "",
     day: selectedDay,
     price: 10000,
   });
+
+  // 전날 뉴스 로드
+  const loadPreviousDayNews = async () => {
+    if (!selectedClass || selectedDay <= 1) {
+      setPreviousDayNews([]);
+      return;
+    }
+
+    setNewsLoading(true);
+    try {
+      const allNews = await getNews();
+      const filteredNews = allNews.filter(
+        (news) => news.class_id === selectedClass && news.day === selectedDay - 1
+      );
+      setPreviousDayNews(filteredNews);
+    } catch (error) {
+      console.error('전날 뉴스 로드 실패:', error);
+      setPreviousDayNews([]);
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
+  // 클래스나 Day 변경 시 전날 뉴스 로드
+  useEffect(() => {
+    loadPreviousDayNews();
+  }, [selectedClass, selectedDay]);
 
   const resetForm = () => {
     setFormData({
@@ -161,7 +191,65 @@ export default function PriceManagement({
   );
 
   return (
-    <Card>
+    <div className="space-y-6">
+      {/* 전날 뉴스 참고 섹션 */}
+      {selectedDay > 1 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Day {selectedDay - 1} 뉴스 참고 (가격 설정 참고용)
+            </CardTitle>
+            <CardDescription>
+              이 뉴스들이 Day {selectedDay} 주식 가격에 영향을 주었습니다
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {newsLoading ? (
+              <div className="text-center py-4">
+                <div className="text-muted-foreground">뉴스를 불러오는 중...</div>
+              </div>
+            ) : previousDayNews.length > 0 ? (
+              <div className="space-y-3">
+                {previousDayNews.map((news, index) => (
+                  <div key={news.id} className="border rounded-lg p-4 bg-muted/30">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-semibold text-sm">뉴스 {index + 1}: {news.title}</h4>
+                      {news.related_stock_ids && news.related_stock_ids.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {news.related_stock_ids.map((stockId) => {
+                            const stock = stocks.find((s) => s.id === stockId);
+                            return stock ? (
+                              <span
+                                key={stockId}
+                                className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
+                              >
+                                {stock.name}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {news.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">
+                <p className="text-muted-foreground">
+                  Day {selectedDay - 1}에 작성된 뉴스가 없습니다.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 주식 가격 관리 */}
+      <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -387,5 +475,6 @@ export default function PriceManagement({
         </Dialog>
       </CardContent>
     </Card>
+    </div>
   );
 }
