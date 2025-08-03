@@ -197,8 +197,8 @@ export default function StockManagement({
                     <SelectContent>
                       <SelectItem value="KR">한국 (KR)</SelectItem>
                       <SelectItem value="US">미국 (US)</SelectItem>
-                      <SelectItem value="JP">일본 (JP)</SelectItem>
-                      <SelectItem value="CN">중국 (CN)</SelectItem>
+                      {/* <SelectItem value="JP">일본 (JP)</SelectItem>
+                      <SelectItem value="CN">중국 (CN)</SelectItem> */}
                     </SelectContent>
                   </Select>
                 </div>
@@ -323,8 +323,8 @@ export default function StockManagement({
                   <SelectContent>
                     <SelectItem value="KR">한국 (KR)</SelectItem>
                     <SelectItem value="US">미국 (US)</SelectItem>
-                    <SelectItem value="JP">일본 (JP)</SelectItem>
-                    <SelectItem value="CN">중국 (CN)</SelectItem>
+                    {/* <SelectItem value="JP">일본 (JP)</SelectItem>
+                    <SelectItem value="CN">중국 (CN)</SelectItem> */}
                   </SelectContent>
                 </Select>
               </div>

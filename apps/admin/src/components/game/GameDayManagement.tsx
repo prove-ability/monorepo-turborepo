@@ -24,17 +24,13 @@ import {
 import { Plus, Calendar } from "lucide-react";
 import { createGameDay, type GameData } from "@/actions/gameActions";
 import { type Stock } from "@/actions/stockActions";
+import StockPriceInput, { type StockPriceInputData } from "./StockPriceInput";
 
 interface GameDayManagementProps {
   selectedClass: string;
   selectedDay: number;
   stocks: Stock[];
   onRefresh: () => void;
-}
-
-interface StockPriceInput {
-  stock_id: string;
-  price: number;
 }
 
 interface NewsInput {
@@ -51,19 +47,10 @@ export default function GameDayManagement({
 }: GameDayManagementProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [stockPrices, setStockPrices] = useState<StockPriceInput[]>([]);
+  const [stockPrices, setStockPrices] = useState<StockPriceInputData[]>([]);
   const [newsItems, setNewsItems] = useState<NewsInput[]>([
     { title: "", content: "", related_stock_ids: [] },
   ]);
-
-  const initializeStockPrices = () => {
-    setStockPrices(
-      stocks.map((stock) => ({
-        stock_id: stock.id,
-        price: 10000, // 기본 가격
-      }))
-    );
-  };
 
   const addNewsItem = () => {
     setNewsItems([
@@ -96,14 +83,6 @@ export default function GameDayManagement({
     }
   };
 
-  const updateStockPrice = (stockId: string, price: number) => {
-    setStockPrices((prev) =>
-      prev.map((item) =>
-        item.stock_id === stockId ? { ...item, price } : item
-      )
-    );
-  };
-
   const toggleStockInNews = (newsIndex: number, stockId: string) => {
     const updated = [...newsItems];
     const currentItem = updated[newsIndex];
@@ -125,6 +104,24 @@ export default function GameDayManagement({
 
       setNewsItems(updated);
     }
+  };
+
+  const updateStockPrice = (stockId: string, price: number) => {
+    setStockPrices((prevPrices) => {
+      const existingIndex = prevPrices.findIndex(
+        (item) => item.stock_id === stockId
+      );
+
+      if (existingIndex >= 0) {
+        // Update existing stock price
+        const updated = [...prevPrices];
+        updated[existingIndex] = { stock_id: stockId, price };
+        return updated;
+      } else {
+        // Add new stock price
+        return [...prevPrices, { stock_id: stockId, price }];
+      }
+    });
   };
 
   const handleCreateGameDay = async () => {
@@ -175,7 +172,6 @@ export default function GameDayManagement({
   };
 
   const openDialog = () => {
-    initializeStockPrices();
     resetForm();
     setIsDialogOpen(true);
   };
@@ -284,43 +280,111 @@ export default function GameDayManagement({
 
                 {/* 주식 가격 섹션 */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">주식 가격</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {stockPrices.map((priceItem) => {
-                      const stock = stocks.find(
-                        (s) => s.id === priceItem.stock_id
-                      );
-                      if (!stock) return null;
-
-                      return (
-                        <Card key={priceItem.stock_id}>
-                          <CardContent className="pt-4">
-                            <div className="space-y-2">
-                              <Label>{stock.name}</Label>
-                              <div className="flex items-center space-x-2">
-                                <Input
-                                  type="number"
-                                  value={priceItem.price}
-                                  onChange={(e) =>
-                                    updateStockPrice(
-                                      priceItem.stock_id,
-                                      Number(e.target.value)
-                                    )
-                                  }
-                                  placeholder="가격"
-                                  min="0"
-                                  step="100"
-                                />
-                                <span className="text-sm text-muted-foreground">
-                                  원
-                                </span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">주식 가격</h3>
+                    <div className="text-sm text-muted-foreground">
+                      설정할 주식을 선택하고 가격을 입력하세요
+                    </div>
                   </div>
+
+                  {/* 주식 선택 버튼들 */}
+                  <div className="mb-4">
+                    <Label className="text-sm font-medium mb-2 block">
+                      가격을 설정할 주식 선택:
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {stocks.map((stock) => {
+                        const isSelected = stockPrices.some(
+                          (p) => p.stock_id === stock.id
+                        );
+                        return (
+                          <Button
+                            key={stock.id}
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              if (isSelected) {
+                                // 선택 해제
+                                setStockPrices((prev) =>
+                                  prev.filter((p) => p.stock_id !== stock.id)
+                                );
+                              } else {
+                                // 선택 추가 (기본 가격 10000원)
+                                setStockPrices((prev) => [
+                                  ...prev,
+                                  { stock_id: stock.id, price: 10000 },
+                                ]);
+                              }
+                            }}
+                          >
+                            {stock.name}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 선택된 주식들의 가격 입력 */}
+                  {stockPrices.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {stockPrices.map((priceItem) => {
+                        const stock = stocks.find(
+                          (s) => s.id === priceItem.stock_id
+                        );
+                        if (!stock) return null;
+
+                        return (
+                          <Card key={priceItem.stock_id}>
+                            <CardContent className="pt-4">
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label>{stock.name}</Label>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      setStockPrices((prev) =>
+                                        prev.filter(
+                                          (p) => p.stock_id !== stock.id
+                                        )
+                                      )
+                                    }
+                                    className="text-red-500 hover:text-red-700"
+                                  >
+                                    제거
+                                  </Button>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Input
+                                    type="number"
+                                    value={priceItem.price}
+                                    onChange={(e) =>
+                                      updateStockPrice(
+                                        priceItem.stock_id,
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    placeholder="가격"
+                                    min="0"
+                                    step="100"
+                                  />
+                                  <span className="text-sm text-muted-foreground">
+                                    원
+                                  </span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+                      <p className="text-muted-foreground">
+                        위에서 주식을 선택하여 가격을 설정하세요
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
