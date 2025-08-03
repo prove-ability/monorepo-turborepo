@@ -53,12 +53,15 @@ export default function GameDayManagement({
 }: GameDayManagementProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [deletingNewsId, setDeletingNewsId] = useState<string | null>(null);
+  const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
+  const [savingNewsIndex, setSavingNewsIndex] = useState<number | null>(null);
 
   const [newsItems, setNewsItems] = useState<NewsInput[]>([
     { title: "", content: "", related_stock_ids: [] },
   ]);
   const [existingNews, setExistingNews] = useState<News[]>([]);
-  const [newsLoading, setNewsLoading] = useState(false);
 
   // 클래스나 Day가 변경될 때마다 상태 초기화 및 기존 뉴스 로드
   useEffect(() => {
@@ -186,10 +189,11 @@ export default function GameDayManagement({
     newsId: string,
     updatedData: Partial<News>
   ) => {
+    setEditingNewsId(newsId);
     try {
       await updateNews({
         id: newsId,
-        day: updatedData.day || selectedDay,
+        day: selectedDay,
         title: updatedData.title || "",
         content: updatedData.content || "",
         related_stock_ids: updatedData.related_stock_ids || [],
@@ -201,6 +205,8 @@ export default function GameDayManagement({
     } catch (error) {
       console.error("뉴스 수정 실패:", error);
       alert("뉴스 수정에 실패했습니다.");
+    } finally {
+      setEditingNewsId(null);
     }
   };
 
@@ -209,6 +215,7 @@ export default function GameDayManagement({
       return;
     }
 
+    setDeletingNewsId(newsId);
     try {
       await deleteNews(newsId);
       await loadExistingNews();
@@ -217,28 +224,30 @@ export default function GameDayManagement({
     } catch (error) {
       console.error("뉴스 삭제 실패:", error);
       alert("뉴스 삭제에 실패했습니다.");
+    } finally {
+      setDeletingNewsId(null);
     }
   };
 
   const handleSaveIndividualNews = async (newsIndex: number) => {
+    const news = newsItems[newsIndex];
     if (!selectedClass) {
       alert("클래스를 선택해주세요.");
       return;
     }
 
-    const news = newsItems[newsIndex];
     if (!news || !news.title.trim() || !news.content.trim()) {
       alert("뉴스 제목과 내용을 모두 입력해주세요.");
       return;
     }
 
-    setLoading(true);
+    setSavingNewsIndex(newsIndex);
     try {
       const gameData: GameData = {
         class_id: selectedClass,
         day: selectedDay,
-        stocks: [],
-        news: [news], // 해당 뉴스만 전송
+        stocks: [], // 빈 배열로 설정 (주식 가격은 다른 탭에서 관리)
+        news: [news],
       };
 
       await createGameDay(gameData);
@@ -260,7 +269,7 @@ export default function GameDayManagement({
       console.error("뉴스 저장 실패:", error);
       alert("뉴스 저장에 실패했습니다.");
     } finally {
-      setLoading(false);
+      setSavingNewsIndex(null);
     }
   };
 
@@ -343,16 +352,18 @@ export default function GameDayManagement({
                                 // TODO: 수정 모달 열기
                                 console.log("뉴스 수정:", news.id);
                               }}
+                              disabled={editingNewsId === news.id || deletingNewsId === news.id}
                             >
-                              수정
+                              {editingNewsId === news.id ? "수정 중..." : "수정"}
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleDeleteNews(news.id)}
                               className="text-red-500 hover:text-red-700"
+                              disabled={editingNewsId === news.id || deletingNewsId === news.id}
                             >
-                              삭제
+                              {deletingNewsId === news.id ? "삭제 중..." : "삭제"}
                             </Button>
                           </div>
                         </div>
@@ -426,12 +437,12 @@ export default function GameDayManagement({
                               size="sm"
                               onClick={() => handleSaveIndividualNews(index)}
                               disabled={
-                                loading ||
+                                savingNewsIndex === index ||
                                 !news.title.trim() ||
                                 !news.content.trim()
                               }
                             >
-                              {loading ? "저장 중..." : "저장"}
+                              {savingNewsIndex === index ? "저장 중..." : "저장"}
                             </Button>
                             {newsItems.length > 1 && (
                               <Button

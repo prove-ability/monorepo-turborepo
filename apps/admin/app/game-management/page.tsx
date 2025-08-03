@@ -18,7 +18,7 @@ import {
   getGameProgress,
   type ClassStockPrice,
 } from "@/actions/gameActions";
-import StockManagement from "@/components/game/StockManagement";
+
 import GameDayManagement from "@/components/game/GameDayManagement";
 import PriceManagement from "@/components/game/PriceManagement";
 
@@ -217,16 +217,11 @@ export default function GameManagementPage() {
       </Card>
 
       {/* 관리 탭 */}
-      <Tabs defaultValue="stocks" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="stocks">주식 관리</TabsTrigger>
+      <Tabs defaultValue="news" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="news">뉴스 관리</TabsTrigger>
           <TabsTrigger value="prices">가격 관리</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="stocks">
-          <StockManagement stocks={stocks} onRefresh={refreshData} />
-        </TabsContent>
 
         <TabsContent value="news">
           <GameDayManagement
