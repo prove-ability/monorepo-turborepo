@@ -220,7 +220,7 @@ export default function GameManagementPage() {
       <Tabs defaultValue="stocks" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="stocks">주식 관리</TabsTrigger>
-          <TabsTrigger value="game-day">게임 Day 관리</TabsTrigger>
+          <TabsTrigger value="news">뉴스 관리</TabsTrigger>
           <TabsTrigger value="prices">가격 관리</TabsTrigger>
         </TabsList>
 
@@ -228,7 +228,7 @@ export default function GameManagementPage() {
           <StockManagement stocks={stocks} onRefresh={refreshData} />
         </TabsContent>
 
-        <TabsContent value="game-day">
+        <TabsContent value="news">
           <GameDayManagement
             selectedClass={selectedClass}
             selectedDay={selectedDay}
