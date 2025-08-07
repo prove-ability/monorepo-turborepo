@@ -70,7 +70,7 @@ function generatePassword(): string {
 
   let password = "";
   // 영문 2자리
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 3; i++) {
     password += letters.charAt(Math.floor(Math.random() * letters.length));
   }
   // 숫자 2자리
