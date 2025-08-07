@@ -9,10 +9,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -31,6 +33,7 @@ export default function LoginPage() {
     // 학생 계정 이메일 형식 차단
     if (email.endsWith("@student.local")) {
       setError("학생 계정으로는 관리자 페이지에 접근할 수 없습니다.");
+      setIsLoading(false);
       return;
     }
 
@@ -46,6 +49,7 @@ export default function LoginPage() {
 
     if (error) {
       setError(error.message);
+      setIsLoading(false);
     } else if (data.user) {
       // 로그인 성공 후 관리자 권한 검증
       try {
@@ -59,6 +63,7 @@ export default function LoginPage() {
           // 관리자가 아닌 경우 로그아웃 후 에러 표시
           await supabase.auth.signOut();
           setError("관리자 권한이 없습니다.");
+          setIsLoading(false);
           return;
         }
 
@@ -69,6 +74,7 @@ export default function LoginPage() {
       } catch (err) {
         await supabase.auth.signOut();
         setError("권한 확인 중 오류가 발생했습니다.");
+        setIsLoading(false);
       }
     }
   };
@@ -82,6 +88,7 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="이메일"
+          disabled={isLoading}
           required
         />
         <input
@@ -89,9 +96,12 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="비밀번호"
+          disabled={isLoading}
           required
         />
-        <button type="submit">로그인</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "로그인 중..." : "로그인"}
+        </button>
         {error && <p style={{ color: "red" }}>{error}</p>}
       </form>
     </div>
