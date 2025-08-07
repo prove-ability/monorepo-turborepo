@@ -44,12 +44,14 @@ export function NavMain({
         </SidebarMenu> */}
         <SidebarMenu>
           {items.map((item) => {
+            // URL을 절대 경로로 처리
+            const href = item.url.startsWith("/") ? item.url : `/${item.url}`;
             const isActive =
               item.url !== "/" && pathname.startsWith(`/${item.url}`);
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild isActive={isActive}>
-                  <Link href={item.url}>
+                  <Link href={href}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
                   </Link>
