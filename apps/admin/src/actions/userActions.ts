@@ -125,16 +125,6 @@ export async function createUser(
       };
     }
 
-    // if (true) {
-    //   return {
-    //     error: {
-    //       _form: [
-    //         `${authData.user?.id} ${loginId} ${password} ${validatedData.name} ${validatedData.phone} ${validatedData.grade} ${validatedData.school_name} ${validatedData.class_id} ${validatedData.client_id}   ${validatedData.nickname} `,
-    //       ],
-    //     },
-    //   };
-    // }
-
     // users 테이블에 사용자 정보 저장 (password 포함) - 관리자 권한으로 실행
     const { error: insertError } = await adminSupabase.from("users").insert({
       user_id: authData.user.id,
@@ -312,40 +302,16 @@ export async function deleteUser(userId: string) {
   }
 }
 
-// 클라이언트별 클래스 목록 조회 (사용자 등록 시 사용)
-export async function getClassesByClient(clientId: string) {
-  try {
-    const supabase = await createClientByServerSide();
-
-    const { data, error } = await supabase
-      .from("classes")
-      .select("id, name")
-      .eq("client_id", clientId)
-      .order("name");
-
-    if (error) {
-      throw error;
-    }
-
-    return { success: true, data };
-  } catch (error) {
-    return {
-      success: false,
-      error: "클래스 목록을 불러오는데 실패했습니다.",
-    };
-  }
-}
-
 // LOGOUT: 사용자 로그아웃
 export async function logoutUser() {
   const supabase = await createClientByServerSide();
-  
+
   const { error } = await supabase.auth.signOut();
-  
+
   if (error) {
     throw new Error(`로그아웃 실패: ${error.message}`);
   }
-  
+
   // 로그아웃 후 로그인 페이지로 리다이렉트
   revalidatePath("/");
 }
