@@ -335,3 +335,17 @@ export async function getClassesByClient(clientId: string) {
     };
   }
 }
+
+// LOGOUT: 사용자 로그아웃
+export async function logoutUser() {
+  const supabase = await createClientByServerSide();
+  
+  const { error } = await supabase.auth.signOut();
+  
+  if (error) {
+    throw new Error(`로그아웃 실패: ${error.message}`);
+  }
+  
+  // 로그아웃 후 로그인 페이지로 리다이렉트
+  revalidatePath("/");
+}

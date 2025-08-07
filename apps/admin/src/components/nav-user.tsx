@@ -1,3 +1,5 @@
+"use client";
+
 import {
   IconCreditCard,
   IconDotsVertical,
@@ -5,6 +7,8 @@ import {
   IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -23,11 +27,29 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useUser } from "@/hooks/use-user";
+import { logoutUser } from "@/actions/userActions";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { user, isLoading } = useUser();
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    try {
+      setIsLoggingOut(true);
+      await logoutUser();
+      router.push("/login");
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+      alert("로그아웃에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   if (isLoading || !user) {
     // TODO: skeleton
@@ -92,9 +114,9 @@ export function NavUser() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
               <IconLogout />
-              Log out
+              {isLoggingOut ? "로그아웃 중..." : "Log out"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
