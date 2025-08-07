@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@repo/ui";
 import { ArrowLeft, Search, Users, Calendar, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { getUsersByClass } from "@/actions/userActions";
 
 interface ClassData {
   id: string;
@@ -19,13 +20,13 @@ interface ClassData {
 }
 
 interface Student {
-  id: string;
+  user_id: string;
   name: string;
   phone: string;
   grade: number;
   school_name: string;
   login_id: string;
-  pw: string;
+  password: string;
   created_at: string;
   updated_at: string;
   clients: { id: string; name: string } | null;
@@ -39,26 +40,51 @@ interface Student {
 
 interface ClassDetailClientProps {
   classData: ClassData;
-  initialStudents: Student[];
+  classId: string;
 }
 
-export function ClassDetailClient({ classData, initialStudents }: ClassDetailClientProps) {
+export function ClassDetailClient({
+  classData,
+  classId,
+}: ClassDetailClientProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 클라이언트에서 학생 목록 조회
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const studentsData = await getUsersByClass(classId);
+        console.log("studentsData:", studentsData);
+        setStudents(studentsData.data);
+      } catch (err) {
+        console.error("학생 목록 조회 실패:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, [classId]);
 
   // 검색 기능
   const filteredStudents = useMemo(() => {
-    if (!searchTerm.trim()) return initialStudents;
+    if (!searchTerm.trim()) return students;
 
     const term = searchTerm.toLowerCase();
-    return initialStudents.filter(
-      (student) =>
+    return students.filter(
+      (student: Student) =>
         student.name.toLowerCase().includes(term) ||
         student.phone.includes(term) ||
         student.school_name.toLowerCase().includes(term) ||
         student.login_id.toLowerCase().includes(term)
     );
-  }, [initialStudents, searchTerm]);
+  }, [students, searchTerm]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ko-KR");
@@ -142,7 +168,39 @@ export function ClassDetailClient({ classData, initialStudents }: ClassDetailCli
 
         {/* 학생 목록 */}
         <div className="p-6">
-          {filteredStudents.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-500 text-lg">
+                학생 목록을 불러오는 중...
+              </p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-red-500 mb-4">
+                <svg
+                  className="w-12 h-12 mx-auto"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <p className="text-red-500 text-lg mb-4">{error}</p>
+              <Button
+                onClick={() => window.location.reload()}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                다시 시도
+              </Button>
+            </div>
+          ) : filteredStudents.length === 0 ? (
             <div className="text-center py-12">
               <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg">
@@ -174,15 +232,15 @@ export function ClassDetailClient({ classData, initialStudents }: ClassDetailCli
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredStudents.map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50">
+                  {filteredStudents.map((student: Student) => (
+                    <tr key={student.user_id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
                             {student.name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            ID: {student.id}
+                            ID: {student.user_id}
                           </div>
                         </div>
                       </td>
@@ -207,7 +265,7 @@ export function ClassDetailClient({ classData, initialStudents }: ClassDetailCli
                             {student.login_id}
                           </div>
                           <div className="text-sm text-gray-500">
-                            비밀번호: {student.pw}
+                            비밀번호: {student.password}
                           </div>
                         </div>
                       </td>

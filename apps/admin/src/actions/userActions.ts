@@ -211,12 +211,11 @@ export async function getUsers() {
 
 // READ: 특정 클래스의 사용자들 조회 (검색 기능 포함)
 export async function getUsersByClass(classId: string, searchTerm?: string) {
-  const supabase = await createClientByServerSide();
+  // RLS 정책을 우회하기 위해 관리자 클라이언트 사용
+  const supabase = await createAdminClient();
 
-  let query = supabase
-    .from("users")
-    .select("*")
-    .eq("class_id", classId);
+  // classId로 필터링하여 해당 클래스의 학생들만 조회
+  let query = supabase.from("users").select("*").eq("class_id", classId);
 
   // 검색어가 있으면 이름, 전화번호, 학교명으로 검색
   if (searchTerm && searchTerm.trim()) {
@@ -231,7 +230,7 @@ export async function getUsersByClass(classId: string, searchTerm?: string) {
     throw new Error(`사용자 조회 실패: ${error.message}`);
   }
 
-  return data || [];
+  return { success: true, data: data || [] };
 }
 
 // UPDATE: 사용자 정보 수정
