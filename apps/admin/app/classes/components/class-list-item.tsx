@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@repo/ui";
 import { deleteClass } from "@/actions/classActions";
 import { CreateUserModal } from "./create-user-modal";
+import { useRouter } from "next/navigation";
+import { Eye } from "lucide-react";
 
 interface ClassWithRelations {
   id: string;
@@ -29,6 +31,7 @@ export function ClassListItem({
   onClassUpdated,
   onEditClass,
 }: ClassListItemProps) {
+  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
 
@@ -55,7 +58,12 @@ export function ClassListItem({
   return (
     <div className="border rounded-lg shadow-sm p-6 bg-white">
       <div className="mb-4">
-        <h3 className="text-lg font-bold text-gray-900">{classItem.name}</h3>
+        <h3
+          className="text-lg font-bold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors"
+          onClick={() => router.push(`/classes/${classItem.id}`)}
+        >
+          {classItem.name}
+        </h3>
         <div className="text-sm text-gray-600 space-y-1 mt-2">
           <p>
             <span className="font-medium">클라이언트:</span>{" "}
@@ -78,17 +86,24 @@ export function ClassListItem({
         </div>
       </div>
 
-      <div className="flex gap-2 justify-end">
+      <div className="flex flex-wrap gap-1 justify-end">
+        <Button
+          variant="ghost"
+          onClick={() => router.push(`/classes/${classItem.id}`)}
+          className="text-xs text-blue-500 hover:bg-blue-50 px-2 py-1"
+        >
+          👁️ 상세
+        </Button>
         <Button
           variant="ghost"
           onClick={() => setIsStudentModalOpen(true)}
-          className="text-xs text-green-500 hover:bg-green-50"
+          className="text-xs text-green-500 hover:bg-green-50 px-2 py-1"
         >
-          학생 추가
+          + 학생
         </Button>
         <Button
           onClick={() => onEditClass(classItem)}
-          className="text-xs text-blue-500 hover:bg-blue-50"
+          className="text-xs text-blue-500 hover:bg-blue-50 px-2 py-1"
           variant="ghost"
         >
           수정
@@ -96,10 +111,10 @@ export function ClassListItem({
         <Button
           onClick={() => handleDeleteClass(classItem.id, classItem.name)}
           disabled={isDeleting}
-          className="text-xs text-red-500 hover:bg-red-50"
+          className="text-xs text-red-500 hover:bg-red-50 px-2 py-1"
           variant="ghost"
         >
-          {isDeleting ? "삭제 중..." : "삭제"}
+          {isDeleting ? "삭제중" : "삭제"}
         </Button>
       </div>
 

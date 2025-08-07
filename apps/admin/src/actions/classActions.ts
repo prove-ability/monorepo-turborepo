@@ -64,41 +64,51 @@ export async function createClass(formData: FormData) {
   return { message: "수업이 생성되었습니다.", data };
 }
 
+// READ: 특정 ID로 단일 클래스 조회
+export async function getClassById(classId: string) {
+  const supabase = await createClientByServerSide();
+
+  const { data, error } = await supabase
+    .from("classes")
+    .select(
+      `
+      *,
+      clients(id, name),
+      managers(id, name)
+    `
+    )
+    .eq("id", classId)
+    .single();
+
+  if (error) {
+    console.error("클래스 조회 실패:", error);
+    throw new Error(`클래스 조회 실패: ${error.message}`);
+  }
+
+  return data;
+}
+
 // READ: 모든 클래스 조회 (클라이언트, 매니저 정보 포함)
 export async function getClasses() {
   const supabase = await createClientByServerSide();
 
-  // 직접 SQL 쿼리를 사용하여 JOIN으로 데이터 조회
-  const { data, error } = await supabase.rpc("get_classes_with_relations");
+  // 새로운 JOIN 방식 시도
+  const { data, error } = await supabase
+    .from("classes")
+    .select(
+      `
+      *,
+      clients(id, name),
+      managers(id, name)
+    `
+    )
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Database error:", error);
-    // fallback: 기본 쿼리 시도
-    const { data: fallbackData, error: fallbackError } = await supabase
-      .from("classes")
-      .select(
-        `
-        *,
-        clients!classes_client_id_fkey (
-          id,
-          name
-        ),
-        managers!classes_manager_id_fkey (
-          id,
-          name
-        )
-      `
-      )
-      .order("created_at", { ascending: false });
-
-    if (fallbackError) {
-      throw new Error(fallbackError.message);
-    }
-
-    return fallbackData;
+    throw new Error(`클래스 목록 조회 실패: ${error.message}`);
   }
 
-  return data;
+  return data || [];
 }
 
 // UPDATE: 클래스 정보 수정

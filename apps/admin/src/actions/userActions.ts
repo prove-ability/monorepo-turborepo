@@ -209,40 +209,29 @@ export async function getUsers() {
   }
 }
 
-// READ: 특정 클래스의 사용자들 조회
-export async function getUsersByClass(classId: string) {
-  try {
-    const supabase = await createClientByServerSide();
+// READ: 특정 클래스의 사용자들 조회 (검색 기능 포함)
+export async function getUsersByClass(classId: string, searchTerm?: string) {
+  const supabase = await createClientByServerSide();
 
-    const { data, error } = await supabase
-      .from("users")
-      .select(
-        `
-        *,
-        classes (
-          id,
-          name,
-          clients (
-            id,
-            name
-          )
-        )
-      `
-      )
-      .eq("class_id", classId)
-      .order("created_at", { ascending: false });
+  let query = supabase
+    .from("users")
+    .select("*")
+    .eq("class_id", classId);
 
-    if (error) {
-      throw error;
-    }
-
-    return { success: true, data };
-  } catch (error) {
-    return {
-      success: false,
-      error: "사용자 목록을 불러오는데 실패했습니다.",
-    };
+  // 검색어가 있으면 이름, 전화번호, 학교명으로 검색
+  if (searchTerm && searchTerm.trim()) {
+    query = query.or(
+      `name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,school_name.ilike.%${searchTerm}%,login_id.ilike.%${searchTerm}%`
+    );
   }
+
+  const { data, error } = await query.order("name");
+
+  if (error) {
+    throw new Error(`사용자 조회 실패: ${error.message}`);
+  }
+
+  return data || [];
 }
 
 // UPDATE: 사용자 정보 수정
