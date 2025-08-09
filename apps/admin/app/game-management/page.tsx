@@ -16,6 +16,7 @@ import {
   updateClassCurrentDay,
   type ClassWithId,
 } from "@/actions/classActions";
+import { DayAdjustmentModal } from "./components/DayAdjustmentModal";
 import { getStocks, type Stock } from "@/actions/stockActions";
 import {
   getClassStockPrices,
@@ -39,6 +40,12 @@ export default function GameManagementPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [gameProgressLoading, setGameProgressLoading] = useState(false);
+
+  // Day 조정 모달 상태
+  const [dayAdjustmentModal, setDayAdjustmentModal] = useState({
+    isOpen: false,
+    newDay: 1,
+  });
 
   useEffect(() => {
     loadInitialData();
@@ -104,15 +111,58 @@ export default function GameManagementPage() {
     }
   };
 
-  // 클래스의 current_day 업데이트
-  const handleUpdateCurrentDay = async (newDay: number) => {
+  // 현재 선택된 클래스의 current_day 가져오기
+  const getCurrentDay = () => {
+    const selectedClassData = classes.find(c => c.id === selectedClass);
+    return selectedClassData?.current_day || 1;
+  };
+
+  // Day 감소 (바로 실행)
+  const handleDayDecrease = async () => {
+    if (!selectedClass) return;
+    
+    const currentDay = getCurrentDay();
+    const newDay = Math.max(1, currentDay - 1);
+    if (newDay === currentDay) return; // 이미 최소값인 경우
+    
+    try {
+      await updateClassCurrentDay(selectedClass, newDay);
+      loadInitialData();
+      alert(`현재 Day가 ${newDay}로 업데이트되었습니다.`);
+    } catch (error) {
+      console.error("현재 Day 업데이트 실패:", error);
+      alert("현재 Day 업데이트에 실패했습니다.");
+    }
+  };
+
+  // Day 증가 모달 열기 (+1 Day만)
+  const handleDayIncreaseRequest = () => {
+    if (!selectedClass) return;
+    
+    const newDay = getCurrentDay() + 1;
+    setDayAdjustmentModal({
+      isOpen: true,
+      newDay,
+    });
+  };
+
+  // Day 조정 모달 닫기
+  const handleDayAdjustmentClose = () => {
+    setDayAdjustmentModal({
+      isOpen: false,
+      newDay: 1,
+    });
+  };
+
+  // Day 조정 확인 후 실제 업데이트
+  const handleDayAdjustmentConfirm = async () => {
     if (!selectedClass) return;
 
     try {
-      await updateClassCurrentDay(selectedClass, newDay);
+      await updateClassCurrentDay(selectedClass, dayAdjustmentModal.newDay);
       // 클래스 목록 새로고침하여 current_day 반영
       loadInitialData();
-      alert(`현재 Day가 ${newDay}로 업데이트되었습니다.`);
+      alert(`현재 Day가 ${dayAdjustmentModal.newDay}로 업데이트되었습니다.`);
     } catch (error) {
       console.error("현재 Day 업데이트 실패:", error);
       alert("현재 Day 업데이트에 실패했습니다.");
@@ -222,11 +272,7 @@ export default function GameManagementPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() =>
-                                handleUpdateCurrentDay(
-                                  Math.max(1, currentDay - 1)
-                                )
-                              }
+                              onClick={handleDayDecrease}
                               disabled={currentDay <= 1}
                             >
                               -1 Day
@@ -234,9 +280,7 @@ export default function GameManagementPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() =>
-                                handleUpdateCurrentDay(currentDay + 1)
-                              }
+                              onClick={handleDayIncreaseRequest}
                             >
                               +1 Day
                             </Button>
@@ -313,6 +357,18 @@ export default function GameManagementPage() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Day 조정 확인 모달 (+1 Day만) */}
+      <DayAdjustmentModal
+        isOpen={dayAdjustmentModal.isOpen}
+        onClose={handleDayAdjustmentClose}
+        onConfirm={handleDayAdjustmentConfirm}
+        classId={selectedClass}
+        currentDay={getCurrentDay()}
+        newDay={dayAdjustmentModal.newDay}
+        className={classes.find(c => c.id === selectedClass)?.name || ""}
+        stocks={stocks}
+      />
     </div>
   );
 }

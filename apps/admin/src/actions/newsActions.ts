@@ -117,3 +117,21 @@ export async function getNewsCountByDay(day: number): Promise<number> {
 
   return count || 0;
 }
+
+// 클래스별, Day별 뉴스 조회
+export async function getNewsByClassAndDay(classId: string, day: number): Promise<News[]> {
+  const supabase = await createClientByServerSide();
+
+  const { data, error } = await supabase
+    .from("news")
+    .select("*")
+    .eq("class_id", classId)
+    .eq("day", day)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`클래스별 뉴스 조회 실패: ${error.message}`);
+  }
+
+  return data || [];
+}
