@@ -42,6 +42,7 @@ export function DayAdjustmentModal({
 }: DayAdjustmentModalProps) {
   const [news, setNews] = useState<News[]>([]);
   const [prices, setPrices] = useState<ClassStockPrice[]>([]);
+  const [prevPrices, setPrevPrices] = useState<ClassStockPrice[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -53,12 +54,22 @@ export function DayAdjustmentModal({
   const loadPreviewData = async () => {
     setLoading(true);
     try {
-      const [newsData, pricesData] = await Promise.all([
+      const fetches: Promise<any>[] = [
         getNewsByClassAndDay(classId, newDay),
         getClassStockPrices(classId, newDay),
-      ]);
+      ];
+      // newDay > 1인 경우 전날 가격도 조회
+      if (newDay > 1) {
+        fetches.push(getClassStockPrices(classId, newDay - 1));
+      }
+
+      const results = await Promise.all(fetches);
+      const newsData = results[0] as News[];
+      const pricesData = results[1] as ClassStockPrice[];
+      const prevPricesData = (newDay > 1 ? (results[2] as ClassStockPrice[]) : []) || [];
       setNews(newsData);
       setPrices(pricesData);
+      setPrevPrices(prevPricesData);
     } catch (error) {
       console.error("미리보기 데이터 로드 실패:", error);
     } finally {
@@ -80,8 +91,21 @@ export function DayAdjustmentModal({
   const dayChange = newDay - currentDay;
   const isIncreasing = dayChange > 0;
   // 다음 Day 진행 가능 여부: 증가일 때 뉴스와 가격이 모두 1개 이상 있어야 함
-  const canConfirm =
-    !loading && (!isIncreasing || (news.length > 0 && prices.length > 0));
+  const canConfirm = !loading && (!isIncreasing || (news.length > 0 && prices.length > 0));
+
+  // 전날 대비 변화 계산 헬퍼
+  const getPrevPrice = (stockId?: string) => {
+    if (!stockId) return undefined;
+    const prev = prevPrices.find((p) => p.stock_id === stockId);
+    return prev?.price;
+  };
+  const getChangeInfo = (stockId?: string, current?: number) => {
+    const prev = getPrevPrice(stockId);
+    if (prev === undefined || current === undefined) return { delta: undefined, dir: "none" as const };
+    const delta = current - prev;
+    const dir = delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+    return { delta, dir };
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -169,9 +193,28 @@ export function DayAdjustmentModal({
                             <div className="font-medium text-sm mb-1">
                               {getStockName(price.stock_id || "")}
                             </div>
-                            <div className="text-lg font-bold text-blue-600">
-                              ₩{price.price.toLocaleString()}
-                            </div>
+                            {(() => {
+                              const { delta, dir } = getChangeInfo(price.stock_id, price.price);
+                              const color = dir === "up" ? "text-green-600" : dir === "down" ? "text-red-600" : "text-gray-600";
+                              const arrow = dir === "up" ? "▲" : dir === "down" ? "▼" : "■";
+                              return (
+                                <div className="space-y-1">
+                                  <div className="text-lg font-bold text-blue-600">
+                                    ₩{price.price.toLocaleString()}
+                                  </div>
+                                  <div className={`text-xs font-medium ${color}`}>
+                                    {prevPrices.length > 0 ? (
+                                      <>
+                                        {arrow}
+                                        {delta !== undefined ? ` ${delta > 0 ? "+" : ""}${delta.toLocaleString()}` : " -"}
+                                      </>
+                                    ) : (
+                                      "전날 데이터 없음"
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         ))}
                       </div>
