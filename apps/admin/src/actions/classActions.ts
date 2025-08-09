@@ -93,39 +93,10 @@ export async function getClassById(classId: string) {
     console.error("클래스 조회 실패:", error);
     throw new Error(`클래스 조회 실패: ${error.message}`);
   }
-
-  // 별도로 해당 클래스의 학생들 조회
-  const { data: users, error: usersError } = await supabase
-    .from("users")
-    .select(
-      `
-      id,
-      name,
-      phone,
-      grade,
-      school_name,
-      login_id,
-      created_at,
-      updated_at
-    `
-    )
-    .eq("class_id", classId);
-
-  if (usersError) {
-    console.error("학생 조회 실패:", usersError);
-    // 학생 조회 실패는 에러로 처리하지 않고 빈 배열로 처리
-  }
-
-  // 클래스 데이터에 학생 목록 추가
-  const result = {
-    ...data,
-    users: users || [],
+  return {
+    success: true,
+    data,
   };
-
-  console.log("getClassById result:", result);
-  console.log("조회된 학생 수:", result.users.length);
-
-  return result;
 }
 
 // READ: 모든 클래스 조회 (클라이언트, 매니저 정보 포함)
