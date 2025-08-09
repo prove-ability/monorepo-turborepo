@@ -11,7 +11,11 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
-import { getClasses, type Class } from "@/actions/classActions";
+import {
+  getClasses,
+  updateClassCurrentDay,
+  type ClassWithId,
+} from "@/actions/classActions";
 import { getStocks, type Stock } from "@/actions/stockActions";
 import {
   getClassStockPrices,
@@ -23,7 +27,7 @@ import GameDayManagement from "@/components/game/GameDayManagement";
 import PriceManagement from "@/components/game/PriceManagement";
 
 export default function GameManagementPage() {
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [classes, setClasses] = useState<ClassWithId[]>([]);
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [prices, setPrices] = useState<ClassStockPrice[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
@@ -100,6 +104,21 @@ export default function GameManagementPage() {
     }
   };
 
+  // 클래스의 current_day 업데이트
+  const handleUpdateCurrentDay = async (newDay: number) => {
+    if (!selectedClass) return;
+
+    try {
+      await updateClassCurrentDay(selectedClass, newDay);
+      // 클래스 목록 새로고침하여 current_day 반영
+      loadInitialData();
+      alert(`현재 Day가 ${newDay}로 업데이트되었습니다.`);
+    } catch (error) {
+      console.error("현재 Day 업데이트 실패:", error);
+      alert("현재 Day 업데이트에 실패했습니다.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -157,27 +176,79 @@ export default function GameManagementPage() {
                 </div>
               ) : gameProgress ? (
                 // 실제 데이터 표시
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">최대 Day:</span>
-                    <span className="ml-2 font-medium">
-                      {gameProgress.maxDay}
-                    </span>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">최대 Day:</span>
+                      <span className="ml-2 font-medium">
+                        {gameProgress.maxDay}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">총 뉴스:</span>
+                      <span className="ml-2 font-medium">
+                        {gameProgress.totalNews}개
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">
+                        총 가격 데이터:
+                      </span>
+                      <span className="ml-2 font-medium">
+                        {gameProgress.totalPrices}개
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">총 뉴스:</span>
-                    <span className="ml-2 font-medium">
-                      {gameProgress.totalNews}개
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">
-                      총 가격 데이터:
-                    </span>
-                    <span className="ml-2 font-medium">
-                      {gameProgress.totalPrices}개
-                    </span>
-                  </div>
+
+                  {/* 클래스별 current_day 조정 */}
+                  {(() => {
+                    const selectedClassData = classes.find(
+                      (c) => c.id === selectedClass
+                    );
+                    const currentDay = selectedClassData?.current_day || 1;
+
+                    return (
+                      <div className="border-t pt-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <span className="text-sm font-medium">
+                              클래스 현재 Day:
+                            </span>
+                            <span className="text-lg font-bold text-blue-600">
+                              Day {currentDay}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleUpdateCurrentDay(
+                                  Math.max(1, currentDay - 1)
+                                )
+                              }
+                              disabled={currentDay <= 1}
+                            >
+                              -1 Day
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleUpdateCurrentDay(currentDay + 1)
+                              }
+                            >
+                              +1 Day
+                            </Button>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          현재 Day는 이 클래스의 게임 진행도를 나타냅니다.
+                          학생들이 볼 수 있는 최대 Day를 제한합니다.
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
                 // 데이터가 없을 때

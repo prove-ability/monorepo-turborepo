@@ -15,6 +15,7 @@ interface ClassWithRelations {
   end_date?: string;
   manager_id: string;
   client_id: string;
+  current_day?: number;
   created_at: string;
   updated_at: string;
   clients: { id: string; name: string } | null;

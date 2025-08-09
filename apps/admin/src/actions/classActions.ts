@@ -15,6 +15,13 @@ const classSchema = z.object({
 
 export type Class = z.infer<typeof classSchema>;
 
+// 데이터베이스에서 조회된 클래스 타입 (id 포함)
+export type ClassWithId = Class & {
+  id: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
 // CREATE: 새로운 클래스 생성
 export async function createClass(formData: FormData) {
   const rawData = {
@@ -226,4 +233,24 @@ export async function getClientsAndManagers() {
     clients: clientsResult.data,
     managers: managersResult.data,
   };
+}
+
+// 클래스의 current_day 업데이트
+export async function updateClassCurrentDay(
+  classId: string,
+  currentDay: number
+) {
+  const supabase = await createClientByServerSide();
+
+  const { error } = await supabase
+    .from("classes")
+    .update({ current_day: currentDay })
+    .eq("id", classId);
+
+  if (error) {
+    throw new Error(`현재 Day 업데이트 실패: ${error.message}`);
+  }
+
+  revalidatePath("/game-management");
+  return { message: `현재 Day가 ${currentDay}로 업데이트되었습니다.` };
 }

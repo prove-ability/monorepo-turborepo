@@ -14,6 +14,7 @@ interface ClassWithRelations {
   end_date?: string;
   manager_id: string;
   client_id: string;
+  current_day?: number;
   created_at: string;
   updated_at: string;
   clients: { id: string; name: string } | null;
@@ -83,6 +84,12 @@ export function ClassListItem({
               {new Date(classItem.end_date).toLocaleDateString("ko-KR")}
             </p>
           )}
+          <p>
+            <span className="font-medium">현재 Day:</span>{" "}
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+              Day {classItem.current_day || 1}
+            </span>
+          </p>
         </div>
       </div>
 
