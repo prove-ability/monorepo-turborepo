@@ -5,6 +5,7 @@ import { Button } from "@repo/ui";
 import { ArrowLeft, Search, Users, Calendar, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getUsersByClass } from "@/actions/userActions";
+import { StudentBulkUpload } from "./StudentBulkUpload";
 
 interface ClassData {
   id: string;
@@ -53,23 +54,25 @@ export function ClassDetailClient({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 학생 목록 조회 함수 (재사용)
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const studentsData = await getUsersByClass(classId);
+      setStudents(studentsData.data);
+    } catch (err) {
+      console.error("학생 목록 조회 실패:", err);
+      setError("학생 목록을 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 클라이언트에서 학생 목록 조회
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const studentsData = await getUsersByClass(classId);
-        console.log("studentsData:", studentsData);
-        setStudents(studentsData.data);
-      } catch (err) {
-        console.error("학생 목록 조회 실패:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchStudents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
   // 검색 기능
@@ -147,10 +150,17 @@ export function ClassDetailClient({
       {/* 학생 목록 섹션 */}
       <div className="bg-white rounded-lg shadow-md">
         <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 gap-3">
             <h2 className="text-xl font-semibold text-gray-900">
               등록된 학생 ({filteredStudents.length}명)
             </h2>
+            <StudentBulkUpload
+              classId={classId}
+              clientId={classData.client_id}
+              onCompleted={async () => {
+                await fetchStudents();
+              }}
+            />
           </div>
 
           {/* 검색 입력 */}

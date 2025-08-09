@@ -13,6 +13,74 @@ interface CreateUserData {
   class_id: string;
 }
 
+// BULK CREATE: 여러 사용자 일괄 생성
+export async function bulkCreateUsers(
+  users: Array<{
+    name: string;
+    phone: string;
+    grade: number;
+    school_name: string;
+    client_id: string;
+    class_id: string;
+  }>
+) {
+  const adminSupabase = await createAdminClient();
+
+  let successCount = 0;
+  let failureCount = 0;
+  const errors: string[] = [];
+
+  for (const u of users) {
+    try {
+      // zod 스키마 재사용을 위해 개별 createUser와 동일한 검증을 수행
+      // 간단 검증: 필수 필드 체크
+      if (!u.name || !u.phone || !u.school_name || !u.class_id) {
+        throw new Error("필수 필드 누락");
+      }
+
+      const loginId = await generateLoginId();
+      const password = generatePassword();
+      const email = `${loginId}@student.local`;
+
+      const { data: authData, error: signUpError } =
+        await adminSupabase.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+        });
+
+      if (signUpError || !authData.user) {
+        throw new Error(`인증 사용자 생성 실패: ${signUpError?.message}`);
+      }
+
+      const { error: insertError } = await adminSupabase.from("users").insert({
+        user_id: authData.user.id,
+        login_id: loginId,
+        password: password,
+        name: u.name,
+        phone: u.phone,
+        grade: u.grade,
+        school_name: u.school_name,
+        class_id: u.class_id,
+      });
+
+      if (insertError) {
+        // Auth 사용자 롤백
+        await adminSupabase.auth.admin.deleteUser(authData.user.id);
+        throw new Error(`사용자 정보 저장 실패: ${insertError.message}`);
+      }
+
+      successCount++;
+    } catch (e: any) {
+      failureCount++;
+      errors.push(e?.message || "알 수 없는 오류");
+    }
+  }
+
+  revalidatePath("/classes");
+  return { successCount, failureCount, errors };
+}
+
 interface UpdateUserData extends Partial<CreateUserData> {}
 
 // 자동 로그인 ID 생성 함수 (중복 방지 - Auth 시스템 포함)

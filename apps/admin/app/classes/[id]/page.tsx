@@ -20,7 +20,7 @@ export default async function ClassDetailPage({
 
     return (
       <div className="container mx-auto px-4 py-8">
-        <ClassDetailClient classData={classData} classId={id} />
+        <ClassDetailClient classData={classData.data} classId={id} />
       </div>
     );
   } catch (error) {
