@@ -10,6 +10,7 @@ const classSchema = z.object({
   end_date: z.string().optional().or(z.literal("")),
   manager_id: z.string().min(1, "매니저 선택은 필수입니다."),
   client_id: z.string().min(1, "클라이언트 선택은 필수입니다."),
+  current_day: z.number().min(1, "현재 Day는 1 이상이어야 합니다.").optional(),
 });
 
 export type Class = z.infer<typeof classSchema>;
