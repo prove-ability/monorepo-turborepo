@@ -5,7 +5,6 @@ import { Button } from "@repo/ui";
 import { deleteClass } from "@/actions/classActions";
 import { CreateUserModal } from "./create-user-modal";
 import { useRouter } from "next/navigation";
-import { Eye } from "lucide-react";
 
 interface ClassWithRelations {
   id: string;
