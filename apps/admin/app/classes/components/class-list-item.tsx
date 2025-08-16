@@ -36,7 +36,11 @@ export function ClassListItem({
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
 
   const handleDeleteClass = async (classId: string, className: string) => {
-    if (!confirm(`"${className}" 수업을 삭제하시겠습니까?`)) {
+    if (
+      !confirm(
+        `"${className}" 수업을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.\n해당 수업에 속한 뉴스와 주식 가격 정보도 함께 삭제됩니다.`
+      )
+    ) {
       return;
     }
 

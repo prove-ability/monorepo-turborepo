@@ -175,16 +175,45 @@ export async function updateClass(classId: string, formData: FormData) {
 
 // DELETE: 클래스 삭제
 export async function deleteClass(classId: string) {
-  const supabase = await createClientByServerSide();
+  // 관리자 권한으로 실행 (RLS 우회)
+  const supabase = await createAdminClient();
+  // 1) 먼저 의존 데이터 삭제: 주식 가격 -> 뉴스 -> 클래스
+  const { error: priceError } = await supabase
+    .from("class_stock_prices")
+    .delete()
+    .eq("class_id", classId);
 
-  const { error } = await supabase.from("classes").delete().eq("id", classId);
-
-  if (error) {
-    return { error: { _form: [error.message] } };
+  if (priceError) {
+    console.error("클래스 관련 주식 가격 삭제 실패:", priceError);
+    return { error: { _form: [priceError.message] } };
   }
 
+  const { error: newsError } = await supabase
+    .from("news")
+    .delete()
+    .eq("class_id", classId);
+
+  if (newsError) {
+    console.error("클래스 관련 뉴스 삭제 실패:", newsError);
+    return { error: { _form: [newsError.message] } };
+  }
+
+  // 2) 마지막으로 클래스 삭제
+  const { error: classError } = await supabase
+    .from("classes")
+    .delete()
+    .eq("id", classId);
+
+  if (classError) {
+    console.error("클래스 삭제 실패:", classError);
+    return { error: { _form: [classError.message] } };
+  }
+
+  // 관련 경로 재검증
   revalidatePath("/admin/classes");
-  return { message: "수업이 삭제되었습니다." };
+  // 필요한 경우 게임 관리 화면도 재검증하세요.
+  // revalidatePath("/game-management");
+  return { message: "수업 및 관련 뉴스/주식 가격 정보가 삭제되었습니다." };
 }
 
 // 클라이언트와 매니저 목록 조회 (폼에서 사용)
