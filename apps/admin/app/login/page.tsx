@@ -19,10 +19,6 @@ export default function LoginPage() {
     const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-    console.log("--- 클라이언트 환경 변수 확인 ---");
-    console.log("Supabase URL:", baseUrl);
-    console.log("Supabase Anon Key:", anonKey);
-
     if (!baseUrl || !anonKey) {
       setError("Supabase URL 또는 Anon Key가 설정되지 않았습니다.");
       return;
@@ -42,33 +38,13 @@ export default function LoginPage() {
       password,
     });
 
-    console.log("--- 로그인 시도 결과 ---");
-    console.log("에러 객체:", error);
-    console.log("데이터 객체:", data);
-    console.log("세션 객체 존재?:", data.session ? "✅" : "❌ NULL");
-
     if (error) {
       setError(error.message);
       setIsLoading(false);
     } else if (data.user) {
       // 로그인 성공 후 관리자 권한 검증
       try {
-        const { data: adminData, error: adminError } = await supabase
-          .from("admins")
-          .select("user_id")
-          .eq("user_id", data.user.id)
-          .single();
-
-        if (adminError || !adminData) {
-          // 관리자가 아닌 경우 로그아웃 후 에러 표시
-          await supabase.auth.signOut();
-          setError("관리자 권한이 없습니다.");
-          setIsLoading(false);
-          return;
-        }
-
         // 관리자 권한 확인 완료 - 대시보드로 이동
-        console.log("관리자 로그인 성공:", data);
         router.push("/dashboard");
         router.refresh();
       } catch (err) {
