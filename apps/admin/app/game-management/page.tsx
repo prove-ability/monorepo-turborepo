@@ -32,6 +32,7 @@ export default function GameManagementPage() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [prices, setPrices] = useState<ClassStockPrice[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const [gameProgress, setGameProgress] = useState<{
     maxDay: number;
@@ -69,7 +70,19 @@ export default function GameManagementPage() {
       setStocks(stocksData);
 
       if (classesData.length > 0) {
-        setSelectedClass(classesData[0].id);
+        // 기본 선택: 첫 고객사 및 해당 고객사의 첫 클래스
+        const firstClientId = (classesData[0] as any)?.clients?.id as
+          | string
+          | undefined;
+        if (firstClientId) {
+          setSelectedClientId(firstClientId);
+          const firstClassOfClient = classesData.find(
+            (c) => (c as any)?.clients?.id === firstClientId
+          );
+          setSelectedClass(firstClassOfClient?.id || classesData[0].id);
+        } else {
+          setSelectedClass(classesData[0].id);
+        }
       }
     } catch (error) {
       console.error("데이터 로드 실패:", error);
@@ -77,6 +90,26 @@ export default function GameManagementPage() {
       setLoading(false);
     }
   };
+
+  // 선택된 고객사 변경 시, 해당 고객사의 첫 클래스를 자동 선택
+  useEffect(() => {
+    if (!selectedClientId) return;
+    const classesOfClient = classes.filter(
+      (c) => (c as any)?.clients?.id === selectedClientId
+    );
+    if (classesOfClient.length === 0) {
+      // 해당 고객사에 클래스가 없으면 선택 해제
+      setSelectedClass("");
+      return;
+    }
+    const currentSelectedBelongs = classesOfClient.some(
+      (c) => c.id === selectedClass
+    );
+    if (!currentSelectedBelongs) {
+      const first = classesOfClient[0];
+      if (first) setSelectedClass(first.id);
+    }
+  }, [selectedClientId, classes]);
 
   const loadGameProgress = async () => {
     if (!selectedClass) return;
@@ -189,6 +222,42 @@ export default function GameManagementPage() {
         <Button onClick={refreshData}>새로고침</Button>
       </div>
 
+      {/* 고객사 선택 */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>고객사 선택</CardTitle>
+          <CardDescription>고객사를 선택하면 해당 고객사의 클래스만 표시됩니다</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {(() => {
+              // classes 목록에서 고객사를 유일값으로 도출
+              const map = new Map<string, { id: string; name: string }>();
+              classes.forEach((c) => {
+                const client = (c as any)?.clients as
+                  | { id: string; name: string }
+                  | undefined;
+                if (client?.id && !map.has(client.id)) {
+                  map.set(client.id, client);
+                }
+              });
+              const clientList = Array.from(map.values());
+              return clientList.map((client) => (
+                <Button
+                  key={client.id}
+                  variant={
+                    selectedClientId === client.id ? "default" : "outline"
+                  }
+                  onClick={() => setSelectedClientId(client.id)}
+                >
+                  {client.name}
+                </Button>
+              ));
+            })()}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 클래스 선택 */}
       <Card className="mb-6">
         <CardHeader>
@@ -197,13 +266,27 @@ export default function GameManagementPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {classes.map((cls) => (
+            {(selectedClientId
+              ? classes.filter(
+                  (c) => (c as any)?.clients?.id === selectedClientId
+                )
+              : classes
+            ).map((cls) => (
               <Button
                 key={cls.id}
                 variant={selectedClass === cls.id ? "default" : "outline"}
                 onClick={() => setSelectedClass(cls.id)}
               >
-                {cls.name}
+                <div className="flex flex-col items-start leading-tight">
+                  <span>{cls.name}</span>
+                  {(() => {
+                    const anyCls = cls as any;
+                    const clientName = anyCls?.clients?.name as string | undefined;
+                    return clientName ? (
+                      <span className="text-[10px] text-muted-foreground">{clientName}</span>
+                    ) : null;
+                  })()}
+                </div>
               </Button>
             ))}
           </div>
