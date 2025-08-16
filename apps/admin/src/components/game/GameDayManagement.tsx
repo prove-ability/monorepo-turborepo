@@ -12,15 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Plus, Calendar } from "lucide-react";
 import { createGameDay, type GameData } from "@/actions/gameActions";
 import { type Stock } from "@/actions/stockActions";
@@ -30,7 +21,6 @@ import {
   deleteNews,
   type News,
 } from "@/actions/newsActions";
-import StockPriceInput, { type StockPriceInputData } from "./StockPriceInput";
 
 interface GameDayManagementProps {
   selectedClass: string;
@@ -51,8 +41,6 @@ export default function GameDayManagement({
   stocks,
   onRefresh,
 }: GameDayManagementProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [newsLoading, setNewsLoading] = useState(false);
   const [deletingNewsId, setDeletingNewsId] = useState<string | null>(null);
   const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
@@ -142,42 +130,6 @@ export default function GameDayManagement({
       }
 
       setNewsItems(updated);
-    }
-  };
-
-  const handleCreateGameDay = async () => {
-    if (!selectedClass) {
-      alert("클래스를 선택해주세요.");
-      return;
-    }
-
-    // 뉴스 유효성 검사
-    const validNews = newsItems.filter(
-      (news) => news.title.trim() && news.content.trim()
-    );
-    if (validNews.length === 0) {
-      alert("최소 하나의 뉴스를 작성해주세요.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const gameData: GameData = {
-        class_id: selectedClass,
-        day: selectedDay,
-        stocks: [], // 빈 배열로 설정 (주식 가격은 다른 탭에서 관리)
-        news: validNews,
-      };
-
-      await createGameDay(gameData);
-      resetForm();
-      onRefresh();
-      alert("뉴스가 성공적으로 저장되었습니다!");
-    } catch (error) {
-      console.error("뉴스 저장 실패:", error);
-      alert("뉴스 저장에 실패했습니다.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -271,11 +223,6 @@ export default function GameDayManagement({
     } finally {
       setSavingNewsIndex(null);
     }
-  };
-
-  const openDialog = () => {
-    resetForm();
-    setIsDialogOpen(true);
   };
 
   if (!selectedClass) {

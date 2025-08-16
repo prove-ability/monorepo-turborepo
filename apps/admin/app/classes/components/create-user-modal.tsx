@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@repo/ui";
 import { createUser } from "@/actions/userActions";
 import type { CreateUserData } from "@/types/user";
@@ -56,6 +56,7 @@ export function CreateUserModal({
         (e.target as HTMLFormElement).reset();
       }
     } catch (error) {
+      console.error("학생 등록 중 오류:", error);
       alert("학생 등록 중 오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);

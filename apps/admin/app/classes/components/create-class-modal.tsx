@@ -56,6 +56,7 @@ export function CreateClassModal({
       setClients(data.clients);
       setManagers(data.managers);
     } catch (error) {
+      console.error("Error loading clients and managers:", error);
       alert("데이터를 불러오는 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
@@ -71,7 +72,6 @@ export function CreateClassModal({
     try {
       const result = await createClass(formData);
       if (result.error) {
-        console.log("result", result);
         if ("_form" in result.error) {
           alert("생성 실패: " + result.error._form?.[0]);
         } else {
@@ -87,6 +87,7 @@ export function CreateClassModal({
         setSelectedClientId("");
       }
     } catch (error) {
+      console.error("Error creating class:", error);
       alert("생성 중 오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);

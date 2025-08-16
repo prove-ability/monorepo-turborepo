@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus } from "lucide-react";
 import {
   getClasses,
   updateClassCurrentDay,
@@ -23,7 +22,6 @@ import {
   getGameProgress,
   type ClassStockPrice,
 } from "@/actions/gameActions";
-
 import GameDayManagement from "@/components/game/GameDayManagement";
 import PriceManagement from "@/components/game/PriceManagement";
 
@@ -146,18 +144,18 @@ export default function GameManagementPage() {
 
   // 현재 선택된 클래스의 current_day 가져오기
   const getCurrentDay = () => {
-    const selectedClassData = classes.find(c => c.id === selectedClass);
+    const selectedClassData = classes.find((c) => c.id === selectedClass);
     return selectedClassData?.current_day || 1;
   };
 
   // Day 감소 (바로 실행)
   const handleDayDecrease = async () => {
     if (!selectedClass) return;
-    
+
     const currentDay = getCurrentDay();
     const newDay = Math.max(1, currentDay - 1);
     if (newDay === currentDay) return; // 이미 최소값인 경우
-    
+
     try {
       await updateClassCurrentDay(selectedClass, newDay);
       loadInitialData();
@@ -171,7 +169,7 @@ export default function GameManagementPage() {
   // Day 증가 모달 열기 (+1 Day만)
   const handleDayIncreaseRequest = () => {
     if (!selectedClass) return;
-    
+
     const newDay = getCurrentDay() + 1;
     setDayAdjustmentModal({
       isOpen: true,
@@ -226,7 +224,9 @@ export default function GameManagementPage() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>고객사 선택</CardTitle>
-          <CardDescription>고객사를 선택하면 해당 고객사의 클래스만 표시됩니다</CardDescription>
+          <CardDescription>
+            고객사를 선택하면 해당 고객사의 클래스만 표시됩니다
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
@@ -281,9 +281,13 @@ export default function GameManagementPage() {
                   <span>{cls.name}</span>
                   {(() => {
                     const anyCls = cls as any;
-                    const clientName = anyCls?.clients?.name as string | undefined;
+                    const clientName = anyCls?.clients?.name as
+                      | string
+                      | undefined;
                     return clientName ? (
-                      <span className="text-[10px] text-muted-foreground">{clientName}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {clientName}
+                      </span>
                     ) : null;
                   })()}
                 </div>
@@ -449,7 +453,7 @@ export default function GameManagementPage() {
         classId={selectedClass}
         currentDay={getCurrentDay()}
         newDay={dayAdjustmentModal.newDay}
-        className={classes.find(c => c.id === selectedClass)?.name || ""}
+        className={classes.find((c) => c.id === selectedClass)?.name || ""}
         stocks={stocks}
       />
     </div>

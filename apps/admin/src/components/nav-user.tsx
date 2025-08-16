@@ -7,7 +7,6 @@ import {
   IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -31,7 +30,6 @@ import { logoutUser } from "@/actions/userActions";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { user, isLoading } = useUser();

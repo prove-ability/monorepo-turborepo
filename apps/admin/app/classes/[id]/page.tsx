@@ -3,9 +3,9 @@ import { getClassById } from "@/actions/classActions";
 import { ClassDetailClient } from "./components/class-detail-client";
 
 interface ClassDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ClassDetailPage({

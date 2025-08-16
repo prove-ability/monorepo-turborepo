@@ -25,12 +25,7 @@ export function CreateClientModal({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<CreateClientInputs>();
+  const { register, handleSubmit, reset } = useForm<CreateClientInputs>();
 
   const onSubmit: SubmitHandler<CreateClientInputs> = async (data) => {
     setIsLoading(true);
@@ -45,8 +40,6 @@ export function CreateClientModal({
 
     try {
       const result = await createClientAction(null, formData);
-
-      console.log("result", result);
 
       if (result.success) {
         // 성공 메시지 표시

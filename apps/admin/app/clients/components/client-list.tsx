@@ -1,8 +1,7 @@
 "use client";
 
-import { createManager } from "@/actions/managerActions";
 import { deleteClientAction } from "@/actions/clientActions";
-import { useState, FormEvent } from "react";
+import { useState } from "react";
 import { type Client } from "@/types/client";
 import { type Manager } from "@/types/manager";
 import { CreateClientModal } from "@/components/dialog/create-client-modal";
@@ -79,6 +78,7 @@ export function ClientList({
         alert("삭제 실패: " + result.message);
       }
     } catch (error) {
+      console.error("삭제 중 오류가 발생했습니다.", error);
       alert("삭제 중 오류가 발생했습니다.");
     } finally {
       setDeletingClientId(null);

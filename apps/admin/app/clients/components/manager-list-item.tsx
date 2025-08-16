@@ -1,6 +1,6 @@
 import { type Manager } from "@/types/manager";
 import { Button } from "@repo/ui";
-import { updateManager, deleteManager } from "@/actions/managerActions";
+import { deleteManager } from "@/actions/managerActions";
 import { useState } from "react";
 
 interface ManagerListItemProps {
@@ -31,6 +31,7 @@ export function ManagerListItem({
         handleManagerDeleted(manager.id);
       }
     } catch (error) {
+      console.error("매니저 삭제 중 오류:", error);
       alert("삭제 중 오류가 발생했습니다.");
     } finally {
       setIsDeleting(false);

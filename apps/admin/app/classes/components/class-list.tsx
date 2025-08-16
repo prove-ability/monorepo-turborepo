@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@repo/ui";
-import type { Class } from "@/types/class";
 import { CreateClassModal } from "./create-class-modal";
 import { EditClassModal } from "./edit-class-modal";
 import { ClassListItem } from "./class-list-item";
-import { deleteClass } from "@/actions/classActions";
 
 interface ClassWithRelations {
   id: string;
@@ -32,7 +30,6 @@ export function ClassList({ initialClasses }: ClassListProps) {
   const [editingClass, setEditingClass] = useState<ClassWithRelations | null>(
     null
   );
-  const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
 
   const handleClassCreated = (newClass: ClassWithRelations) => {
     setClasses((prev) => [newClass, ...prev]);

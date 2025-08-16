@@ -53,6 +53,7 @@ export function ClassListItem({
         onClassUpdated();
       }
     } catch (error) {
+      console.error("Error deleting class:", error);
       alert("삭제 중 오류가 발생했습니다.");
     } finally {
       setIsDeleting(false);

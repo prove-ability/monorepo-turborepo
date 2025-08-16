@@ -80,6 +80,7 @@ export function EditClassModal({
       setClients(data.clients);
       setManagers(data.managers);
     } catch (error) {
+      console.error(error);
       alert("데이터를 불러오는 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
@@ -107,6 +108,7 @@ export function EditClassModal({
         setIsOpen(false);
       }
     } catch (error) {
+      console.error(error);
       alert("수정 중 오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);
