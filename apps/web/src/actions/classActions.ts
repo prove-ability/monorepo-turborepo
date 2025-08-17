@@ -7,7 +7,7 @@ export async function getClassInfo(classId: string) {
 
   const { data: classInfo, error } = await supabase
     .from("classes")
-    .select("current_day, initial_balance")
+    .select("current_day")
     .eq("id", classId)
     .single();
 

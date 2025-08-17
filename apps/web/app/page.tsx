@@ -1,12 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getClassInfo } from "@/actions/classActions";
 import HomeClient from "@/components/HomeClient";
 
 export default async function Home() {
   const supabase = await createClient();
 
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
 
   if (!authUser) {
     return redirect("/login");
@@ -23,13 +24,7 @@ export default async function Home() {
     return redirect("/login");
   }
 
-  const classInfo = await getClassInfo(user.class_id);
+  console.log(user);
 
-  const homeData = {
-    currentDay: classInfo?.current_day || 1,
-    totalAssets: classInfo?.initial_balance || 0,
-    availableToOrder: classInfo?.initial_balance || 0,
-  };
-
-  return <HomeClient user={user} homeData={homeData} />;
+  return <HomeClient user={user} />;
 }

@@ -181,6 +181,23 @@ export async function updateNickname(
   }
 }
 
+export async function getWallet(userId: string) {
+  const supabase = await createClientByServerSide();
+
+  const { data: wallet, error } = await supabase
+    .from("wallets")
+    .select("balance")
+    .eq("user_id", userId)
+    .single();
+
+  if (error) {
+    console.error("지갑 정보 조회 실패:", error);
+    return null;
+  }
+
+  return wallet;
+}
+
 export async function logoutStudent() {
   const supabase = await createClientByServerSide();
   await supabase.auth.signOut();
