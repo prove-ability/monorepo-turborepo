@@ -70,6 +70,18 @@ export async function bulkCreateUsers(
         throw new Error(`사용자 정보 저장 실패: ${insertError.message}`);
       }
 
+      // 지갑 생성
+      const { error: walletError } = await adminSupabase
+        .from("wallets")
+        .insert({ user_id: authData.user.id });
+
+      if (walletError) {
+        // 사용자 정보 및 Auth 사용자 롤백
+        await adminSupabase.from("users").delete().eq("user_id", authData.user.id);
+        await adminSupabase.auth.admin.deleteUser(authData.user.id);
+        throw new Error(`지갑 생성 실패: ${walletError.message}`);
+      }
+
       successCount++;
     } catch (e: any) {
       failureCount++;
@@ -210,6 +222,22 @@ export async function createUser(
       await adminSupabase.auth.admin.deleteUser(authData.user.id);
       return {
         error: { _form: [`사용자 정보 저장 실패: ${insertError.message}`] },
+      };
+    }
+
+    // 지갑 생성
+    const { error: walletError } = await adminSupabase
+      .from("wallets")
+      .insert({ user_id: authData.user.id });
+
+    if (walletError) {
+      // 사용자 정보 및 Auth 사용자 롤백
+      await adminSupabase.from("users").delete().eq("user_id", authData.user.id);
+      await adminSupabase.auth.admin.deleteUser(authData.user.id);
+      return {
+        error: {
+          _form: [`지갑 생성에 실패했습니다: ${walletError.message}`],
+        },
       };
     }
 
