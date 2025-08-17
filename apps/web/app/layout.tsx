@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Providers from "./providers";
+import { BottomNav } from "@/components/BottomNav";
 
 import "./globals.css";
 
@@ -26,9 +27,12 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} h-screen max-w-4xl mx-auto p-4`}
+        className={`${geistSans.variable} ${geistMono.variable} h-screen max-w-xl mx-auto bg-gray-50`}
       >
-        <Providers>{children}</Providers>
+        <div className="p-4 h-full bg-white">
+          <Providers>{children}</Providers>
+        </div>
+        <BottomNav />
       </body>
     </html>
   );

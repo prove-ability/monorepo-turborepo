@@ -39,9 +39,8 @@ export default function HomeClient({ user }: HomeClientProps) {
     fetchData();
   }, [user.class_id, user.user_id]);
   return (
-    <div className="w-full max-w-md mx-auto bg-white">
-      <div className="p-4 space-y-4 pb-20">
-        {" "}
+    <div className="w-full bg-white">
+      <div className="space-y-4 pb-20">
         {/* 하단 네비게이션 높이만큼 패딩 추가 */}
         {/* 상단 알림 */}
         <div className="bg-blue-900 text-white p-3 rounded-lg text-sm">
@@ -76,34 +75,6 @@ export default function HomeClient({ user }: HomeClientProps) {
         </div>
       </div>
 
-      {/* 하단 네비게이션 */}
-      <div className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto bg-white border-t">
-        <div className="flex justify-around p-2">
-          <button className="text-center text-gray-600">
-            <span className="block text-2xl">🏠</span>
-            <span className="text-xs">홈</span>
-          </button>
-          <button className="text-center text-gray-600">
-            <span className="block text-2xl">📰</span>
-            <span className="text-xs">뉴스</span>
-          </button>
-          <button className="text-center text-blue-600 font-bold">
-            <span className="block text-2xl">📈</span>
-            <span className="text-xs">투자</span>
-          </button>
-          <button className="text-center text-gray-600">
-            <span className="block text-2xl">🏆</span>
-            <span className="text-xs">랭킹</span>
-          </button>
-          <button
-            onClick={() => logoutStudent()}
-            className="text-center text-gray-600"
-          >
-            <span className="block text-2xl">⚙️</span>
-            <span className="text-xs">로그아웃</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
