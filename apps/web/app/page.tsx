@@ -24,7 +24,5 @@ export default async function Home() {
     return redirect("/login");
   }
 
-  console.log(user);
-
   return <HomeClient user={user} />;
 }
