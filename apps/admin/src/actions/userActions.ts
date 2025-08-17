@@ -77,7 +77,10 @@ export async function bulkCreateUsers(
 
       if (walletError) {
         // 사용자 정보 및 Auth 사용자 롤백
-        await adminSupabase.from("users").delete().eq("user_id", authData.user.id);
+        await adminSupabase
+          .from("users")
+          .delete()
+          .eq("user_id", authData.user.id);
         await adminSupabase.auth.admin.deleteUser(authData.user.id);
         throw new Error(`지갑 생성 실패: ${walletError.message}`);
       }
@@ -119,8 +122,6 @@ async function generateLoginId(): Promise<string> {
       existingIds.add(loginId);
     }
   });
-
-  console.log("existingIds", existingIds);
 
   // user001부터 시작하여 중복되지 않는 ID 찾기
   // 더 높은 번호부터 시작하여 기존 사용자와 충돌 방지
@@ -232,7 +233,10 @@ export async function createUser(
 
     if (walletError) {
       // 사용자 정보 및 Auth 사용자 롤백
-      await adminSupabase.from("users").delete().eq("user_id", authData.user.id);
+      await adminSupabase
+        .from("users")
+        .delete()
+        .eq("user_id", authData.user.id);
       await adminSupabase.auth.admin.deleteUser(authData.user.id);
       return {
         error: {
