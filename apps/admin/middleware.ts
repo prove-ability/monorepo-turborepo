@@ -7,11 +7,6 @@ export async function middleware(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  // ✅ 이 로그를 추가해서 확인!
-  console.log("--- 미들웨어 실행 ---");
-  console.log("Supabase URL 로드됨?:", baseUrl ? "✅" : "❌ UNDEFINED");
-  console.log("Supabase Key 로드됨?:", anonKey ? "✅" : "❌ UNDEFINED");
-
   return await updateSessionByAdmin(baseUrl, anonKey, request);
 }
 

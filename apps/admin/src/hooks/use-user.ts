@@ -5,7 +5,7 @@ import { type User } from "@supabase/supabase-js";
 import { createClientByClientSide } from "@repo/utils";
 
 export function useUser() {
-  const supabase = createClientByClientSide();
+  const supabase = createClientByClientSide("admin");
 
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);

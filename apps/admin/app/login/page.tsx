@@ -35,7 +35,7 @@ export default function LoginPage() {
       return;
     }
 
-    const supabase = createClientByClientSide();
+    const supabase = createClientByClientSide("admin");
 
     // 학생 계정 이메일 형식 차단
     if (email.endsWith("@student.local")) {

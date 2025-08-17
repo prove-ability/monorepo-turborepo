@@ -78,16 +78,21 @@ export async function bulkCreateUsers(
         .single();
 
       if (classError || !classData) {
-        await adminSupabase.from("users").delete().eq("user_id", authData.user.id);
+        await adminSupabase
+          .from("users")
+          .delete()
+          .eq("user_id", authData.user.id);
         await adminSupabase.auth.admin.deleteUser(authData.user.id);
         throw new Error(`클래스 정보 조회 실패: ${classError?.message}`);
       }
 
       // 지갑 생성
-      const { error: walletError } = await adminSupabase.from("wallets").insert({
-        user_id: authData.user.id,
-        balance: classData.starting_balance,
-      });
+      const { error: walletError } = await adminSupabase
+        .from("wallets")
+        .insert({
+          user_id: authData.user.id,
+          balance: classData.starting_balance,
+        });
 
       if (walletError) {
         // 사용자 정보 및 Auth 사용자 롤백
@@ -248,7 +253,10 @@ export async function createUser(
       .single();
 
     if (classError || !classData) {
-      await adminSupabase.from("users").delete().eq("user_id", authData.user.id);
+      await adminSupabase
+        .from("users")
+        .delete()
+        .eq("user_id", authData.user.id);
       await adminSupabase.auth.admin.deleteUser(authData.user.id);
       return {
         error: {
