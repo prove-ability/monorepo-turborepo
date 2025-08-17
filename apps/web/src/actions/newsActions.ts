@@ -2,13 +2,14 @@
 
 import { createWebClient } from "@/lib/supabase/server";
 
-export async function getNewsByClass(classId: string) {
+export async function getNewsByDay(classId: string, day: number) {
   const supabase = await createWebClient();
 
   const { data: newsData, error: newsError } = await supabase
     .from("news")
     .select("id, content, related_stock_ids")
     .eq("class_id", classId)
+    .eq("day", day)
     .order("created_at", { ascending: false });
 
   if (newsError) {

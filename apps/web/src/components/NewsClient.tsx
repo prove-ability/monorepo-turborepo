@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 
 import { NewsItem } from "@/types/news";
-import { createWebClientByClientSide } from "@/lib/supabase/client";
+import { getNewsByDay } from "@/actions/newsActions";
 import { useEffect, useState } from "react";
 
 interface ClassData {
@@ -26,42 +26,15 @@ export default function NewsClient({ classData }: NewsClientProps) {
   useEffect(() => {
     const fetchNews = async () => {
       setLoading(true);
-      const supabase = createWebClientByClientSide();
-      const { data: newsData, error: newsError } = await supabase
-        .from("news")
-        .select("*")
-        .eq("class_id", classData.id)
-        .eq("day", classData.current_day)
-        .order("created_at", { ascending: false });
-
-      if (newsError) {
-        console.error("뉴스 조회 실패:", newsError);
+      try {
+        const newsData = await getNewsByDay(classData.id, classData.current_day);
+        setNews(newsData);
+      } catch (error) {
+        console.error("뉴스 조회 실패:", error);
         setNews([]);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const newsWithTags = await Promise.all(
-        newsData.map(async (item: any) => {
-          let tags: string[] = [];
-          if (item.related_stock_ids && item.related_stock_ids.length > 0) {
-            const { data: stocks, error: stocksError } = await supabase
-              .from("stocks")
-              .select("name")
-              .in("id", item.related_stock_ids);
-
-            if (stocksError) {
-              console.error("관련 주식 조회 실패:", stocksError);
-            } else {
-              tags = stocks.map((stock: any) => `#${stock.name}`);
-            }
-          }
-          return { ...item, tags, id: item.id };
-        })
-      );
-
-      setNews(newsWithTags);
-      setLoading(false);
     };
 
     fetchNews();
