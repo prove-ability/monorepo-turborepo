@@ -74,7 +74,6 @@ export default function HomeClient({ user }: HomeClientProps) {
           </div>
         </div>
       </div>
-
     </div>
   );
 }
