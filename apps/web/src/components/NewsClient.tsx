@@ -8,11 +8,17 @@ import { NewsItem } from "@/types/news";
 import { createWebClientByClientSide } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 
-interface NewsClientProps {
-  classId: string;
+interface ClassData {
+  id: string;
+  current_day: number;
+  // 다른 클래스 속성들...
 }
 
-export default function NewsClient({ classId }: NewsClientProps) {
+interface NewsClientProps {
+  classData: ClassData;
+}
+
+export default function NewsClient({ classData }: NewsClientProps) {
   const router = useRouter();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +30,8 @@ export default function NewsClient({ classId }: NewsClientProps) {
       const { data: newsData, error: newsError } = await supabase
         .from("news")
         .select("*")
-        .eq("class_id", classId)
+        .eq("class_id", classData.id)
+        .eq("day", classData.current_day)
         .order("created_at", { ascending: false });
 
       if (newsError) {
@@ -58,7 +65,7 @@ export default function NewsClient({ classId }: NewsClientProps) {
     };
 
     fetchNews();
-  }, [classId]);
+  }, [classData]);
 
   if (loading) {
     return (

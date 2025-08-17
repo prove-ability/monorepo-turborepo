@@ -24,5 +24,16 @@ export default async function NewsPage() {
     return <div>뉴스 정보를 불러올 수 없습니다.</div>;
   }
 
-  return <NewsClient classId={user.class_id} />;
+  const { data: classData, error: classError } = await supabase
+    .from("classes")
+    .select("*")
+    .eq("id", user.class_id)
+    .single();
+
+  if (classError || !classData) {
+    console.error("클래스 정보 조회 실패:", classError);
+    return <div>뉴스 정보를 불러올 수 없습니다.</div>;
+  }
+
+  return <NewsClient classData={classData} />;
 }
