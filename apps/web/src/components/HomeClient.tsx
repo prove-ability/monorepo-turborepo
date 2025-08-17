@@ -67,9 +67,6 @@ export default function HomeClient({ user }: HomeClientProps) {
         <div className="space-y-4 bg-blue-900 p-5 rounded-2xl shadow-sm">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-white">내 계좌</h2>
-            <button className="text-sm font-semibold text-blue-300 flex items-center gap-1">
-              분석 <ChevronRight className="w-4 h-4" />
-            </button>
           </div>
           <p className="text-4xl font-bold text-white pt-2">
             {walletInfo?.balance.toLocaleString() || 0}원
@@ -95,8 +92,12 @@ export default function HomeClient({ user }: HomeClientProps) {
           <h2 className="text-xl font-bold text-gray-800">보유 종목</h2>
           <div className="p-6 bg-gray-50 rounded-2xl flex items-center justify-between">
             <div>
-              <p className="text-lg text-gray-600 font-medium">보유 종목이 없어요</p>
-              <p className="text-base text-gray-400 mt-1">뉴스를 읽고 투자해 보세요</p>
+              <p className="text-lg text-gray-600 font-medium">
+                보유 종목이 없어요
+              </p>
+              <p className="text-base text-gray-400 mt-1">
+                뉴스를 읽고 투자해 보세요
+              </p>
             </div>
             <button className="bg-blue-900 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition-transform active:scale-95 text-sm shrink-0">
               뉴스 보러가기 <ArrowRight className="w-4 h-4" />
