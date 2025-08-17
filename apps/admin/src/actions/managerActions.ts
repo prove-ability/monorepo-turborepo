@@ -29,11 +29,20 @@ export async function createManager(clientId: string, formData: FormData) {
   }
 
   const supabase = await createClientByServerSide();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: { _form: ["사용자 인증에 실패했습니다. 다시 로그인해주세요."] } };
+  }
+
   const { error, data } = await supabase
     .from("managers")
     .insert({
       ...validation.data,
       client_id: clientId, // 어떤 고객사 소속인지 명시
+      created_by: user.id,
     })
     .select("*")
     .single();

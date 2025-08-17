@@ -46,9 +46,17 @@ export async function createClass(formData: FormData) {
     end_date: validation.data.end_date === "" ? null : validation.data.end_date,
   };
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: { _form: ["사용자 인증에 실패했습니다. 다시 로그인해주세요."] } };
+  }
+
   const { error, data } = await supabase
     .from("classes")
-    .insert(classData)
+    .insert({ ...classData, created_by: user.id })
     .select(
       `
       *,

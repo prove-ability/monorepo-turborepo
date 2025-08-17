@@ -60,11 +60,26 @@ export async function createClientAction(_prevState: any, formData: FormData) {
 
   try {
     const supabase = await createClientByServerSide();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return {
+        message: "사용자 인증에 실패했습니다. 다시 로그인해주세요.",
+        errors: null,
+        success: false,
+      };
+    }
+
+    // 유효성 검사를 통과한 데이터에 생성자 ID 추가
+    const dataToInsert = {
+      ...validatedFields.data,
+      created_by: user.id,
+    };
 
     // 유효성 검사를 통과한 데이터를 Supabase에 삽입
-    const { error } = await supabase
-      .from("clients")
-      .insert(validatedFields.data);
+    const { error } = await supabase.from("clients").insert(dataToInsert);
 
     if (error) {
       console.error("Database Error:", error);

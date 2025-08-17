@@ -44,9 +44,17 @@ export async function getStocks(): Promise<Stock[]> {
 export async function createStock(stockData: CreateStockData): Promise<Stock> {
   const supabase = await createClientByServerSide();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("사용자 인증에 실패했습니다. 다시 로그인해주세요.");
+  }
+
   const { data, error } = await supabase
     .from("stocks")
-    .insert([stockData])
+    .insert([{ ...stockData, created_by: user.id }])
     .select()
     .single();
 

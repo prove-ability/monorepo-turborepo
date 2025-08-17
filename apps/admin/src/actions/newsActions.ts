@@ -49,9 +49,17 @@ export async function getNews(day?: number): Promise<News[]> {
 export async function createNews(newsData: CreateNewsData): Promise<News> {
   const supabase = await createClientByServerSide();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("사용자 인증에 실패했습니다. 다시 로그인해주세요.");
+  }
+
   const { data, error } = await supabase
     .from("news")
-    .insert([newsData])
+    .insert([{ ...newsData, created_by: user.id }])
     .select()
     .single();
 
