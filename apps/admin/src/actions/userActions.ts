@@ -70,10 +70,24 @@ export async function bulkCreateUsers(
         throw new Error(`사용자 정보 저장 실패: ${insertError.message}`);
       }
 
+      // 클래스 정보 조회하여 starting_balance 가져오기
+      const { data: classData, error: classError } = await adminSupabase
+        .from("classes")
+        .select("starting_balance")
+        .eq("id", u.class_id)
+        .single();
+
+      if (classError || !classData) {
+        await adminSupabase.from("users").delete().eq("user_id", authData.user.id);
+        await adminSupabase.auth.admin.deleteUser(authData.user.id);
+        throw new Error(`클래스 정보 조회 실패: ${classError?.message}`);
+      }
+
       // 지갑 생성
-      const { error: walletError } = await adminSupabase
-        .from("wallets")
-        .insert({ user_id: authData.user.id });
+      const { error: walletError } = await adminSupabase.from("wallets").insert({
+        user_id: authData.user.id,
+        balance: classData.starting_balance,
+      });
 
       if (walletError) {
         // 사용자 정보 및 Auth 사용자 롤백
@@ -226,10 +240,28 @@ export async function createUser(
       };
     }
 
+    // 클래스 정보 조회하여 starting_balance 가져오기
+    const { data: classData, error: classError } = await adminSupabase
+      .from("classes")
+      .select("starting_balance")
+      .eq("id", validatedData.class_id)
+      .single();
+
+    if (classError || !classData) {
+      await adminSupabase.from("users").delete().eq("user_id", authData.user.id);
+      await adminSupabase.auth.admin.deleteUser(authData.user.id);
+      return {
+        error: {
+          _form: [`클래스 정보 조회에 실패했습니다: ${classError?.message}`],
+        },
+      };
+    }
+
     // 지갑 생성
-    const { error: walletError } = await adminSupabase
-      .from("wallets")
-      .insert({ user_id: authData.user.id });
+    const { error: walletError } = await adminSupabase.from("wallets").insert({
+      user_id: authData.user.id,
+      balance: classData.starting_balance,
+    });
 
     if (walletError) {
       // 사용자 정보 및 Auth 사용자 롤백
