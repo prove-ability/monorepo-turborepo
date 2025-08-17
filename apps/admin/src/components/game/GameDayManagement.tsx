@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Calendar } from "lucide-react";
+import { createBrowserClient } from "@supabase/ssr";
 import { createGameDay, type GameData } from "@/actions/gameActions";
 import { type Stock } from "@/actions/stockActions";
 import {
@@ -45,6 +46,23 @@ export default function GameDayManagement({
   const [deletingNewsId, setDeletingNewsId] = useState<string | null>(null);
   const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
   const [savingNewsIndex, setSavingNewsIndex] = useState<number | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUser();
+  }, []);
 
   const [newsItems, setNewsItems] = useState<NewsInput[]>([
     { title: "", content: "", related_stock_ids: [] },
@@ -202,7 +220,11 @@ export default function GameDayManagement({
         news: [news],
       };
 
-      await createGameDay(gameData);
+      if (!userId) {
+        alert("사용자 정보를 가져올 수 없습니다. 다시 로그인해주세요.");
+        return;
+      }
+      await createGameDay(gameData, userId);
 
       // 해당 뉴스를 목록에서 제거
       const updatedNewsItems = newsItems.filter(

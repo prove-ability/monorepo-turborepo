@@ -131,7 +131,7 @@ export async function deleteStockPrice(priceId: string): Promise<void> {
 }
 
 // 클래스별 게임 데이터 일괄 생성
-export async function createGameDay(gameData: GameData): Promise<void> {
+export async function createGameDay(gameData: GameData, userId: string): Promise<void> {
   const supabase = await createClientByServerSide();
 
   try {
@@ -143,9 +143,8 @@ export async function createGameDay(gameData: GameData): Promise<void> {
         content: news.content,
         related_stock_ids: news.related_stock_ids || [],
         class_id: gameData.class_id,
+        created_by: userId,
       };
-
-      console.log("뉴스 삽입 데이터:", newsData);
 
       const { data, error } = await supabase
         .from("news")
@@ -180,7 +179,7 @@ export async function createGameDay(gameData: GameData): Promise<void> {
         .from("class_stock_prices")
         .upsert(priceData, {
           onConflict: "class_id,stock_id,day",
-          ignoreDuplicates: false
+          ignoreDuplicates: false,
         });
 
       if (priceError) {
