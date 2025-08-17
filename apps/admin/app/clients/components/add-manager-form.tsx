@@ -42,7 +42,6 @@ export function AddManagerForm({
           : Object.values(result.error).flat().join(", ")
       );
     } else {
-      console.log("result", result);
       setMsg(result.message);
       setName("");
       setMobile("");

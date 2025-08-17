@@ -131,7 +131,10 @@ export async function deleteStockPrice(priceId: string): Promise<void> {
 }
 
 // 클래스별 게임 데이터 일괄 생성
-export async function createGameDay(gameData: GameData, userId: string): Promise<void> {
+export async function createGameDay(
+  gameData: GameData,
+  userId: string
+): Promise<void> {
   const supabase = await createClientByServerSide();
 
   try {
@@ -160,7 +163,6 @@ export async function createGameDay(gameData: GameData, userId: string): Promise
     });
 
     const createdNews = await Promise.all(newsPromises);
-    console.log("생성된 뉴스:", createdNews);
 
     // 2. 주식 가격 생성
     const pricePromises = gameData.stocks.map(async (stock) => {
@@ -172,8 +174,6 @@ export async function createGameDay(gameData: GameData, userId: string): Promise
         news_id: createdNews[0]?.id, // 첫 번째 뉴스와 연결
       };
 
-      console.log("주식 가격 삽입 데이터:", priceData);
-
       // UPSERT 방식으로 변경 (기존 데이터가 있으면 업데이트, 없으면 삽입)
       const { error: priceError } = await supabase
         .from("class_stock_prices")
@@ -183,7 +183,6 @@ export async function createGameDay(gameData: GameData, userId: string): Promise
         });
 
       if (priceError) {
-        console.log("주식 가격 삽입 에러:", priceError);
         throw new Error(`주식 가격 저장 실패: ${priceError.message}`);
       }
     });

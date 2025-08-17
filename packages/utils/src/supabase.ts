@@ -100,10 +100,6 @@ export async function updateSessionByUser(
     },
   });
 
-  console.log(
-    "Supabase 세션이 생성되었으므로 middleware가 자동으로 리다이렉트 처리"
-  );
-
   const supabase = createServerClient(baseUrl, anonKey, {
     cookies: {
       get(name: string) {
@@ -125,8 +121,6 @@ export async function updateSessionByUser(
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
-
-  console.log(user);
 
   if ((!user || userError) && request.nextUrl.pathname !== "/login") {
     return NextResponse.redirect(new URL("/login", request.url));
