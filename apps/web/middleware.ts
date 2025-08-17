@@ -1,6 +1,6 @@
 // middleware.ts
 
-import { updateSession } from "@/lib/supabase";
+import { updateSession } from "@/lib/supabase/server";
 import { type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {

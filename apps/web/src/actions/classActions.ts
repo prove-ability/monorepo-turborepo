@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createWebClient } from "@/lib/supabase/server";
 
 export async function getClassInfo(classId: string) {
-  const supabase = await createClient();
+  const supabase = await createWebClient();
 
   const { data: classInfo, error } = await supabase
     .from("classes")

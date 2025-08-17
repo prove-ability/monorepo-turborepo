@@ -1,6 +1,6 @@
 "use server";
 
-import { createWebClient } from "@/lib/supabase";
+import { createWebClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export interface LoginResult {
