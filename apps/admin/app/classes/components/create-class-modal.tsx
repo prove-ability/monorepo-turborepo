@@ -67,7 +67,7 @@ export function CreateClassModal({
     e.preventDefault();
     setIsSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(e.target as HTMLFormElement);
 
     try {
       const result = await createClass(formData);
@@ -97,7 +97,7 @@ export function CreateClassModal({
   if (!isOpen) return null;
 
   return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">새 수업 추가</h2>
@@ -126,8 +126,23 @@ export function CreateClassModal({
                 id="name"
                 name="name"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="수업명을 입력하세요"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="starting_balance"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                학생 시작 금액
+              </label>
+              <input
+                type="number"
+                id="starting_balance"
+                name="starting_balance"
+                defaultValue={0}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               />
             </div>
 

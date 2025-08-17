@@ -11,6 +11,7 @@ const classSchema = z.object({
   manager_id: z.string().min(1, "매니저 선택은 필수입니다."),
   client_id: z.string().min(1, "클라이언트 선택은 필수입니다."),
   current_day: z.number().min(1, "현재 Day는 1 이상이어야 합니다.").optional(),
+  starting_balance: z.number().min(0, "시작 금액은 0 이상이어야 합니다.").optional(),
 });
 
 export type Class = z.infer<typeof classSchema>;
@@ -30,6 +31,7 @@ export async function createClass(formData: FormData) {
     end_date: formData.get("end_date"),
     manager_id: formData.get("manager_id"),
     client_id: formData.get("client_id"),
+    starting_balance: Number(formData.get("starting_balance") || 0),
   };
 
   const validation = classSchema.safeParse(rawData);
@@ -146,6 +148,7 @@ export async function updateClass(classId: string, formData: FormData) {
     end_date: formData.get("end_date"),
     manager_id: formData.get("manager_id"),
     client_id: formData.get("client_id"),
+    starting_balance: Number(formData.get("starting_balance") || 0),
   };
 
   const validation = classSchema.safeParse(rawData);
@@ -154,7 +157,7 @@ export async function updateClass(classId: string, formData: FormData) {
     return { error: validation.error.flatten().fieldErrors };
   }
 
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   // end_date가 빈 문자열이면 null로 변환
   const classData = {

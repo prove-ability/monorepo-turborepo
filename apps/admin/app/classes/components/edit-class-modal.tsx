@@ -22,6 +22,7 @@ interface ClassData {
   end_date?: string;
   manager_id: string;
   client_id: string;
+  starting_balance?: number;
   clients: { id: string; name: string } | null;
   managers: { id: string; name: string } | null;
 }
@@ -48,6 +49,14 @@ export function EditClassModal({
   const [filteredManagers, setFilteredManagers] = useState<Manager[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    start_date: "",
+    end_date: "",
+    manager_id: "",
+    client_id: "",
+    starting_balance: 0,
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -73,6 +82,36 @@ export function EditClassModal({
     }
   }, [selectedClientId, managers, classData.client_id]);
 
+  useEffect(() => {
+    if (classData) {
+      setFormData({
+        name: classData.name,
+        start_date: classData.start_date
+          ? (classData.start_date.split("T")[0] ?? "")
+          : "",
+        end_date: classData.end_date
+          ? (classData.end_date.split("T")[0] ?? "")
+          : "",
+        manager_id: classData.manager_id,
+        client_id: classData.client_id,
+        starting_balance: classData.starting_balance || 0,
+      });
+    }
+  }, [classData]);
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
+    const isNumber = type === "number";
+    setFormData((prev) => ({
+      ...prev,
+      [name]: isNumber ? Number(value) : value,
+    }));
+  };
+
   const loadClientsAndManagers = async () => {
     setIsLoading(true);
     try {
@@ -91,19 +130,17 @@ export function EditClassModal({
     e.preventDefault();
     setIsSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
 
     try {
       const result = await updateClass(classData.id, formData);
-      if (result.error) {
-        if ("_form" in result.error) {
-          alert("수정 실패: " + result.error._form?.[0]);
-        } else {
-          const errors = Object.values(result.error).flat();
-          alert("수정 실패: " + errors.join(", "));
-        }
-      } else {
-        alert(result.message);
+
+      if (result?.error) {
+        const errorMessages = Object.values(result.error).flat().join(", ");
+        alert(`수정 실패: ${errorMessages}`);
+      } else if (result?.data) {
+        alert("수업이 성공적으로 수정되었습니다.");
         onClassUpdated(result.data);
         setIsOpen(false);
       }
@@ -118,7 +155,7 @@ export function EditClassModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">수업 수정</h2>
@@ -147,9 +184,28 @@ export function EditClassModal({
                 id="name"
                 name="name"
                 required
-                defaultValue={classData.name}
+                value={formData.name}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="수업명을 입력하세요"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label
+                htmlFor="starting_balance"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                학생 시작 금액
+              </label>
+              <input
+                type="number"
+                id="starting_balance"
+                name="starting_balance"
+                value={formData.starting_balance}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="예: 100000"
               />
             </div>
 
@@ -218,7 +274,8 @@ export function EditClassModal({
                 id="start_date"
                 name="start_date"
                 required
-                defaultValue={classData.start_date}
+                value={formData.start_date}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -234,7 +291,8 @@ export function EditClassModal({
                 type="date"
                 id="end_date"
                 name="end_date"
-                defaultValue={classData.end_date || ""}
+                value={formData.end_date || ""}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

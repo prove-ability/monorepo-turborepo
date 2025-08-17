@@ -16,6 +16,7 @@ interface ClassWithRelations {
   current_day?: number;
   created_at: string;
   updated_at: string;
+  starting_balance?: number;
   clients: { id: string; name: string } | null;
   managers: { id: string; name: string } | null;
 }
@@ -93,6 +94,11 @@ export function ClassListItem({
             <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
               Day {classItem.current_day || 1}
             </span>
+          </p>
+          <p>
+            <span className="font-medium">시작 금액:</span>{" "}
+            {classItem.starting_balance?.toLocaleString() + " 원" ||
+              "데이터 없음"}
           </p>
         </div>
       </div>
