@@ -24,6 +24,9 @@ export async function createClient() {
           }
         },
       },
+      auth: {
+        storageKey: "web", // Unique key for web app
+      },
     }
   );
 }
