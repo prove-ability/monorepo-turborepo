@@ -90,11 +90,11 @@ export function CreateClientModal({
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-blackA6 data-[state=open]:animate-overlayShow" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[85vh] w-[90vw] max-w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-md bg-gray1 p-[25px] shadow-[var(--shadow-6)] focus:outline-none data-[state=open]:animate-contentShow text-foreground bg-gray-600 z-20">
-          <Dialog.Title className="m-0 text-[17px] font-medium text-mauve12">
+        <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[85vh] w-[90vw] max-w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-md bg-white p-[25px] shadow-lg focus:outline-none data-[state=open]:animate-contentShow z-20">
+          <Dialog.Title className="m-0 text-[17px] font-bold text-gray-900">
             신규 고객사 추가
           </Dialog.Title>
-          <Dialog.Description className="mb-5 mt-2.5 text-[15px] leading-normal text-mauve11">
+          <Dialog.Description className="mb-5 mt-2.5 text-[15px] leading-normal text-gray-600">
             새로운 고객사의 정보를 입력해주세요.
           </Dialog.Description>
 
