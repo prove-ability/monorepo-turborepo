@@ -1,7 +1,7 @@
-import { createClientByServerSide } from "./supabase";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export async function isAdmin(): Promise<boolean> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   // 1. 현재 로그인한 사용자 정보를 가져옵니다.
   const {

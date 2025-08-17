@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server"; // 이 파일의 모든 함수는 서버에서만 실행되는 서버 액션임을 명시합니다.
 
-import { createClientByServerSide } from "@/lib";
+import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache"; // 데이터 변경 후 캐시를 무효화하여 UI를 갱신
 import { z } from "zod"; // 데이터 유효성 검사를 위한 라이브러리
 
@@ -59,7 +59,7 @@ export async function createClientAction(_prevState: any, formData: FormData) {
   }
 
   try {
-    const supabase = await createClientByServerSide();
+    const supabase = await createAdminClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -151,7 +151,7 @@ export async function updateClientAction(
   }
 
   try {
-    const supabase = await createClientByServerSide();
+    const supabase = await createAdminClient();
     const { error } = await supabase
       .from("clients")
       .update(validatedFields.data)
@@ -190,7 +190,7 @@ export async function deleteClientAction(id: string) {
   if (!id) return { message: "고객사 ID가 필요합니다.", success: false };
 
   try {
-    const supabase = await createClientByServerSide();
+    const supabase = await createAdminClient();
     const { error } = await supabase.from("clients").delete().eq("id", id);
 
     if (error) {

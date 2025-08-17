@@ -1,27 +1,12 @@
-import {
-  type CookieOptions,
-  createServerClient,
-  createBrowserClient,
-} from "@supabase/ssr";
+"use server";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-// For client-side components
-export function createWebClientByClientSide(): SupabaseClient {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        storageKey: "web", // Unique key for web app
-      },
-    }
-  );
-}
-
 // For server-side components and server actions
-export async function createWebClient(): Promise<SupabaseClient> {
+export async function createAdminClient(): Promise<SupabaseClient> {
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -50,14 +35,16 @@ export async function createWebClient(): Promise<SupabaseClient> {
         },
       },
       auth: {
-        storageKey: "web", // Unique key for web app
+        storageKey: "admin",
       },
     }
   );
 }
 
 // For middleware
-export async function updateSession(request: NextRequest) {
+export async function updateSession(
+  request: NextRequest
+): Promise<NextResponse> {
   const response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -80,7 +67,7 @@ export async function updateSession(request: NextRequest) {
         },
       },
       auth: {
-        storageKey: "web", // Unique key for web app
+        storageKey: "admin", // Unique key for admin
       },
     }
   );
@@ -96,24 +83,24 @@ export async function updateSession(request: NextRequest) {
 
   if (user && !userError) {
     const userEmail = user.email;
-    if (userEmail && !userEmail.endsWith("@student.local")) {
+    if (userEmail && userEmail.endsWith("@student.local")) {
       await supabase.auth.signOut();
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
     try {
-      const { data: studentData, error: studentError } = await supabase
-        .from("users")
+      const { data: adminData, error: adminError } = await supabase
+        .from("admins")
         .select("user_id")
         .eq("user_id", user.id)
         .single();
 
-      if (studentError || !studentData) {
+      if (adminError || !adminData) {
         await supabase.auth.signOut();
         return NextResponse.redirect(new URL("/login", request.url));
       }
     } catch (error) {
-      console.error("Student validation error:", error);
+      console.error("Admin validation error:", error);
       await supabase.auth.signOut();
       return NextResponse.redirect(new URL("/login", request.url));
     }

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { type User } from "@supabase/supabase-js";
-import { createClientByClientSide } from "@repo/utils";
+import { createAdminClientByClientSide } from "@/lib/supabase/client";
 
 export function useUser() {
-  const supabase = createClientByClientSide("admin");
+  const supabase = createAdminClientByClientSide();
 
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);

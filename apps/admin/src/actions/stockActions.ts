@@ -1,6 +1,6 @@
 "use server";
 
-import { createClientByServerSide } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export interface Stock {
@@ -26,7 +26,7 @@ export interface UpdateStockData extends CreateStockData {
 
 // 주식 목록 조회
 export async function getStocks(): Promise<Stock[]> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { data, error } = await supabase
     .from("stocks")
@@ -42,7 +42,7 @@ export async function getStocks(): Promise<Stock[]> {
 
 // 주식 생성
 export async function createStock(stockData: CreateStockData): Promise<Stock> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const {
     data: { user },
@@ -68,7 +68,7 @@ export async function createStock(stockData: CreateStockData): Promise<Stock> {
 
 // 주식 수정
 export async function updateStock(stockData: UpdateStockData): Promise<Stock> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { data, error } = await supabase
     .from("stocks")
@@ -93,7 +93,7 @@ export async function updateStock(stockData: UpdateStockData): Promise<Stock> {
 
 // 주식 삭제
 export async function deleteStock(stockId: string): Promise<void> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { error } = await supabase.from("stocks").delete().eq("id", stockId);
 

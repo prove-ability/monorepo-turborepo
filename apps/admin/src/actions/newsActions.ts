@@ -1,6 +1,6 @@
 "use server";
 
-import { createClientByServerSide } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export interface News {
@@ -28,7 +28,7 @@ export interface UpdateNewsData extends CreateNewsData {
 
 // 뉴스 목록 조회 (특정 day 또는 전체)
 export async function getNews(day?: number): Promise<News[]> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   let query = supabase.from("news").select("*");
 
@@ -47,7 +47,7 @@ export async function getNews(day?: number): Promise<News[]> {
 
 // 뉴스 생성
 export async function createNews(newsData: CreateNewsData): Promise<News> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const {
     data: { user },
@@ -73,7 +73,7 @@ export async function createNews(newsData: CreateNewsData): Promise<News> {
 
 // 뉴스 수정
 export async function updateNews(newsData: UpdateNewsData): Promise<News> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { data, error } = await supabase
     .from("news")
@@ -99,7 +99,7 @@ export async function updateNews(newsData: UpdateNewsData): Promise<News> {
 
 // 뉴스 삭제
 export async function deleteNews(newsId: string): Promise<void> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { error } = await supabase.from("news").delete().eq("id", newsId);
 
@@ -112,7 +112,7 @@ export async function deleteNews(newsId: string): Promise<void> {
 
 // 특정 day의 뉴스 개수 조회
 export async function getNewsCountByDay(day: number): Promise<number> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { count, error } = await supabase
     .from("news")
@@ -128,7 +128,7 @@ export async function getNewsCountByDay(day: number): Promise<number> {
 
 // 클래스별, Day별 뉴스 조회
 export async function getNewsByClassAndDay(classId: string, day: number): Promise<News[]> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { data, error } = await supabase
     .from("news")

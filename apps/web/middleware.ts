@@ -1,13 +1,10 @@
 // middleware.ts
 
-import { updateSessionByUser } from "@repo/utils";
+import { updateSession } from "@/lib/supabase";
 import { type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  return await updateSessionByUser(baseUrl, anonKey, request);
+  return await updateSession(request);
 }
 
 // 미들웨어가 실행될 경로 설정

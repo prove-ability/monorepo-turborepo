@@ -1,8 +1,8 @@
-import { createClientByServerSide } from "@/lib";
+import { createAdminClient } from "@/lib/supabase/server";
 import { ClientList } from "./components/client-list";
 
 export default async function ClientsPage() {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   // Supabase의 관계형 쿼리: clients 테이블을 조회하면서,
   // 관련된 managers 테이블의 모든 데이터(*)를 함께 가져옵니다.

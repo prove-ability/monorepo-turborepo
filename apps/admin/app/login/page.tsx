@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClientByClientSide } from "@repo/utils";
+import { createAdminClientByClientSide } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,15 +27,7 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
 
-    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-    if (!baseUrl || !anonKey) {
-      setError("Supabase URL 또는 Anon Key가 설정되지 않았습니다.");
-      return;
-    }
-
-    const supabase = createClientByClientSide("admin");
+    const supabase = createAdminClientByClientSide();
 
     // 학생 계정 이메일 형식 차단
     if (email.endsWith("@student.local")) {

@@ -1,6 +1,6 @@
 "use server";
 
-import { createClientByServerSide } from "../lib/supabase";
+import { createWebClient } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 
 export interface LoginResult {
@@ -23,7 +23,7 @@ export async function loginStudent(
   password: string
 ): Promise<LoginResult> {
   try {
-    const supabase = await createClientByServerSide();
+    const supabase = await createWebClient();
 
     // 관리자 계정 형식 차단 (일반 이메일 형식)
     if (loginId.includes("@") && !loginId.endsWith("@student.local")) {
@@ -99,7 +99,7 @@ export async function updateNickname(
   nickname: string
 ): Promise<UpdateNicknameResult> {
   try {
-    const supabase = await createClientByServerSide();
+    const supabase = await createWebClient();
 
     // 현재 로그인된 사용자 확인
     const {
@@ -182,7 +182,7 @@ export async function updateNickname(
 }
 
 export async function getWallet(userId: string) {
-  const supabase = await createClientByServerSide();
+  const supabase = await createWebClient();
 
   const { data: wallet, error } = await supabase
     .from("wallets")
@@ -199,7 +199,7 @@ export async function getWallet(userId: string) {
 }
 
 export async function logoutStudent() {
-  const supabase = await createClientByServerSide();
+  const supabase = await createWebClient();
   await supabase.auth.signOut();
   redirect("/login");
 }

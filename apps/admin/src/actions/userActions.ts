@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClientByServerSide, createAdminClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase/server";
 // 타입 정의를 인라인으로 추가
 interface CreateUserData {
   name: string;
@@ -317,7 +317,7 @@ export async function createUser(
 // READ: 모든 사용자 조회 (클라이언트, 클래스 정보 포함)
 export async function getUsers() {
   try {
-    const supabase = await createClientByServerSide();
+    const supabase = await createAdminClient();
 
     const { data, error } = await supabase
       .from("users")
@@ -376,7 +376,7 @@ export async function getUsersByClass(classId: string, searchTerm?: string) {
 // UPDATE: 사용자 정보 수정
 export async function updateUser(userId: string, data: UpdateUserData) {
   try {
-    const supabase = await createClientByServerSide();
+    const supabase = await createAdminClient();
 
     const { error } = await supabase
       .from("users")
@@ -404,7 +404,7 @@ export async function updateUser(userId: string, data: UpdateUserData) {
 // DELETE: 사용자 삭제
 export async function deleteUser(userId: string) {
   try {
-    const supabase = await createClientByServerSide();
+    const supabase = await createAdminClient();
 
     // users 테이블에서 삭제 (CASCADE로 auth.users도 자동 삭제됨)
     const { error } = await supabase
@@ -432,7 +432,7 @@ export async function deleteUser(userId: string) {
 
 // LOGOUT: 사용자 로그아웃
 export async function logoutUser() {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { error } = await supabase.auth.signOut();
 

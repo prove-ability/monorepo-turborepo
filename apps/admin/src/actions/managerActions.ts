@@ -1,6 +1,6 @@
 "use server";
 
-import { createClientByServerSide } from "@/lib";
+import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -28,7 +28,7 @@ export async function createManager(clientId: string, formData: FormData) {
     return { error: validation.error.flatten().fieldErrors };
   }
 
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -69,7 +69,7 @@ export async function updateManager(managerId: string, formData: FormData) {
     return { error: validation.error.flatten().fieldErrors };
   }
 
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
   const { error, data } = await supabase
     .from("managers")
     .update(validation.data)
@@ -87,7 +87,7 @@ export async function updateManager(managerId: string, formData: FormData) {
 
 // DELETE: 매니저 삭제
 export async function deleteManager(managerId: string) {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
   const { error } = await supabase
     .from("managers")
     .delete()

@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient, createClientByServerSide } from "@/lib";
+import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -117,7 +117,7 @@ export async function getClassById(classId: string) {
 
 // READ: 모든 클래스 조회 (클라이언트, 매니저 정보 포함)
 export async function getClasses() {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const {
     data: { user },
@@ -241,7 +241,7 @@ export async function deleteClass(classId: string) {
 
 // 클라이언트와 매니저 목록 조회 (폼에서 사용)
 export async function getClientsAndManagers() {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const [clientsResult, managersResult] = await Promise.all([
     supabase.from("clients").select("id, name").order("name"),
@@ -263,7 +263,7 @@ export async function updateClassCurrentDay(
   classId: string,
   currentDay: number
 ) {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { error } = await supabase
     .from("classes")

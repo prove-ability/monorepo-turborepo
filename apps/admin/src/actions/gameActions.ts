@@ -1,6 +1,6 @@
 "use server";
 
-import { createClientByServerSide } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export interface ClassStockPrice {
@@ -45,7 +45,7 @@ export async function getClassStockPrices(
   classId?: string,
   day?: number
 ): Promise<ClassStockPrice[]> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   let query = supabase.from("class_stock_prices").select("*");
 
@@ -70,7 +70,7 @@ export async function getClassStockPrices(
 export async function createStockPrice(
   priceData: CreateStockPriceData
 ): Promise<ClassStockPrice> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { data, error } = await supabase
     .from("class_stock_prices")
@@ -90,7 +90,7 @@ export async function createStockPrice(
 export async function updateStockPrice(
   priceData: UpdateStockPriceData
 ): Promise<ClassStockPrice> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { data, error } = await supabase
     .from("class_stock_prices")
@@ -116,7 +116,7 @@ export async function updateStockPrice(
 
 // 주식 가격 삭제
 export async function deleteStockPrice(priceId: string): Promise<void> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   const { error } = await supabase
     .from("class_stock_prices")
@@ -135,7 +135,7 @@ export async function createGameDay(
   gameData: GameData,
   userId: string
 ): Promise<void> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   try {
     // 1. 뉴스 생성
@@ -203,7 +203,7 @@ export async function getGameProgress(classId: string): Promise<{
   totalNews: number;
   totalPrices: number;
 }> {
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   // 최대 day 조회
   const { data: maxDayData, error: maxDayError } = await supabase
