@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getClasses } from "@/actions/classActions";
 import { Button } from "@repo/ui";
 import { CreateClassModal } from "./create-class-modal";
 import { EditClassModal } from "./edit-class-modal";
@@ -20,12 +21,10 @@ interface ClassWithRelations {
   managers: { id: string; name: string } | null;
 }
 
-interface ClassListProps {
-  initialClasses: ClassWithRelations[];
-}
-
-export function ClassList({ initialClasses }: ClassListProps) {
-  const [classes, setClasses] = useState(initialClasses);
+export function ClassList() {
+  const [classes, setClasses] = useState<ClassWithRelations[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassWithRelations | null>(
     null
@@ -41,11 +40,37 @@ export function ClassList({ initialClasses }: ClassListProps) {
     );
   };
 
-  const onClassUpdated = () => {
-    // 클래스 목록을 새로고침하기 위해 부모 컴포넌트에서 다시 데이터를 가져와야 함
-    // 여기서는 간단히 페이지 새로고침을 사용하거나, 부모에서 refetch 함수를 전달받아야 함
-    window.location.reload();
+  useEffect(() => {
+    async function loadClasses() {
+      try {
+        setLoading(true);
+        const fetchedClasses = await getClasses();
+        setClasses(fetchedClasses);
+        setError(null);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다."
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadClasses();
+  }, []);
+
+  const onClassUpdated = async () => {
+    const fetchedClasses = await getClasses();
+    setClasses(fetchedClasses);
   };
+
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">오류: {error}</div>;
+  }
 
   return (
     <div className="space-y-4">

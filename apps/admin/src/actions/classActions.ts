@@ -38,7 +38,7 @@ export async function createClass(formData: FormData) {
     return { error: validation.error.flatten().fieldErrors };
   }
 
-  const supabase = await createClientByServerSide();
+  const supabase = await createAdminClient();
 
   // end_date가 빈 문자열이면 null로 변환
   const classData = {
@@ -51,7 +51,9 @@ export async function createClass(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: { _form: ["사용자 인증에 실패했습니다. 다시 로그인해주세요."] } };
+    return {
+      error: { _form: ["사용자 인증에 실패했습니다. 다시 로그인해주세요."] },
+    };
   }
 
   const { error, data } = await supabase
@@ -73,6 +75,7 @@ export async function createClass(formData: FormData) {
     .single();
 
   if (error) {
+    console.error("클래스 생성 실패:", error);
     return { error: { _form: [error.message] } };
   }
 
@@ -111,6 +114,10 @@ export async function getClassById(classId: string) {
 export async function getClasses() {
   const supabase = await createClientByServerSide();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   // 새로운 JOIN 방식 시도
   const { data, error } = await supabase
     .from("classes")
@@ -121,6 +128,7 @@ export async function getClasses() {
       managers(id, name)
     `
     )
+    .eq("created_by", user?.id)
     .order("created_at", { ascending: false });
 
   if (error) {
