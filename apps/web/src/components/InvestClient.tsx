@@ -2,15 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { TrendingUp } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
-import {
-  getStocks,
-  getClassPortfolio,
-  PortfolioItem,
-} from "@/actions/investActions";
+import { getStocks } from "@/actions/investActions";
+import { InvestModal } from "./InvestModal";
 
-// TODO: 정확한 타입 정의 필요
-export type Stock = any;
+export type Stock = {
+  id: string;
+  name: string;
+  price: number;
+  priceChange: number;
+  changeRate: number;
+  logo_url: string;
+  market_country_code: string;
+};
 
 interface InvestClientProps {
   classInfo: any;
@@ -19,20 +24,17 @@ interface InvestClientProps {
 export default function InvestClient({ classInfo }: InvestClientProps) {
   const router = useRouter();
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
-  const [stocks, setStocks] = useState<Stock[]>([]);
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [krStocks, setKrStocks] = useState<Stock[]>([]);
+  const [usStocks, setUsStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [stocksData, portfolioData] = await Promise.all([
-          getStocks(classInfo.id, classInfo.current_day),
-          getClassPortfolio(classInfo.id, classInfo.current_day),
-        ]);
-        setStocks(stocksData);
-        setPortfolio(portfolioData);
+        const stocksData = await getStocks(classInfo.id, classInfo.current_day);
+        setKrStocks(stocksData.filter((s) => s.market_country_code === "KR"));
+        setUsStocks(stocksData.filter((s) => s.market_country_code === "US"));
       } catch (error) {
         console.error("데이터 조회 실패:", error);
       } finally {
@@ -45,134 +47,166 @@ export default function InvestClient({ classInfo }: InvestClientProps) {
     }
   }, [classInfo]);
 
-  const krStocks = stocks.filter((s) => s.market_country_code === "KR");
-  const usStocks = stocks.filter((s) => s.market_country_code === "US");
+  const handleBuy = () => {
+    if (!selectedStock) return;
+    const price = selectedStock.price;
+    router.push(
+      `/invest/trade?stockId=${selectedStock.id}&stockName=${selectedStock.name}&price=${price}&action=buy`
+    );
+  };
+
+  const handleSell = () => {
+    if (!selectedStock) return;
+    const price = selectedStock.price;
+    router.push(
+      `/invest/trade?stockId=${selectedStock.id}&stockName=${selectedStock.name}&price=${price}&action=sell`
+    );
+  };
 
   return (
-    <div className="w-full bg-white flex flex-col h-screen">
-      <main className="flex-grow overflow-y-auto p-4">
-        <div className="bg-green-100 p-4 rounded-lg mb-6">
-          <h3 className="font-semibold text-green-800 mb-2">My Portfolio</h3>
-          <div className="space-y-2">
-            {portfolio.map((item) => {
-              const stock = item.stocks;
-              if (!stock) return null;
+    <div className="h-full bg-gray-50">
+      <main className="max-w-2xl mx-auto p-4 space-y-5">
+        {/* 상단 배너 */}
+        <div className="bg-indigo-50 text-indigo-800 p-4 rounded-xl flex items-center gap-3">
+          <TrendingUp className="h-6 w-6 flex-shrink-0" />
+          <div>
+            <h2 className="font-bold text-lg">어떤 종목에 투자해 볼까요?</h2>
+            <p className="text-base text-indigo-600 mt-1">
+              뉴스를 읽고 신중히 투자해 주세요.
+            </p>
+          </div>
+        </div>
 
-              const price = stock.class_stock_prices?.[0]?.price ?? 0;
-              const totalValue = price * item.quantity;
+        {/* 투자 종목 리스트 */}
+        <div className="bg-white rounded-xl shadow-md">
+          <div className="p-4">
+            <h3 className="text-xl font-bold text-gray-800">국내주식</h3>
+          </div>
+          <div className="px-4 pb-4">
+            <div className="flex items-center bg-indigo-100 rounded-md py-2 text-xs text-indigo-800 font-bold">
+              <div className="w-2/5 px-2">종목명</div>
+              <div className="w-1/4 text-right px-2">현재가</div>
+              <div className="w-1/4 text-right px-2">대비</div>
+              <div className="w-1/5 text-right px-2">등락률</div>
+            </div>
+            {krStocks.map((stock, index) => {
+              const colorClass =
+                stock.priceChange > 0
+                  ? "text-red-500"
+                  : stock.priceChange < 0
+                    ? "text-blue-500"
+                    : "text-gray-500";
+              const indicator =
+                stock.priceChange > 0 ? "▲" : stock.priceChange < 0 ? "▼" : "";
 
               return (
                 <div
                   key={stock.id}
-                  className="flex justify-between items-center"
+                  className="flex items-center py-4 cursor-pointer hover:bg-gray-50 text-sm"
+                  onClick={() => setSelectedStock(stock)}
                 >
-                  <span className="font-semibold">
-                    {stock.name} ({item.quantity}주)
-                  </span>
-                  <span className="text-gray-800">
-                    {totalValue.toLocaleString()}원
-                  </span>
+                  <div className="w-2/5 px-2 font-medium text-gray-800">
+                    {stock.name}
+                  </div>
+                  <div
+                    className={`w-1/4 text-right px-2 font-medium ${colorClass}`}
+                  >
+                    {stock.price.toLocaleString()}원
+                  </div>
+                  <div
+                    className={`w-1/4 text-right px-2 font-medium ${colorClass}`}
+                  >
+                    {indicator} {Math.abs(stock.priceChange).toLocaleString()}
+                  </div>
+                  <div
+                    className={`w-1/5 text-right px-2 font-medium ${colorClass}`}
+                  >
+                    {stock.changeRate.toFixed(2)}%
+                  </div>
                 </div>
               );
             })}
-            {portfolio.length === 0 && (
-              <p className="text-gray-500">보유한 주식이 없습니다.</p>
-            )}
           </div>
         </div>
-        <div className="bg-blue-900 text-white p-4 rounded-lg mb-6 text-center">
-          <h2 className="font-bold">어떤 종목에 투자해 볼까요?</h2>
-          <p className="text-sm">뉴스를 읽고 신중히 투자해 주세요.</p>
+
+        <div className="bg-white rounded-xl shadow-md mt-6">
+          <div className="p-4">
+            <h3 className="text-xl font-bold text-gray-800">해외주식</h3>
+          </div>
+          <div className="px-4 pb-4">
+            <div className="flex items-center bg-indigo-100 rounded-md py-2 text-xs text-indigo-800 font-bold">
+              <div className="w-2/5 px-2">종목명</div>
+              <div className="w-1/4 text-right px-2">현재가</div>
+              <div className="w-1/4 text-right px-2">대비</div>
+              <div className="w-1/5 text-right px-2">등락률</div>
+            </div>
+            {usStocks.map((stock, index) => {
+              const colorClass =
+                stock.priceChange > 0
+                  ? "text-red-500"
+                  : stock.priceChange < 0
+                    ? "text-blue-500"
+                    : "text-gray-500";
+              const indicator =
+                stock.priceChange > 0 ? "▲" : stock.priceChange < 0 ? "▼" : "";
+
+              return (
+                <div
+                  key={stock.id}
+                  className="flex items-center py-4 cursor-pointer hover:bg-gray-50 text-sm"
+                  onClick={() => setSelectedStock(stock)}
+                >
+                  <div className="w-2/5 px-2 font-medium text-gray-800">
+                    {stock.name}
+                  </div>
+                  <div
+                    className={`w-1/4 text-right px-2 font-medium ${colorClass}`}
+                  >
+                    {stock.price.toLocaleString()}원
+                  </div>
+                  <div
+                    className={`w-1/4 text-right px-2 font-medium ${colorClass}`}
+                  >
+                    {indicator} {Math.abs(stock.priceChange).toLocaleString()}
+                  </div>
+                  <div
+                    className={`w-1/5 text-right px-2 font-medium ${colorClass}`}
+                  >
+                    {stock.changeRate.toFixed(2)}%
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-semibold text-gray-500 mb-2">KR 국내주식</h3>
-            <div className="bg-gray-50 rounded-lg">
-              {krStocks.map((stock) => (
-                <div
-                  key={stock.id}
-                  className="flex justify-between items-center p-4 border-b last:border-b-0 cursor-pointer"
-                  onClick={() => setSelectedStock(stock)}
-                >
-                  <span className="font-semibold">{stock.name}</span>
-                  <span className="text-gray-800">
-                    {stock.price.toLocaleString()}원
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-gray-500 mb-2">US 해외주식</h3>
-            <div className="bg-gray-50 rounded-lg">
-              {usStocks.map((stock) => (
-                <div
-                  key={stock.id}
-                  className="flex justify-between items-center p-4 border-b last:border-b-0 cursor-pointer"
-                  onClick={() => setSelectedStock(stock)}
-                >
-                  <span className="font-semibold">{stock.name}</span>
-                  <span className="text-gray-800">
-                    {stock.price.toLocaleString()}원
-                  </span>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-gray-400 mt-2">
-              *모든 종목은 원화로 표시됩니다. (1$={1300}원)
-            </p>
-          </div>
+        <div className="mt-4 flex items-center justify-center space-x-2 text-xs text-gray-500">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>
+            해외 주식은 편의를 위해 원화(KRW)로 표시됩니다. (적용 환율: $1 =
+            1,300원)
+          </span>
         </div>
       </main>
 
-      {/* TODO: 매수/매도 모달 구현 */}
-      {selectedStock && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end">
-          <div className="bg-white w-full p-4 rounded-t-lg">
-            <h3 className="font-bold text-lg">
-              {selectedStock.name}, 어떻게 할까요?
-            </h3>
-            <div className="flex justify-between items-center my-4">
-              <span>현재가</span>
-              <span>{selectedStock.price.toLocaleString()}원</span>
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  if (!selectedStock) return;
-                  const price = selectedStock.price;
-                  router.push(
-                    `/invest/trade?stockId=${selectedStock.id}&stockName=${selectedStock.name}&price=${price}&action=buy`
-                  );
-                }}
-                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg"
-              >
-                매수하기
-              </button>
-              <button
-                onClick={() => {
-                  if (!selectedStock) return;
-                  const price = selectedStock.price;
-                  router.push(
-                    `/invest/trade?stockId=${selectedStock.id}&stockName=${selectedStock.name}&price=${price}&action=sell`
-                  );
-                }}
-                className="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-lg"
-              >
-                매도하기
-              </button>
-            </div>
-            <button
-              onClick={() => setSelectedStock(null)}
-              className="w-full mt-2 text-center text-gray-500"
-            >
-              닫기
-            </button>
-          </div>
-        </div>
-      )}
+      <InvestModal
+        stock={selectedStock}
+        onClose={() => setSelectedStock(null)}
+        onBuy={handleBuy}
+        onSell={handleSell}
+      />
 
       <BottomNav />
     </div>

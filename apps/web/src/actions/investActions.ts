@@ -6,27 +6,48 @@ import { revalidatePath } from "next/cache";
 export async function getStocks(classId: number, day: number) {
   "use server";
   const supabase = await createWebClient();
+
+  // 현재일과 전일 주가 정보를 함께 조회합니다.
   const { data, error } = await supabase
-    .from("class_stock_prices")
+    .from("stocks")
     .select(
       `
-      price,
-      stocks (*)
+      *,
+      class_stock_prices!inner ( day, price )
     `
     )
-    .eq("class_id", classId)
-    .eq("day", day);
+    .eq("class_stock_prices.class_id", classId)
+    .in("class_stock_prices.day", [day, day - 1]);
 
   if (error) {
     console.error("일차별 주식 정보 조회 실패:", error);
     return [];
   }
 
-  // stocks 객체를 펼쳐서 필요한 데이터만 반환
-  return data.map((item) => ({
-    ...item.stocks,
-    price: item.price,
-  }));
+  // 주식별로 현재가와 전일가를 찾아서 등락률을 계산합니다.
+  const processedStocks = data.map((stock) => {
+    const currentPriceInfo = stock.class_stock_prices.find(
+      (p: { day: number; price: number }) => p.day === day
+    );
+    const prevPriceInfo = stock.class_stock_prices.find(
+      (p: { day: number; price: number }) => p.day === day - 1
+    );
+
+    const currentPrice = currentPriceInfo?.price ?? 0;
+    const prevPrice = prevPriceInfo?.price ?? currentPrice; // 전일 가격 없으면 현재가로
+
+    const priceChange = currentPrice - prevPrice;
+    const changeRate = prevPrice === 0 ? 0 : (priceChange / prevPrice) * 100;
+
+    return {
+      ...stock,
+      price: currentPrice,
+      priceChange,
+      changeRate,
+    };
+  });
+
+  return processedStocks;
 }
 
 export type PortfolioItem = {

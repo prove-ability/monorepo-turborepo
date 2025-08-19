@@ -7,7 +7,7 @@ export async function getNewsByDay(classId: string, day: number) {
 
   const { data: newsData, error: newsError } = await supabase
     .from("news")
-    .select("id, content, related_stock_ids")
+    .select("id, title, content, related_stock_ids")
     .eq("class_id", classId)
     .eq("day", day)
     .order("created_at", { ascending: false });
@@ -29,7 +29,7 @@ export async function getNewsByDay(classId: string, day: number) {
         if (stocksError) {
           console.error("관련 주식 조회 실패:", stocksError);
         } else {
-          tags = stocks.map((stock) => `#${stock.name}`);
+          tags = stocks.map((stock) => stock.name);
         }
       }
       return { ...item, tags };
