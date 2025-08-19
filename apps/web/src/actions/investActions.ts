@@ -77,9 +77,7 @@ export async function getClassPortfolio(
     .eq("class_id", classId)
     .eq("stocks.class_stock_prices.day", day);
 
-  console.log("classId", classId);
-
-  if (error) {
+    if (error) {
     console.error("포트폴리오 정보 조회 실패:", error);
     return [];
   }
