@@ -198,6 +198,76 @@ export async function getWallet(userId: string) {
   return wallet;
 }
 
+export async function getHoldings(userId: string) {
+  const supabase = await createWebClient();
+
+  // 1. 사용자의 보유 주식 목록 조회
+  const { data: holdings, error: holdingsError } = await supabase
+    .from("holdings")
+    .select("stock_id, quantity, average_purchase_price")
+    .eq("user_id", userId);
+
+  if (holdingsError) {
+    console.error("보유 주식 정보 조회 실패:", holdingsError);
+    return [];
+  }
+
+  if (!holdings || holdings.length === 0) {
+    return [];
+  }
+
+  // 2. 사용자 정보에서 class_id 조회
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("class_id")
+    .eq("user_id", userId)
+    .single();
+
+  if (userError || !user) {
+    console.error("사용자 정보 조회 실패:", userError);
+    return [];
+  }
+
+  const stockIds = holdings.map((h) => h.stock_id);
+
+  // 3. 보유 주식의 현재 가격 정보 조회 (class_stock_prices)
+  const { data: stockPrices, error: stockPricesError } = await supabase
+    .from("class_stock_prices")
+    .select("stock_id, price")
+    .eq("class_id", user.class_id)
+    .in("stock_id", stockIds);
+
+  if (stockPricesError) {
+    console.error("주식 가격 정보 조회 실패:", stockPricesError);
+    return [];
+  }
+
+  // 4. 주식 이름 정보 조회 (stocks)
+  const { data: stocks, error: stocksError } = await supabase
+    .from("stocks")
+    .select("id, name")
+    .in("id", stockIds);
+
+  if (stocksError) {
+    console.error("주식 이름 정보 조회 실패:", stocksError);
+    return [];
+  }
+
+  // 5. 정보 결합
+  const stockPriceMap = new Map(stockPrices.map((p) => [p.stock_id, p.price]));
+  const stockNameMap = new Map(stocks.map((s) => [s.id, s.name]));
+
+  const combinedHoldings = holdings.map((holding) => {
+    return {
+      ...holding,
+      name: stockNameMap.get(holding.stock_id) || null,
+      current_price: stockPriceMap.get(holding.stock_id) || null,
+    };
+  });
+
+  return combinedHoldings;
+}
+
 export async function logoutStudent() {
   const supabase = await createWebClient();
   await supabase.auth.signOut();

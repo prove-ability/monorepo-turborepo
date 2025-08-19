@@ -1,15 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Bell,
-  TrendingUp,
-  Wallet,
-  PackageOpen,
-  ChevronRight,
-  ArrowRight,
-} from "lucide-react";
-import { logoutStudent, getWallet } from "@/actions/userActions";
+import { ArrowRight } from "lucide-react";
+import { getWallet, getHoldings } from "@/actions/userActions";
 import { getClassInfo } from "@/actions/classActions";
 
 interface User {
@@ -26,6 +19,14 @@ interface WalletInfo {
   balance: number;
 }
 
+interface Holding {
+  stock_id: string;
+  quantity: number;
+  average_purchase_price: number;
+  name: string | null;
+  current_price: number | null;
+}
+
 interface HomeClientProps {
   user: User;
 }
@@ -33,21 +34,39 @@ interface HomeClientProps {
 export default function HomeClient({ user }: HomeClientProps) {
   const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
+  const [holdings, setHoldings] = useState<Holding[]>([]);
 
   useEffect(() => {
     async function fetchData() {
-      const [classData, walletData] = await Promise.all([
+      const [classData, walletData, holdingsData] = await Promise.all([
         getClassInfo(user.class_id),
         getWallet(user.user_id),
+        getHoldings(user.user_id),
       ]);
       setClassInfo(classData);
       setWalletInfo(walletData);
+      setHoldings(holdingsData || []);
     }
 
     fetchData();
   }, [user.class_id, user.user_id]);
+  // 투자 원금
+  const investedAmount = holdings.reduce(
+    (acc, holding) => acc + holding.average_purchase_price * holding.quantity,
+    0
+  );
+
+  // 보유 주식 평가액
+  const evaluationAmount = holdings.reduce((acc, holding) => {
+    const currentPrice = holding.current_price || 0;
+    return acc + currentPrice * holding.quantity;
+  }, 0);
+
+  // 총 자산 = 현금 + 보유 주식 평가액
+  const totalAssetValue = (walletInfo?.balance || 0) + evaluationAmount;
+
   return (
-    <div className="w-full bg-gray-50 p-4 min-h-screen">
+    <div className="w-full min-h-screen">
       <div className="space-y-6 pb-20">
         {/* 상단 알림 */}
         <div className="bg-indigo-50 text-indigo-800 p-4 rounded-xl flex items-center gap-3">
@@ -69,12 +88,14 @@ export default function HomeClient({ user }: HomeClientProps) {
             <h2 className="text-xl font-bold text-white">내 계좌</h2>
           </div>
           <p className="text-4xl font-bold text-white pt-2">
-            {walletInfo?.balance.toLocaleString() || 0}원
+            {totalAssetValue.toLocaleString()}원
           </p>
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div className="bg-white/20 p-4 rounded-lg">
               <p className="text-base text-indigo-100">투자 중인 금액</p>
-              <p className="text-xl font-semibold text-white">0원</p>
+              <p className="text-xl font-semibold text-white">
+                {investedAmount.toLocaleString()}원
+              </p>
             </div>
             <div className="bg-white/20 p-4 rounded-lg">
               <p className="text-base text-indigo-100">주문 가능 금액</p>
