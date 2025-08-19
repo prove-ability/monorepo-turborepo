@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Providers from "./providers";
-import { BottomNav } from "@/components/BottomNav";
+import AppLayout from "@/components/AppLayout";
 
 import "./globals.css";
 
@@ -29,10 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} h-screen max-w-xl mx-auto bg-gray-50`}
       >
-        <div className="p-4 h-full bg-white">
-          <Providers>{children}</Providers>
-        </div>
-        <BottomNav />
+        <Providers>
+          <AppLayout>{children}</AppLayout>
+        </Providers>
       </body>
     </html>
   );
