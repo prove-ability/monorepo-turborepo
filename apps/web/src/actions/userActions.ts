@@ -198,8 +198,17 @@ export async function getWallet(userId: string) {
   return wallet;
 }
 
-export async function getHoldings(userId: string) {
+export async function getHoldings() {
   const supabase = await createWebClient();
+
+  const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !authUser) {
+    console.error("사용자 인증 실패:", authError);
+    return [];
+  }
+
+  const userId = authUser.id;
 
   // 1. 사용자의 보유 주식 목록 조회
   const { data: holdings, error: holdingsError } = await supabase

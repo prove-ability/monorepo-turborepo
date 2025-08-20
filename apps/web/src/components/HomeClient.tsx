@@ -67,7 +67,7 @@ export default function HomeClient({ user }: HomeClientProps) {
         const [classData, walletData, holdingsData] = await Promise.all([
           getClassInfo(user.class_id),
           getWallet(user.user_id),
-          getHoldings(user.user_id),
+          getHoldings(),
         ]);
         setClassInfo(classData);
         setWalletInfo(walletData);

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { TrendingUp } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { getStocks } from "@/actions/investActions";
+import { getHoldings } from "@/actions/userActions";
 import { InvestModal } from "./InvestModal";
 
 export type Stock = {
@@ -26,15 +27,20 @@ export default function InvestClient({ classInfo }: InvestClientProps) {
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [krStocks, setKrStocks] = useState<Stock[]>([]);
   const [usStocks, setUsStocks] = useState<Stock[]>([]);
+  const [holdings, setHoldings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const stocksData = await getStocks(classInfo.id, classInfo.current_day);
+        const [stocksData, holdingsData] = await Promise.all([
+          getStocks(classInfo.id, classInfo.current_day),
+          getHoldings(),
+        ]);
         setKrStocks(stocksData.filter((s) => s.market_country_code === "KR"));
         setUsStocks(stocksData.filter((s) => s.market_country_code === "US"));
+        setHoldings(holdingsData);
       } catch (error) {
         console.error("데이터 조회 실패:", error);
       } finally {
@@ -203,6 +209,7 @@ export default function InvestClient({ classInfo }: InvestClientProps) {
 
       <InvestModal
         stock={selectedStock}
+        isOwned={holdings.some((h) => h.stock_id === selectedStock?.id)}
         onClose={() => setSelectedStock(null)}
         onBuy={handleBuy}
         onSell={handleSell}

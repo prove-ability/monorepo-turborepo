@@ -6,6 +6,7 @@ import { useDrag } from "@use-gesture/react";
 
 interface InvestModalProps {
   stock: Stock | null;
+  isOwned: boolean;
   onClose: () => void;
   onBuy: () => void;
   onSell: () => void;
@@ -13,6 +14,7 @@ interface InvestModalProps {
 
 export function InvestModal({
   stock,
+  isOwned,
   onClose,
   onBuy,
   onSell,
@@ -56,19 +58,21 @@ export function InvestModal({
       >
         <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4" />
         <h3 className="font-bold text-lg mb-4">{stock.name}, 어떻게 할까요?</h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className={`grid ${isOwned ? "grid-cols-2" : "grid-cols-1"} gap-3`}>
           <button
             onClick={onBuy}
             className="w-full bg-red-500 text-white p-3 rounded-lg font-bold hover:bg-red-600 transition-colors"
           >
             살래요 (매수)
           </button>
-          <button
-            onClick={onSell}
-            className="w-full bg-blue-500 text-white p-3 rounded-lg font-bold hover:bg-blue-600 transition-colors"
-          >
-            팔래요 (매도)
-          </button>
+          {isOwned && (
+            <button
+              onClick={onSell}
+              className="w-full bg-blue-500 text-white p-3 rounded-lg font-bold hover:bg-blue-600 transition-colors"
+            >
+              팔래요 (매도)
+            </button>
+          )}
         </div>
       </animated.div>
     </div>
