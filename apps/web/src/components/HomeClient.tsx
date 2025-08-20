@@ -168,13 +168,6 @@ export default function HomeClient({ user }: HomeClientProps) {
                       ? "text-blue-500"
                       : "text-gray-500";
 
-                console.log("evaluation", evaluation);
-                console.log(
-                  "average_purchase_price",
-                  holding.average_purchase_price * holding.quantity
-                );
-                console.log("profit", profit);
-
                 return (
                   <div
                     key={holding.stock_id}
