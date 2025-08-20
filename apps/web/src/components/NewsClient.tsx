@@ -1,6 +1,6 @@
 "use client";
 
-import { Newspaper, ChevronLeft } from "lucide-react";
+import { Newspaper } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
 
@@ -69,12 +69,6 @@ export default function NewsClient({ classData }: NewsClientProps) {
 
   return (
     <div className="w-full min-h-screen">
-      <header className="flex items-center p-4 sticky top-0 z-10">
-        <button onClick={() => router.back()}>
-          <ChevronLeft className="h-6 w-6 text-gray-700" />
-        </button>
-      </header>
-
       <main className="flex-grow space-y-5 pb-24">
         <div className="bg-indigo-50 text-indigo-800 p-4 rounded-xl flex items-center gap-3">
           <Newspaper className="h-6 w-6 flex-shrink-0" />
