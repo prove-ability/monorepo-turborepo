@@ -24,6 +24,30 @@ interface NewsClientProps {
   classData: ClassData;
 }
 
+const NewsPageSkeleton = () => (
+  <div className="w-full min-h-screen p-4 space-y-5 animate-pulse">
+    {/* Top Banner Skeleton */}
+    <div className="bg-gray-200 rounded-xl h-20" />
+
+    {/* News List Skeleton */}
+    <div className="space-y-4">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="bg-white p-4 rounded-xl shadow-md space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="h-5 bg-gray-200 rounded w-12"></div>
+            <div className="h-5 bg-gray-200 rounded w-20"></div>
+          </div>
+          <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+          <div className="space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 export default function NewsClient({ classData }: NewsClientProps) {
   const router = useRouter();
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -50,21 +74,7 @@ export default function NewsClient({ classData }: NewsClientProps) {
   }, [classData]);
 
   if (loading) {
-    return (
-      <div className="w-full min-h-screen p-4">
-        <header className="flex items-center justify-between mb-4">
-          <div className="h-6 w-6 bg-gray-200 rounded" />
-          <div className="h-6 w-24 bg-gray-200 rounded" />
-          <div className="h-6 w-6" />
-        </header>
-        <div className="space-y-4 animate-pulse">
-          <div className="h-24 bg-gray-200 rounded-lg" />
-          <div className="h-24 bg-gray-200 rounded-lg" />
-          <div className="h-24 bg-gray-200 rounded-lg" />
-          <div className="h-24 bg-gray-200 rounded-lg" />
-        </div>
-      </div>
-    );
+    return <NewsPageSkeleton />;
   }
 
   return (
