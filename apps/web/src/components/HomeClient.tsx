@@ -148,7 +148,6 @@ export default function HomeClient({ user }: HomeClientProps) {
           {holdings && holdings.length > 0 ? (
             <div className="bg-white rounded-2xl shadow-md overflow-hidden">
               {holdings.map((holding) => {
-                console.log("holding", holding);
                 const currentPrice = holding.current_price || 0;
                 const evaluation = currentPrice * holding.quantity;
                 const profit =
