@@ -57,8 +57,16 @@ export function InvestModal({
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
         <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4" />
-        <h3 className="font-bold text-lg mb-4">{stock.name}, 어떻게 할까요?</h3>
-        <div className={`grid ${isOwned ? "grid-cols-2" : "grid-cols-1"} gap-3`}>
+        <h3 className="font-bold text-lg">{stock.name}, 어떻게 할까요?</h3>
+        <div className="flex justify-between items-center py-4 my-4">
+          <span className="text-gray-600 font-medium">현재가</span>
+          <span className="font-bold text-lg text-gray-900">
+            {stock.price.toLocaleString()}원
+          </span>
+        </div>
+        <div
+          className={`grid ${isOwned ? "grid-cols-2" : "grid-cols-1"} gap-3`}
+        >
           <button
             onClick={onBuy}
             className="w-full bg-red-500 text-white p-3 rounded-lg font-bold hover:bg-red-600 transition-colors"
