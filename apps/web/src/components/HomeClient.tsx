@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { getWallet, getHoldings } from "@/actions/userActions";
 import { getClassInfo } from "@/actions/classActions";
@@ -31,6 +32,23 @@ interface HomeClientProps {
   user: User;
 }
 
+const HoldingsSkeleton = () => (
+  <div className="bg-white rounded-2xl shadow-md overflow-hidden animate-pulse">
+    {[...Array(1)].map((_, i) => (
+      <div key={i} className="p-4">
+        <div className="flex justify-between items-center">
+          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-5 bg-gray-200 rounded w-1/4"></div>
+        </div>
+        <div className="flex justify-between items-center text-sm mt-2">
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/5"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
 const AccountSkeleton = () => (
   <div className="space-y-4 bg-gradient-to-br from-blue-500 to-indigo-600 p-5 rounded-2xl shadow-md animate-pulse">
     <div className="flex justify-between items-center">
@@ -56,6 +74,7 @@ const AccountSkeleton = () => (
 );
 
 export default function HomeClient({ user }: HomeClientProps) {
+  const router = useRouter();
   const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [holdings, setHoldings] = useState<Holding[]>([]);
@@ -145,7 +164,9 @@ export default function HomeClient({ user }: HomeClientProps) {
         {/* 보유 종목 */}
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-gray-800">보유 종목</h2>
-          {holdings && holdings.length > 0 ? (
+          {isLoading ? (
+            <HoldingsSkeleton />
+          ) : holdings && holdings.length > 0 ? (
             <div className="bg-white rounded-2xl shadow-md overflow-hidden">
               {holdings.map((holding) => {
                 const currentPrice = holding.current_price || 0;
@@ -203,7 +224,10 @@ export default function HomeClient({ user }: HomeClientProps) {
                   뉴스를 읽고 투자해 보세요
                 </p>
               </div>
-              <button className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition-transform active:scale-95 text-sm shrink-0">
+              <button
+                onClick={() => router.push("/news")}
+                className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition-transform active:scale-95 text-sm shrink-0"
+              >
                 뉴스 보러가기 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
