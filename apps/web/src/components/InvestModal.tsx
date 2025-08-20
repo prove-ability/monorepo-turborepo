@@ -51,7 +51,7 @@ export function InvestModal({
       <animated.div
         {...bind()}
         style={{ y }}
-        className="bg-white w-full p-4 rounded-t-lg touch-none pb-screen"
+        className="bg-white w-full p-4 rounded-t-lg touch-none pb-screen max-w-xl mx-auto"
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
         <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4" />
