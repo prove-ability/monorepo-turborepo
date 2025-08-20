@@ -31,25 +31,57 @@ interface HomeClientProps {
   user: User;
 }
 
+const AccountSkeleton = () => (
+  <div className="space-y-4 bg-gradient-to-br from-blue-500 to-indigo-600 p-5 rounded-2xl shadow-md animate-pulse">
+    <div className="flex justify-between items-center">
+      <h2 className="text-xl font-bold text-white">내 계좌</h2>
+    </div>
+    {/* text-4xl pt-2에 해당하는 높이와 패딩 적용 */}
+    <div className="pt-2">
+      <div className="h-10 bg-white/30 rounded-md w-3/4"></div>
+    </div>
+    <div className="grid grid-cols-2 gap-4 pt-4">
+      <div className="bg-white/20 p-4 rounded-lg">
+        <p className="text-base text-indigo-100">투자 중인 금액</p>
+        {/* text-xl에 해당하는 높이 적용 */}
+        <div className="h-7 bg-white/30 rounded-md mt-1 w-1/2"></div>
+      </div>
+      <div className="bg-white/20 p-4 rounded-lg">
+        <p className="text-base text-indigo-100">주문 가능 금액</p>
+        {/* text-xl에 해당하는 높이 적용 */}
+        <div className="h-7 bg-white/30 rounded-md mt-1 w-1/2"></div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function HomeClient({ user }: HomeClientProps) {
   const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
-      const [classData, walletData, holdingsData] = await Promise.all([
-        getClassInfo(user.class_id),
-        getWallet(user.user_id),
-        getHoldings(user.user_id),
-      ]);
-      setClassInfo(classData);
-      setWalletInfo(walletData);
-      setHoldings(holdingsData || []);
+      try {
+        const [classData, walletData, holdingsData] = await Promise.all([
+          getClassInfo(user.class_id),
+          getWallet(user.user_id),
+          getHoldings(user.user_id),
+        ]);
+        setClassInfo(classData);
+        setWalletInfo(walletData);
+        setHoldings(holdingsData || []);
+      } catch (error) {
+        console.error("Failed to fetch home data:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     fetchData();
   }, [user.class_id, user.user_id]);
+
   // 투자 원금
   const investedAmount = holdings.reduce(
     (acc, holding) => acc + holding.average_purchase_price * holding.quantity,
@@ -83,28 +115,32 @@ export default function HomeClient({ user }: HomeClientProps) {
         </div>
 
         {/* 내 계좌 */}
-        <div className="space-y-4 bg-gradient-to-br from-blue-500 to-indigo-600 p-5 rounded-2xl shadow-md">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white">내 계좌</h2>
-          </div>
-          <p className="text-4xl font-bold text-white pt-2">
-            {totalAssetValue.toLocaleString()}원
-          </p>
-          <div className="grid grid-cols-2 gap-4 pt-4">
-            <div className="bg-white/20 p-4 rounded-lg">
-              <p className="text-base text-indigo-100">투자 중인 금액</p>
-              <p className="text-xl font-semibold text-white">
-                {investedAmount.toLocaleString()}원
-              </p>
+        {isLoading ? (
+          <AccountSkeleton />
+        ) : (
+          <div className="space-y-4 bg-gradient-to-br from-blue-500 to-indigo-600 p-5 rounded-2xl shadow-md">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold text-white">내 계좌</h2>
             </div>
-            <div className="bg-white/20 p-4 rounded-lg">
-              <p className="text-base text-indigo-100">주문 가능 금액</p>
-              <p className="text-xl font-semibold text-white">
-                {walletInfo?.balance.toLocaleString() || 0}원
-              </p>
+            <p className="text-4xl font-bold text-white pt-2">
+              {totalAssetValue.toLocaleString()}원
+            </p>
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <div className="bg-white/20 p-4 rounded-lg">
+                <p className="text-base text-indigo-100">투자 중인 금액</p>
+                <p className="text-xl font-semibold text-white">
+                  {investedAmount.toLocaleString()}원
+                </p>
+              </div>
+              <div className="bg-white/20 p-4 rounded-lg">
+                <p className="text-base text-indigo-100">주문 가능 금액</p>
+                <p className="text-xl font-semibold text-white">
+                  {walletInfo?.balance.toLocaleString() || 0}원
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 보유 종목 */}
         <div className="space-y-4">
