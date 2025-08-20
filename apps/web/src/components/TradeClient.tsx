@@ -17,26 +17,40 @@ export default function TradeClient() {
 
   const [quantity, setQuantity] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [holdingQuantity, setHoldingQuantity] = useState<number | null>(null);
   const [classId, setClassId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchClassInfo = async () => {
+    const fetchUserInfo = async () => {
       const supabase = createWebClientByClientSide();
       const {
         data: { session },
       } = await supabase.auth.getSession();
       if (session?.user) {
+        const userId = session.user.id;
         const { data: student } = await supabase
           .from("users")
           .select("class_id")
-          .eq("user_id", session.user.id)
+          .eq("user_id", userId)
           .single();
         if (student) {
           setClassId(student.class_id);
         }
+
+        if (action === "sell" && stockId) {
+          const { data: holding } = await supabase
+            .from("holdings")
+            .select("quantity")
+            .eq("user_id", userId)
+            .eq("stock_id", stockId)
+            .single();
+          if (holding) {
+            setHoldingQuantity(holding.quantity);
+          }
+        }
       }
     };
-    fetchClassInfo();
+    fetchUserInfo();
   }, []);
 
   const handleKeyPress = (key: string) => {
@@ -102,6 +116,14 @@ export default function TradeClient() {
           <p className="text-lg">수량</p>
           <h2 className="text-4xl font-bold my-2 h-12">{quantity || "0"}</h2>
           <p className="text-blue-200">{`몇 주 ${action === "buy" ? "매수" : "매도"}할까요?`}</p>
+          {action === "sell" && holdingQuantity !== null && price && (
+            <div className="text-blue-200 mt-1 text-sm">
+              <p>보유 수량: {holdingQuantity}주</p>
+              <p className="mt-1">
+                예상 금액: {(holdingQuantity * parseFloat(price)).toLocaleString()}원
+              </p>
+            </div>
+          )}
         </div>
       </main>
 
