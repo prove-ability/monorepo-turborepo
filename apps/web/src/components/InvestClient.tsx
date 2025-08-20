@@ -65,7 +65,7 @@ export default function InvestClient({ classInfo }: InvestClientProps) {
 
   return (
     <div className="h-full">
-      <main className="max-w-2xl mx-auto space-y-5">
+      <main className="max-w-xl mx-auto space-y-5">
         {/* 상단 배너 */}
         <div className="bg-indigo-50 text-indigo-800 p-4 rounded-xl flex items-center gap-3">
           <TrendingUp className="h-6 w-6 flex-shrink-0" />
