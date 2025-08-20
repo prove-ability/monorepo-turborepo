@@ -1,14 +1,14 @@
 "use client";
 
-import { Home, Newspaper, Gem, Trophy } from "lucide-react";
+import { Home, Newspaper, ShoppingCart, Gem } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/", label: "홈", icon: Home },
-  { href: "/news", label: "뉴스", icon: Newspaper },
-  { href: "/invest", label: "투자", icon: Gem },
-  { href: "/ranking", label: "랭킹", icon: Trophy },
+  { href: "/", icon: Home, label: "홈" },
+  { href: "/news", icon: Newspaper, label: "뉴스" },
+  { href: "/invest", icon: ShoppingCart, label: "투자" },
+  { href: "/ranking", icon: Gem, label: "랭킹" },
 ];
 
 export function BottomNav() {
@@ -16,7 +16,7 @@ export function BottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 w-full max-w-xl mx-auto bg-white border-t-2 border-gray-100 z-40">
-      <div className="flex justify-around">
+      <div className="grid grid-cols-4 h-full">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (

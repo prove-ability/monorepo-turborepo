@@ -1,6 +1,7 @@
 "use server";
 
 import { createWebClient } from "@/lib/supabase/server";
+import { Holding, Ranking, User } from "@/types/ranking";
 import { redirect } from "next/navigation";
 
 export interface LoginResult {
@@ -198,6 +199,72 @@ export async function getWallet(userId: string) {
   return wallet;
 }
 
+export async function getRankingByClass(classId: string) {
+  const supabase = await createWebClient();
+
+  const { data: users, error: usersError } = await supabase
+    .from("users")
+    .select("user_id, nickname")
+    .eq("class_id", classId);
+
+  if (usersError) {
+    console.error("클래스 사용자 조회 실패:", usersError);
+    return [];
+  }
+
+  const rankings = await Promise.all(
+    users.map(async (user: User) => {
+      const { data: wallet, error: walletError } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", user.user_id)
+        .single();
+
+      const { data: holdings, error: holdingsError } = await supabase
+        .from("holdings")
+        .select("*, stocks(*)")
+        .eq("user_id", user.user_id);
+
+      const holdingsValue = holdings
+        ? holdings.reduce((acc: number, holding: Holding) => {
+            const stock = holding.stocks;
+            const currentPrice = stock?.current_price || 0;
+            return acc + currentPrice * holding.quantity;
+          }, 0)
+        : 0;
+
+      const totalAsset = (wallet?.balance || 0) + holdingsValue;
+
+      return {
+        nickname: user.nickname,
+        totalAsset,
+      };
+    })
+  );
+
+  rankings.sort((a, b) => {
+    if (b.totalAsset !== a.totalAsset) {
+      return b.totalAsset - a.totalAsset;
+    }
+
+    const aHasNickname = !!a.nickname;
+    const bHasNickname = !!b.nickname;
+
+    if (aHasNickname && !bHasNickname) {
+      return -1; // a가 더 높은 순위
+    }
+    if (!aHasNickname && bHasNickname) {
+      return 1; // b가 더 높은 순위
+    }
+
+    const nameA = a.nickname || "";
+    const nameB = b.nickname || "";
+    return nameA.localeCompare(nameB);
+  });
+
+  return rankings.map((r, index) => ({ ...r, rank: index + 1 }));
+}
+
 export async function getHoldings() {
   const supabase = await createWebClient();
 
@@ -225,6 +292,8 @@ export async function getHoldings() {
     return [];
   }
 
+  const stockIds = holdings.map((h) => h.stock_id);
+
   // 2. 사용자 정보에서 class_id 조회
   const { data: user, error: userError } = await supabase
     .from("users")
@@ -237,9 +306,7 @@ export async function getHoldings() {
     return [];
   }
 
-  const stockIds = holdings.map((h) => h.stock_id);
-
-  // 3. 클래스의 현재 날짜 정보 조회
+  // 3. 클래스 정보에서 현재 Day 조회
   const { data: classInfo, error: classError } = await supabase
     .from("classes")
     .select("current_day")
