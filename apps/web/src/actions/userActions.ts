@@ -230,11 +230,24 @@ export async function getHoldings(userId: string) {
 
   const stockIds = holdings.map((h) => h.stock_id);
 
-  // 3. 보유 주식의 현재 가격 정보 조회 (class_stock_prices)
+  // 3. 클래스의 현재 날짜 정보 조회
+  const { data: classInfo, error: classError } = await supabase
+    .from("classes")
+    .select("current_day")
+    .eq("id", user.class_id)
+    .single();
+
+  if (classError || !classInfo) {
+    console.error("클래스 정보 조회 실패:", classError);
+    return [];
+  }
+
+  // 4. 보유 주식의 현재 가격 정보 조회 (class_stock_prices)
   const { data: stockPrices, error: stockPricesError } = await supabase
     .from("class_stock_prices")
     .select("stock_id, price")
     .eq("class_id", user.class_id)
+    .eq("day", classInfo.current_day)
     .in("stock_id", stockIds);
 
   if (stockPricesError) {
@@ -242,7 +255,7 @@ export async function getHoldings(userId: string) {
     return [];
   }
 
-  // 4. 주식 이름 정보 조회 (stocks)
+  // 5. 주식 이름 정보 조회 (stocks)
   const { data: stocks, error: stocksError } = await supabase
     .from("stocks")
     .select("id, name")
@@ -253,7 +266,7 @@ export async function getHoldings(userId: string) {
     return [];
   }
 
-  // 5. 정보 결합
+  // 6. 정보 결합
   const stockPriceMap = new Map(stockPrices.map((p) => [p.stock_id, p.price]));
   const stockNameMap = new Map(stocks.map((s) => [s.id, s.name]));
 

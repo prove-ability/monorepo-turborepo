@@ -145,19 +145,77 @@ export default function HomeClient({ user }: HomeClientProps) {
         {/* 보유 종목 */}
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-gray-800">보유 종목</h2>
-          <div className="p-6 bg-white rounded-2xl flex items-center justify-between shadow-md">
-            <div>
-              <p className="text-lg text-gray-800 font-bold">
-                보유 종목이 없어요
-              </p>
-              <p className="text-base text-gray-500 mt-1">
-                뉴스를 읽고 투자해 보세요
-              </p>
+          {holdings && holdings.length > 0 ? (
+            <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+              {holdings.map((holding) => {
+                console.log("holding", holding);
+                const currentPrice = holding.current_price || 0;
+                const evaluation = currentPrice * holding.quantity;
+                const profit =
+                  evaluation -
+                  holding.average_purchase_price * holding.quantity;
+                const profitRate =
+                  holding.average_purchase_price === 0
+                    ? 0
+                    : (profit /
+                        (holding.average_purchase_price * holding.quantity)) *
+                      100;
+
+                const colorClass =
+                  profit > 0
+                    ? "text-red-500"
+                    : profit < 0
+                      ? "text-blue-500"
+                      : "text-gray-500";
+
+                console.log("evaluation", evaluation);
+                console.log(
+                  "average_purchase_price",
+                  holding.average_purchase_price * holding.quantity
+                );
+                console.log("profit", profit);
+
+                return (
+                  <div
+                    key={holding.stock_id}
+                    className="p-4 border-b last:border-b-0"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="font-bold text-lg text-gray-800">
+                        {holding.name}
+                      </div>
+                      <div className={`font-semibold ${colorClass}`}>
+                        {profit.toLocaleString()}원
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center text-sm mt-1">
+                      <div className="text-gray-500">
+                        {holding.quantity}주 ·{" "}
+                        {holding.average_purchase_price.toLocaleString()}원
+                      </div>
+                      <div className={`${colorClass}`}>
+                        {profitRate.toFixed(2)}%
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <button className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition-transform active:scale-95 text-sm shrink-0">
-              뉴스 보러가기 <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
+          ) : (
+            <div className="p-6 bg-white rounded-2xl flex items-center justify-between shadow-md">
+              <div>
+                <p className="text-lg text-gray-800 font-bold">
+                  보유 종목이 없어요
+                </p>
+                <p className="text-base text-gray-500 mt-1">
+                  뉴스를 읽고 투자해 보세요
+                </p>
+              </div>
+              <button className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition-transform active:scale-95 text-sm shrink-0">
+                뉴스 보러가기 <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
