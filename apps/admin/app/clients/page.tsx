@@ -9,27 +9,27 @@ export default async function ClientsPage() {
       columns: {
         id: true,
         name: true,
-        mobilePhone: true,
+        mobile_phone: true,
         email: true,
-        createdAt: true,
-        createdBy: true,
+        created_at: true,
+        created_by: true,
       },
       with: {
         managers: {
           columns: {
             id: true,
-            startDate: true,
-            endDate: true,
-            managerId: true,
-            clientId: true,
-            createdAt: true,
-            updatedAt: true,
-            createdBy: true,
-            currentDay: true,
+            start_date: true,
+            end_date: true,
+            manager_id: true,
+            client_id: true,
+            created_at: true,
+            updated_at: true,
+            created_by: true,
+            current_day: true,
           },
         },
       },
-      orderBy: [desc(clients.createdAt)],
+      orderBy: [desc(clients.created_at)],
     });
 
     return (
@@ -39,6 +39,7 @@ export default async function ClientsPage() {
       </div>
     );
   } catch (error) {
+    console.error("Error fetching clients:", error);
     const message =
       error instanceof Error ? error.message : "An unknown error occurred";
     return <p>오류: {message}</p>;
