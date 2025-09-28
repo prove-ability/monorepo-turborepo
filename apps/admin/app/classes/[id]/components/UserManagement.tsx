@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { createUserWithClerk } from "@/actions/userActions";
+import { createUserWithStack } from "@/actions/userActions";
 import { toast } from "sonner";
 
 const userSchema = z.object({
@@ -37,7 +37,7 @@ export default function UserManagement({ classId }: { classId: string }) {
     formData.append("password", data.password);
     formData.append("classId", classId);
 
-    const result = await createUserWithClerk(formData);
+    const result = await createUserWithStack(formData);
 
     if (result.success) {
       toast.success(result.message);
@@ -66,17 +66,25 @@ export default function UserManagement({ classId }: { classId: string }) {
             <div className="space-y-2">
               <Label htmlFor="name">이름</Label>
               <Input id="name" {...register("name")} />
-              {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+              {errors.name && (
+                <p className="text-red-500 text-sm">{errors.name.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">이메일 (로그인 ID)</Label>
               <Input id="email" type="email" {...register("email")} />
-              {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">초기 비밀번호</Label>
               <Input id="password" type="password" {...register("password")} />
-              {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+              {errors.password && (
+                <p className="text-red-500 text-sm">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
           </div>
           <Button type="submit" disabled={isSubmitting}>

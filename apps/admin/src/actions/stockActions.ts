@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { currentUser } from "@clerk/nextjs/server";
+import { stackServerApp } from "@/stack/server";
 import { db, stocks } from "@repo/db";
 import { eq, asc } from "drizzle-orm";
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
@@ -23,7 +23,7 @@ export async function getStocks(): Promise<Stock[]> {
 
 // 주식 생성
 export async function createStock(stockData: CreateStockData): Promise<Stock> {
-  const user = await currentUser();
+  const user = await stackServerApp.getUser();
   if (!user) {
     throw new Error("사용자 인증에 실패했습니다. 다시 로그인해주세요.");
   }

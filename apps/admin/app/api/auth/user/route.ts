@@ -1,11 +1,12 @@
-import { auth } from "@clerk/nextjs/server";
+import { stackServerApp } from "@/stack/server";
 import { type NextRequest, NextResponse } from "next/server";
 import { db, admins } from "@repo/db";
 import { eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const user = await stackServerApp.getUser();
+    const userId = user?.id;
 
     if (!userId) {
       return NextResponse.json(

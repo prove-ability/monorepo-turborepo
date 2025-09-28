@@ -71,14 +71,14 @@ export function ClassDetailClient({
       const nickname = student.nickname?.toLowerCase() || "";
       const phone = student.phone || "";
       const schoolName = student.schoolName?.toLowerCase() || "";
-      const clerkId = student.clerkId?.toLowerCase() || "";
+      const authId = student.auth_id?.toLowerCase() || "";
 
       return (
         name.includes(term) ||
         nickname.includes(term) ||
         phone.includes(term) ||
         schoolName.includes(term) ||
-        clerkId.includes(term)
+        authId.includes(term)
       );
     });
   }, [students, searchTerm]);
@@ -162,7 +162,7 @@ export function ClassDetailClient({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="학생 이름, 닉네임, 전화번호, 학교명, 로그인ID로 검색..."
+              placeholder="학생 이름, 닉네임, 전화번호, 학교명, Auth ID로 검색..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -228,7 +228,7 @@ export function ClassDetailClient({
                       학교 정보
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Clerk ID
+                      Auth ID
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       등록일
@@ -265,7 +265,7 @@ export function ClassDetailClient({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {student.clerkId ?? "-"}
+                          {student.auth_id ?? "-"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

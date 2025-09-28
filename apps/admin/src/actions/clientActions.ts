@@ -3,7 +3,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { currentUser } from "@clerk/nextjs/server";
+import { stackServerApp } from "@/stack/server";
 import { db, clients } from "@repo/db";
 import { eq } from "drizzle-orm";
 
@@ -31,7 +31,7 @@ export async function createClientAction(_prevState: any, formData: FormData) {
   }
 
   try {
-    const user = await currentUser();
+    const user = await stackServerApp.getUser();
     if (!user) {
       return {
         message: "사용자 인증에 실패했습니다. 다시 로그인해주세요.",

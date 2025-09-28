@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { currentUser } from "@clerk/nextjs/server";
+import { stackServerApp } from "@/stack/server";
 import { db, managers } from "@repo/db";
 import { eq } from "drizzle-orm";
 
@@ -24,15 +24,15 @@ export async function createManager(clientId: string, formData: FormData) {
   }
 
   try {
-    const user = await currentUser();
+    const user = await stackServerApp.getUser();
     if (!user) {
       return { success: false, message: "사용자 인증에 실패했습니다." };
     }
 
     const [data] = await db.insert(managers).values({
       ...validation.data,
-      clientId: clientId,
-      createdBy: user.id,
+      client_id: clientId,
+      created_by: user.id,
     }).returning();
 
     revalidatePath("/admin/clients");

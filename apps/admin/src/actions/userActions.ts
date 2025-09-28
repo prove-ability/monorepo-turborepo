@@ -2,9 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { db, users, classes, wallets } from "@repo/db";
+import { db, users, wallets } from "@repo/db";
 import { eq, or, like, and, desc, asc } from "drizzle-orm";
-import { clerkClient } from "@clerk/nextjs/server";
 
 // 타입 정의
 interface CreateUserData {
@@ -18,16 +17,6 @@ interface CreateUserData {
 
 interface UpdateUserData extends Partial<CreateUserData> {}
 
-// 사용자 데이터 검증 스키마
-const userSchema = z.object({
-  name: z.string().min(1, "이름은 필수입니다"),
-  phone: z.string().min(1, "전화번호는 필수입니다"),
-  grade: z.number().min(1, "학년은 필수입니다.").max(12, "학년은 12를 넘을 수 없습니다."),
-  schoolName: z.string().min(1, "학교명은 필수입니다"),
-  clientId: z.string().min(1, "클라이언트 ID는 필수입니다"),
-  classId: z.string().min(1, "클래스 ID는 필수입니다"),
-});
-
 const createUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -35,7 +24,7 @@ const createUserSchema = z.object({
   classId: z.string().uuid(),
 });
 
-export async function createUserWithClerk(formData: FormData) {
+export async function createUserWithStack(formData: FormData) {
   try {
     const validatedData = createUserSchema.parse({
       email: formData.get("email"),
@@ -44,29 +33,54 @@ export async function createUserWithClerk(formData: FormData) {
       classId: formData.get("classId"),
     });
 
-    // 1. Create user in Clerk
-    const clerkUser = await clerkClient.users.createUser({
-      emailAddress: [validatedData.email],
-      password: validatedData.password,
-      firstName: validatedData.name,
+    // 1. Create user in Stack via REST API
+    if (!process.env.STACK_SECRET_SERVER_KEY) {
+      throw new Error(
+        "STACK_SECRET_SERVER_KEY is not set in environment variables."
+      );
+    }
+
+    const response = await fetch("https://api.stack-auth.com/v1/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.STACK_SECRET_SERVER_KEY}`,
+      },
+      body: JSON.stringify({
+        email: validatedData.email,
+        password: validatedData.password,
+        displayName: validatedData.name,
+      }),
     });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(
+        `Stack user creation failed: ${response.status} ${errorBody}`
+      );
+    }
+
+    const stackUser = await response.json();
 
     // 2. Create user in our database
     await db.insert(users).values({
-      clerkId: clerkUser.id,
       name: validatedData.name,
       classId: validatedData.classId,
+      auth_id: stackUser.id,
     });
 
     revalidatePath("/classes");
     return { success: true, message: "학생 계정이 성공적으로 생성되었습니다." };
-
   } catch (e) {
-    const error = e instanceof Error ? e : new Error("An unknown error occurred");
+    const error =
+      e instanceof Error ? e : new Error("An unknown error occurred");
     if (error instanceof z.ZodError) {
       return { success: false, error: error.flatten().fieldErrors };
     }
-    return { success: false, error: { _form: [`사용자 생성 중 오류 발생: ${error.message}`] } };
+    return {
+      success: false,
+      error: { _form: [`사용자 생성 중 오류 발생: ${error.message}`] },
+    };
   }
 }
 
@@ -81,8 +95,12 @@ export async function getUsers() {
     });
     return { success: true, data };
   } catch (e) {
-    const error = e instanceof Error ? e : new Error("An unknown error occurred");
-    return { success: false, error: `사용자 목록을 불러오는데 실패했습니다: ${error.message}` };
+    const error =
+      e instanceof Error ? e : new Error("An unknown error occurred");
+    return {
+      success: false,
+      error: `사용자 목록을 불러오는데 실패했습니다: ${error.message}`,
+    };
   }
 }
 
@@ -92,7 +110,13 @@ export async function getUsersByClass(classId: string, searchTerm?: string) {
     const conditions = [eq(users.classId, classId)];
     if (searchTerm?.trim()) {
       const searchPattern = `%${searchTerm.trim()}%`;
-      conditions.push(or(like(users.name, searchPattern), like(users.phone, searchPattern), like(users.schoolName, searchPattern), like(users.clerkId, searchPattern))!);
+      conditions.push(
+        or(
+          like(users.name, searchPattern),
+          like(users.phone, searchPattern),
+          like(users.schoolName, searchPattern)
+        )!
+      );
     }
 
     const data = await db.query.users.findMany({
@@ -101,7 +125,8 @@ export async function getUsersByClass(classId: string, searchTerm?: string) {
     });
     return { success: true, data: data || [] };
   } catch (e) {
-    const error = e instanceof Error ? e : new Error("An unknown error occurred");
+    const error =
+      e instanceof Error ? e : new Error("An unknown error occurred");
     throw new Error(`사용자 조회 실패: ${error.message}`);
   }
 }
@@ -119,10 +144,17 @@ export async function updateUser(userId: string, data: UpdateUserData) {
 
     await db.update(users).set(updateData).where(eq(users.id, userId));
     revalidatePath("/classes");
-    return { success: true, message: "사용자 정보가 성공적으로 수정되었습니다." };
+    return {
+      success: true,
+      message: "사용자 정보가 성공적으로 수정되었습니다.",
+    };
   } catch (e) {
-    const error = e instanceof Error ? e : new Error("An unknown error occurred");
-    return { success: false, error: `사용자 정보 수정에 실패했습니다: ${error.message}` };
+    const error =
+      e instanceof Error ? e : new Error("An unknown error occurred");
+    return {
+      success: false,
+      error: `사용자 정보 수정에 실패했습니다: ${error.message}`,
+    };
   }
 }
 
@@ -134,8 +166,12 @@ export async function deleteUser(userId: string) {
     revalidatePath("/classes");
     return { success: true, message: "사용자가 성공적으로 삭제되었습니다." };
   } catch (e) {
-    const error = e instanceof Error ? e : new Error("An unknown error occurred");
-    return { success: false, error: `사용자 삭제에 실패했습니다: ${error.message}` };
+    const error =
+      e instanceof Error ? e : new Error("An unknown error occurred");
+    return {
+      success: false,
+      error: `사용자 삭제에 실패했습니다: ${error.message}`,
+    };
   }
 }
 
