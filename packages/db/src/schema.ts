@@ -4,6 +4,16 @@ import { relations } from 'drizzle-orm';
 // Enum for transaction type
 export const transactionTypeEnum = pgEnum('transaction_type', ['buy', 'sell']);
 
+export const adminRoleEnum = pgEnum('admin_role', ['superadmin', 'admin', 'manager']);
+
+export const admins = pgTable('admins', {
+  id: uuid('id').primaryKey(), // This should correspond to the auth.users.id
+  email: text('email').unique(),
+  role: adminRoleEnum('role').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   clerkId: text('clerk_id').unique(),
@@ -94,8 +104,8 @@ export const clients = pgTable('clients', {
 
 export const managers = pgTable('managers', {
     id: uuid('id').primaryKey().defaultRandom(),
-    startDate: timestamp('start_date', { withTimezone: true }),
-    endDate: timestamp('end_date', { withTimezone: true }),
+    startDate: timestamp('start_date'),
+    endDate: timestamp('end_date'),
     managerId: uuid('manager_id').references((): AnyPgColumn => users.id),
     clientId: uuid('client_id').references((): AnyPgColumn => clients.id),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -133,6 +143,10 @@ export const classesRelations = relations(classes, ({ one }) => ({
     fields: [classes.managerId],
     references: [managers.id],
   }),
+}));
+
+export const clientsRelations = relations(clients, ({ many }) => ({
+  managers: many(managers),
 }));
 
 export const managersRelations = relations(managers, ({ one }) => ({

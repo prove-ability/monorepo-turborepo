@@ -1,9 +1,4 @@
-export interface Client {
-  id: string;
-  name: string;
-  phone?: string | null;
-  fax?: string | null;
-  email?: string | null;
-  website?: string | null;
-  created_at: string;
-}
+import { type InferSelectModel } from "drizzle-orm";
+import { type clients } from "@repo/db/schema";
+
+export type Client = InferSelectModel<typeof clients>;

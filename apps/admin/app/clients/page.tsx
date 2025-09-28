@@ -1,29 +1,46 @@
-import { createAdminClient } from "@/lib/supabase/server";
+import { db } from "@repo/db";
 import { ClientList } from "./components/client-list";
+import { desc } from "drizzle-orm";
+import { clients } from "@repo/db/schema";
 
 export default async function ClientsPage() {
-  const supabase = await createAdminClient();
+  try {
+    const clientData = await db.query.clients.findMany({
+      columns: {
+        id: true,
+        name: true,
+        mobilePhone: true,
+        email: true,
+        createdAt: true,
+        createdBy: true,
+      },
+      with: {
+        managers: {
+          columns: {
+            id: true,
+            startDate: true,
+            endDate: true,
+            managerId: true,
+            clientId: true,
+            createdAt: true,
+            updatedAt: true,
+            createdBy: true,
+            currentDay: true,
+          },
+        },
+      },
+      orderBy: [desc(clients.createdAt)],
+    });
 
-  // Supabase의 관계형 쿼리: clients 테이블을 조회하면서,
-  // 관련된 managers 테이블의 모든 데이터(*)를 함께 가져옵니다.
-  const { data: clients, error } = await supabase
-    .from("clients")
-    .select(
-      `
-      *,
-      managers ( * )
-    `
-    )
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    return <p>오류: {error.message}</p>;
+    return (
+      <div className="container mx-auto py-10">
+        <h1 className="text-3xl font-bold mb-6">고객사 및 매니저 관리</h1>
+        <ClientList initialClients={clientData} />
+      </div>
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "An unknown error occurred";
+    return <p>오류: {message}</p>;
   }
-
-  return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">고객사 및 매니저 관리</h1>
-      <ClientList initialClients={clients} />
-    </div>
-  );
 }
