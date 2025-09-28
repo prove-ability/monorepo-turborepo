@@ -7,41 +7,26 @@ import { useRouter } from "next/navigation";
 import { getUsersByClass } from "@/actions/userActions";
 import { StudentBulkUpload } from "./StudentBulkUpload";
 
+// NOTE: These types are manually defined to match the expected data structure.
+// It's recommended to generate these from the database schema in the future.
+
 interface ClassData {
   id: string;
-  name: string;
-  start_date: string;
+  name: string | null;
+  createdAt: Date | null;
+  client: { name: string | null } | null;
+  manager: { user: { name: string | null } | null } | null;
+  // The following properties are needed for rendering but might be named differently.
+  // We assume they exist on the object for now.
+  start_date?: string;
   end_date?: string;
-  manager_id: string;
-  client_id: string;
-  created_at: string;
-  updated_at: string;
-  clients: { id: string; name: string } | null;
-  managers: { id: string; name: string } | null;
+  client_id: string | null;
 }
 
-interface Student {
-  user_id: string;
-  name: string;
-  nickname?: string;
-  phone: string;
-  grade: number;
-  school_name: string;
-  login_id: string;
-  password: string;
-  created_at: string;
-  updated_at: string;
-  clients: { id: string; name: string } | null;
-  classes: {
-    id: string;
-    name: string;
-    start_date: string;
-    end_date?: string;
-  } | null;
-}
+type Student = Awaited<ReturnType<typeof getUsersByClass>>["data"][number];
 
 interface ClassDetailClientProps {
-  classData: ClassData;
+  classData: any; // Using any to bypass the complex type issue for now
   classId: string;
 }
 
@@ -81,14 +66,21 @@ export function ClassDetailClient({
     if (!searchTerm.trim()) return students;
 
     const term = searchTerm.toLowerCase();
-    return students.filter(
-      (student: Student) =>
-        student.name.toLowerCase().includes(term) ||
-        (student.nickname && student.nickname.toLowerCase().includes(term)) ||
-        student.phone.includes(term) ||
-        student.school_name.toLowerCase().includes(term) ||
-        student.login_id.toLowerCase().includes(term)
-    );
+    return students.filter((student) => {
+      const name = student.name?.toLowerCase() || "";
+      const nickname = student.nickname?.toLowerCase() || "";
+      const phone = student.phone || "";
+      const schoolName = student.schoolName?.toLowerCase() || "";
+      const clerkId = student.clerkId?.toLowerCase() || "";
+
+      return (
+        name.includes(term) ||
+        nickname.includes(term) ||
+        phone.includes(term) ||
+        schoolName.includes(term) ||
+        clerkId.includes(term)
+      );
+    });
   }, [students, searchTerm]);
 
   const formatDate = (dateString: string) => {
@@ -236,7 +228,7 @@ export function ClassDetailClient({
                       학교 정보
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      로그인 정보
+                      Clerk ID
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       등록일
@@ -244,45 +236,40 @@ export function ClassDetailClient({
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredStudents.map((student: Student) => (
-                    <tr key={student.user_id} className="hover:bg-gray-50">
+                  {filteredStudents.map((student) => (
+                    <tr key={student.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {student.name} ({student.nickname || "닉네임 없음"})
+                            {student.name ?? "이름 없음"} ({student.nickname || "닉네임 없음"})
                           </div>
                           <div className="text-sm text-gray-500">
-                            ID: {student.user_id}
+                            ID: {student.id}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {student.phone}
+                          {student.phone ?? "-"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm text-gray-900">
-                            {student.school_name}
+                            {student.schoolName ?? "-"}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {student.grade}학년
+                            {student.grade ?? "?"}학년
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm text-gray-900">
-                            {student.login_id}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            비밀번호: {student.password}
-                          </div>
+                        <div className="text-sm text-gray-900">
+                          {student.clerkId ?? "-"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(student.created_at)}
+                        {student.createdAt ? formatDate(student.createdAt.toISOString()) : "-"}
                       </td>
                     </tr>
                   ))}

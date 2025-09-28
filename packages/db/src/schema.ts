@@ -6,8 +6,8 @@ export const transactionTypeEnum = pgEnum('transaction_type', ['buy', 'sell']);
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
+  clerkId: text('clerk_id').unique(),
   name: text('name'),
-  loginId: text('login_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
   classId: uuid('class_id').references((): AnyPgColumn => classes.id),
@@ -15,7 +15,6 @@ export const users = pgTable('users', {
   grade: text('grade'),
   phone: text('phone'),
   schoolName: text('school_name'),
-  password: text('password'), // Note: Storing plain text passwords is not recommended
 });
 
 export const classes = pgTable('classes', {
