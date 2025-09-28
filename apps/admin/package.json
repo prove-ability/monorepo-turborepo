@@ -31,6 +31,7 @@
     "@repo/hooks": "workspace:*",
     "@repo/ui": "workspace:*",
     "@repo/utils": "workspace:*",
+    "@stackframe/stack": "^2.8.41",
     "@tabler/icons-react": "^3.34.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@tanstack/react-table": "^8.21.3",
