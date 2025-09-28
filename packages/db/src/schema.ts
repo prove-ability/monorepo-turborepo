@@ -36,7 +36,7 @@ export const news = pgTable('news', {
   day: integer('day'),
   title: text('title'),
   content: text('content'),
-  relatedStockIds: jsonb('related_stock_ids'),
+  relatedStockIds: jsonb('related_stock_ids').$type<string[]>(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
   createdBy: uuid('created_by'),
@@ -150,6 +150,7 @@ export const managersRelations = relations(managers, ({ one }) => ({
 export const holdings = pgTable('holdings', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references((): AnyPgColumn => users.id),
+  classId: uuid('class_id').references((): AnyPgColumn => classes.id),
   stockId: uuid('stock_id').references((): AnyPgColumn => stocks.id),
   quantity: integer('quantity'),
   averagePurchasePrice: numeric('average_purchase_price'),

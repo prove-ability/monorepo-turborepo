@@ -1,6 +1,6 @@
 "use server";
 
-import { createWebClient } from "@/lib/supabase/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { db, stocks, classStockPrices, holdings, transactions, users, wallets } from "@repo/db";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -20,10 +20,10 @@ export async function getStocks(classId: string, day: number) {
     });
 
     // 주식별로 현재가와 전일가를 찾아서 등락률을 계산합니다.
-    type StockWithPrices = typeof stockData[number];
-    const processedStocks = stockData.map((stock: StockWithPrices) => {
-      const currentPriceInfo = stock.classStockPrices.find((p: StockWithPrices['classStockPrices'][number]) => p.day === day);
-      const prevPriceInfo = stock.classStockPrices.find((p: StockWithPrices['classStockPrices'][number]) => p.day === day - 1);
+    const processedStocks = stockData.map((stock) => {
+      const prices = stock.classStockPrices as { day: number, price: string }[];
+      const currentPriceInfo = prices.find(p => p.day === day);
+      const prevPriceInfo = prices.find(p => p.day === day - 1);
 
       const currentPrice = currentPriceInfo ? parseFloat(currentPriceInfo.price) : 0;
       const prevPrice = prevPriceInfo ? parseFloat(prevPriceInfo.price) : currentPrice; // 전일 가격 없으면 현재가로
@@ -76,16 +76,14 @@ export async function getClassPortfolio(
       },
     });
 
-    type HoldingWithRelations = typeof portfolioData[number];
-
     return portfolioData
-      .filter((item: HoldingWithRelations) => item.stock && item.stock.classStockPrices.length > 0)
-      .map((item: HoldingWithRelations) => ({
-        quantity: item.quantity,
+      .filter(item => item.stock && (item.stock.classStockPrices as any[]).length > 0)
+      .map(item => ({
+        quantity: item.quantity || 0,
         stocks: {
-          id: item.stock.id,
-          name: item.stock.name,
-          class_stock_prices: item.stock.classStockPrices.map(p => ({ price: parseFloat(p.price) })),
+          id: item.stock!.id,
+          name: item.stock!.name || 'N/A',
+          class_stock_prices: (item.stock!.classStockPrices as { price: string }[]).map(p => ({ price: parseFloat(p.price) })),
         },
       }));
   } catch (error) {
@@ -104,12 +102,11 @@ interface TradeParams {
 export async function executeTrade(
   params: TradeParams
 ): Promise<{ success?: boolean; error?: string }> {
-  const supabase = await createWebClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
-
-  if (!authUser) {
+  const user = await currentUser();
+  if (!user) {
     return { error: "사용자를 찾을 수 없습니다." };
   }
+  const authUser = user;
 
   const { stockId, quantity, price, action } = params;
   const totalValue = price * quantity;

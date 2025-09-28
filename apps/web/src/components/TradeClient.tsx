@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Delete } from "lucide-react";
 import { executeTrade } from "@/actions/investActions";
-import { createWebClientByClientSide } from "@/lib/supabase/client";
 
 export default function TradeClient() {
   const router = useRouter();
@@ -17,40 +16,10 @@ export default function TradeClient() {
 
   const [quantity, setQuantity] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [holdingQuantity, setHoldingQuantity] = useState<number | null>(null);
-  const [classId, setClassId] = useState<string | null>(null);
+  const [holdingQuantity, setHoldingQuantity] = useState<number | null>(null); // This will be replaced by Drizzle
 
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      const supabase = createWebClientByClientSide();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) {
-        const userId = session.user.id;
-        const { data: student } = await supabase
-          .from("users")
-          .select("class_id")
-          .eq("user_id", userId)
-          .single();
-        if (student) {
-          setClassId(student.class_id);
-        }
-
-        if (action === "sell" && stockId) {
-          const { data: holding } = await supabase
-            .from("holdings")
-            .select("quantity")
-            .eq("user_id", userId)
-            .eq("stock_id", stockId)
-            .single();
-          if (holding) {
-            setHoldingQuantity(holding.quantity);
-          }
-        }
-      }
-    };
-    fetchUserInfo();
+    // TODO: Fetch user and holding info using Clerk and Drizzle
   }, []);
 
   const handleKeyPress = (key: string) => {
@@ -62,14 +31,7 @@ export default function TradeClient() {
   };
 
   const handleTrade = async () => {
-    if (
-      !stockId ||
-      !price ||
-      !action ||
-      !classId ||
-      !quantity ||
-      parseInt(quantity) === 0
-    ) {
+    if (!stockId || !price || !action || !quantity || parseInt(quantity) === 0) {
       alert("거래 정보가 올바르지 않습니다.");
       return;
     }

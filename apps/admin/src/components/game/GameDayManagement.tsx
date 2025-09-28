@@ -33,7 +33,7 @@ interface GameDayManagementProps {
 interface NewsInput {
   title: string;
   content: string;
-  related_stock_ids: string[];
+  relatedStockIds: string[];
 }
 
 export default function GameDayManagement({
@@ -65,7 +65,7 @@ export default function GameDayManagement({
   }, []);
 
   const [newsItems, setNewsItems] = useState<NewsInput[]>([
-    { title: "", content: "", related_stock_ids: [] },
+    { title: "", content: "", relatedStockIds: [] },
   ]);
   const [existingNews, setExistingNews] = useState<News[]>([]);
 
@@ -86,7 +86,7 @@ export default function GameDayManagement({
       const allNews = await getNews();
       // 현재 클래스와 Day에 해당하는 뉴스만 필터링
       const filteredNews = allNews.filter(
-        (news) => news.class_id === selectedClass && news.day === selectedDay
+        (news) => news.classId === selectedClass && news.day === selectedDay
       );
       setExistingNews(filteredNews);
     } catch (error) {
@@ -100,7 +100,7 @@ export default function GameDayManagement({
   const addNewsItem = () => {
     setNewsItems([
       ...newsItems,
-      { title: "", content: "", related_stock_ids: [] },
+      { title: "", content: "", relatedStockIds: [] },
     ]);
   };
 
@@ -121,7 +121,7 @@ export default function GameDayManagement({
       updated[index] = {
         title: currentItem.title || "",
         content: currentItem.content || "",
-        related_stock_ids: currentItem.related_stock_ids || [],
+        relatedStockIds: currentItem.relatedStockIds || [],
         [field]: value,
       };
       setNewsItems(updated);
@@ -133,17 +133,17 @@ export default function GameDayManagement({
     const currentItem = updated[newsIndex];
 
     if (currentItem) {
-      const relatedStocks = currentItem.related_stock_ids;
+      const relatedStocks = currentItem.relatedStockIds;
 
       if (relatedStocks.includes(stockId)) {
         updated[newsIndex] = {
           ...currentItem,
-          related_stock_ids: relatedStocks.filter((id) => id !== stockId),
+          relatedStockIds: relatedStocks.filter((id) => id !== stockId),
         };
       } else {
         updated[newsIndex] = {
           ...currentItem,
-          related_stock_ids: [...relatedStocks, stockId],
+          relatedStockIds: [...relatedStocks, stockId],
         };
       }
 
@@ -152,7 +152,7 @@ export default function GameDayManagement({
   };
 
   const resetForm = () => {
-    setNewsItems([{ title: "", content: "", related_stock_ids: [] }]);
+    setNewsItems([{ title: "", content: "", relatedStockIds: [] }]);
   };
 
   const handleUpdateNews = async (
@@ -166,8 +166,8 @@ export default function GameDayManagement({
         day: selectedDay,
         title: updatedData.title || "",
         content: updatedData.content || "",
-        related_stock_ids: updatedData.related_stock_ids || [],
-        class_id: selectedClass,
+        relatedStockIds: updatedData.relatedStockIds || [],
+        classId: selectedClass,
       });
       await loadExistingNews();
       onRefresh();
@@ -214,7 +214,7 @@ export default function GameDayManagement({
     setSavingNewsIndex(newsIndex);
     try {
       const gameData: GameData = {
-        class_id: selectedClass,
+        classId: selectedClass,
         day: selectedDay,
         stocks: [], // 빈 배열로 설정 (주식 가격은 다른 탭에서 관리)
         news: [news],
@@ -233,7 +233,7 @@ export default function GameDayManagement({
       setNewsItems(
         updatedNewsItems.length > 0
           ? updatedNewsItems
-          : [{ title: "", content: "", related_stock_ids: [] }]
+          : [{ title: "", content: "", relatedStockIds: [] }]
       );
 
       await loadExistingNews();
@@ -371,14 +371,14 @@ export default function GameDayManagement({
                               {news.content}
                             </div>
                           </div>
-                          {news.related_stock_ids &&
-                            news.related_stock_ids.length > 0 && (
+                          {news.relatedStockIds &&
+                            news.relatedStockIds.length > 0 && (
                               <div>
                                 <Label className="text-sm font-medium">
                                   관련 주식
                                 </Label>
                                 <div className="mt-1 flex flex-wrap gap-1">
-                                  {news.related_stock_ids.map((stockId) => {
+                                  {news.relatedStockIds.map((stockId) => {
                                     const stock = stocks.find(
                                       (s) => s.id === stockId
                                     );
@@ -481,7 +481,7 @@ export default function GameDayManagement({
                               <Button
                                 key={stock.id}
                                 variant={
-                                  news.related_stock_ids.includes(stock.id)
+                                  news.relatedStockIds.includes(stock.id)
                                     ? "default"
                                     : "outline"
                                 }

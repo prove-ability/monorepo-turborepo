@@ -1,42 +1,25 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { db, classStockPrices, news as newsSchema } from "@repo/db";
+import { eq, and, desc, count, sql, lte } from "drizzle-orm";
+import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 
-export interface ClassStockPrice {
-  id: string;
-  class_id?: string;
-  stock_id?: string;
-  day: number;
-  price: number;
-  news_id?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateStockPriceData {
-  class_id?: string;
-  stock_id: string;
-  day: number;
-  price: number;
-  news_id?: string;
-}
-
-export interface UpdateStockPriceData extends CreateStockPriceData {
-  id: string;
-}
+export type ClassStockPrice = InferSelectModel<typeof classStockPrices>;
+export type CreateStockPriceData = InferInsertModel<typeof classStockPrices>;
+export type UpdateStockPriceData = CreateStockPriceData & { id: string };
 
 export interface GameData {
-  class_id: string;
+  classId: string;
   day: number;
   stocks: {
-    stock_id: string;
+    stockId: string;
     price: number;
   }[];
   news: {
     title: string;
     content: string;
-    related_stock_ids?: string[];
+    relatedStockIds?: string[];
   }[];
 }
 
@@ -45,89 +28,71 @@ export async function getClassStockPrices(
   classId?: string,
   day?: number
 ): Promise<ClassStockPrice[]> {
-  const supabase = await createAdminClient();
+  try {
+    const conditions = [];
+    if (classId) {
+      conditions.push(eq(classStockPrices.classId, classId));
+    }
+    if (day !== undefined) {
+      conditions.push(eq(classStockPrices.day, day));
+    }
 
-  let query = supabase.from("class_stock_prices").select("*");
+    const data = await db.query.classStockPrices.findMany({
+      where: and(...conditions),
+      orderBy: [desc(classStockPrices.day)],
+    });
 
-  if (classId) {
-    query = query.eq("class_id", classId);
+    return data;
+  } catch (error) {
+    throw new Error(`주식 가격 조회 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
-
-  if (day !== undefined) {
-    query = query.eq("day", day);
-  }
-
-  const { data, error } = await query.order("day", { ascending: false });
-
-  if (error) {
-    throw new Error(`주식 가격 조회 실패: ${error.message}`);
-  }
-
-  return data || [];
 }
 
 // 주식 가격 생성
 export async function createStockPrice(
   priceData: CreateStockPriceData
 ): Promise<ClassStockPrice> {
-  const supabase = await createAdminClient();
-
-  const { data, error } = await supabase
-    .from("class_stock_prices")
-    .insert([priceData])
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`주식 가격 생성 실패: ${error.message}`);
+  try {
+    const [data] = await db.insert(classStockPrices).values(priceData).returning();
+    if (!data) {
+      throw new Error("주식 가격 생성 후 데이터 반환에 실패했습니다.");
+    }
+    revalidatePath("/game-management");
+    return data;
+  } catch (error) {
+    throw new Error(`주식 가격 생성 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
-
-  revalidatePath("/game-management");
-  return data;
 }
 
 // 주식 가격 수정
 export async function updateStockPrice(
   priceData: UpdateStockPriceData
 ): Promise<ClassStockPrice> {
-  const supabase = await createAdminClient();
-
-  const { data, error } = await supabase
-    .from("class_stock_prices")
-    .update({
-      class_id: priceData.class_id,
-      stock_id: priceData.stock_id,
-      day: priceData.day,
-      price: priceData.price,
-      news_id: priceData.news_id,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", priceData.id)
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`주식 가격 수정 실패: ${error.message}`);
+  try {
+    const { id, ...updateData } = priceData;
+    const [data] = await db
+      .update(classStockPrices)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(classStockPrices.id, id))
+      .returning();
+    if (!data) {
+      throw new Error("주식 가격 수정 후 데이터 반환에 실패했습니다.");
+    }
+    revalidatePath("/game-management");
+    return data;
+  } catch (error) {
+    throw new Error(`주식 가격 수정 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
-
-  revalidatePath("/game-management");
-  return data;
 }
 
 // 주식 가격 삭제
 export async function deleteStockPrice(priceId: string): Promise<void> {
-  const supabase = await createAdminClient();
-
-  const { error } = await supabase
-    .from("class_stock_prices")
-    .delete()
-    .eq("id", priceId);
-
-  if (error) {
-    throw new Error(`주식 가격 삭제 실패: ${error.message}`);
+  try {
+    await db.delete(classStockPrices).where(eq(classStockPrices.id, priceId));
+    revalidatePath("/game-management");
+  } catch (error) {
+    throw new Error(`주식 가격 삭제 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
-
-  revalidatePath("/game-management");
 }
 
 // 클래스별 게임 데이터 일괄 생성
@@ -135,59 +100,39 @@ export async function createGameDay(
   gameData: GameData,
   userId: string
 ): Promise<void> {
-  const supabase = await createAdminClient();
-
   try {
-    // 1. 뉴스 생성
-    const newsPromises = gameData.news.map(async (news) => {
-      const newsData = {
+    await db.transaction(async (tx) => {
+      // 1. 뉴스 생성
+      const newsToInsert = gameData.news.map(news => ({
         day: gameData.day,
         title: news.title,
         content: news.content,
-        related_stock_ids: news.related_stock_ids || [],
-        class_id: gameData.class_id,
-        created_by: userId,
-      };
+        relatedStockIds: news.relatedStockIds || [],
+        classId: gameData.classId,
+        createdBy: userId,
+      }));
 
-      const { data, error } = await supabase
-        .from("news")
-        .insert([newsData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("뉴스 삽입 에러:", error);
-        throw error;
+      let createdNews: InferSelectModel<typeof newsSchema>[] = [];
+      if (newsToInsert.length > 0) {
+        createdNews = await tx.insert(newsSchema).values(newsToInsert).returning();
       }
-      return data;
-    });
 
-    const createdNews = await Promise.all(newsPromises);
-
-    // 2. 주식 가격 생성
-    const pricePromises = gameData.stocks.map(async (stock) => {
-      const priceData = {
-        class_id: gameData.class_id,
-        stock_id: stock.stock_id,
+      // 2. 주식 가격 생성
+      const pricesToInsert = gameData.stocks.map(stock => ({
+        classId: gameData.classId,
+        stockId: stock.stockId,
         day: gameData.day,
-        price: stock.price,
-        news_id: createdNews[0]?.id, // 첫 번째 뉴스와 연결
-      };
+        price: String(stock.price),
+        newsId: createdNews[0]?.id,
+      }));
 
-      // UPSERT 방식으로 변경 (기존 데이터가 있으면 업데이트, 없으면 삽입)
-      const { error: priceError } = await supabase
-        .from("class_stock_prices")
-        .upsert(priceData, {
-          onConflict: "class_id,stock_id,day",
-          ignoreDuplicates: false,
+      if (pricesToInsert.length > 0) {
+        await tx.insert(classStockPrices).values(pricesToInsert).onConflictDoUpdate({
+          target: [classStockPrices.classId, classStockPrices.stockId, classStockPrices.day],
+          set: { price: sql`excluded.price` }
         });
-
-      if (priceError) {
-        throw new Error(`주식 가격 저장 실패: ${priceError.message}`);
       }
     });
-
-    await Promise.all(pricePromises);
 
     revalidatePath("/game-management");
   } catch (error) {
@@ -203,46 +148,27 @@ export async function getGameProgress(classId: string): Promise<{
   totalNews: number;
   totalPrices: number;
 }> {
-  const supabase = await createAdminClient();
+  try {
+    const maxDayResult = await db.select({ value: sql`max(${classStockPrices.day})`.mapWith(Number) })
+      .from(classStockPrices)
+      .where(eq(classStockPrices.classId, classId));
+    
+    const maxDay = maxDayResult[0]?.value || 0;
 
-  // 최대 day 조회
-  const { data: maxDayData, error: maxDayError } = await supabase
-    .from("class_stock_prices")
-    .select("day")
-    .eq("class_id", classId)
-    .order("day", { ascending: false })
-    .limit(1);
+    const newsCountResult = await db.select({ value: count() })
+      .from(newsSchema)
+      .where(and(eq(newsSchema.classId, classId), lte(newsSchema.day, maxDay)));
 
-  if (maxDayError) {
-    throw new Error(`게임 진행 상황 조회 실패: ${maxDayError.message}`);
+    const priceCountResult = await db.select({ value: count() })
+      .from(classStockPrices)
+      .where(eq(classStockPrices.classId, classId));
+
+    return {
+      maxDay,
+      totalNews: newsCountResult[0]?.value || 0,
+      totalPrices: priceCountResult[0]?.value || 0,
+    };
+  } catch (error) {
+    throw new Error(`게임 진행 상황 조회 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
-
-  const maxDay = maxDayData?.[0]?.day || 0;
-
-  // 뉴스 개수 조회 (클래스별 필터링)
-  const { count: newsCount, error: newsError } = await supabase
-    .from("news")
-    .select("*", { count: "exact", head: true })
-    .eq("class_id", classId)
-    .lte("day", maxDay);
-
-  if (newsError) {
-    throw new Error(`뉴스 개수 조회 실패: ${newsError.message}`);
-  }
-
-  // 가격 데이터 개수 조회
-  const { count: priceCount, error: priceError } = await supabase
-    .from("class_stock_prices")
-    .select("*", { count: "exact", head: true })
-    .eq("class_id", classId);
-
-  if (priceError) {
-    throw new Error(`가격 데이터 개수 조회 실패: ${priceError.message}`);
-  }
-
-  return {
-    maxDay,
-    totalNews: newsCount || 0,
-    totalPrices: priceCount || 0,
-  };
 }

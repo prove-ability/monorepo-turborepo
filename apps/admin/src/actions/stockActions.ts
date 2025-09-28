@@ -1,105 +1,70 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { currentUser } from "@clerk/nextjs/server";
+import { db, stocks } from "@repo/db";
+import { eq, asc } from "drizzle-orm";
+import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 
-export interface Stock {
-  id: string;
-  name: string;
-  industry_sector?: string;
-  remarks?: string;
-  market_country_code: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateStockData {
-  name: string;
-  industry_sector?: string;
-  remarks?: string;
-  market_country_code: string;
-}
-
-export interface UpdateStockData extends CreateStockData {
-  id: string;
-}
+export type Stock = InferSelectModel<typeof stocks>;
+export type CreateStockData = Omit<InferInsertModel<typeof stocks>, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>;
+export type UpdateStockData = CreateStockData & { id: string };
 
 // 주식 목록 조회
 export async function getStocks(): Promise<Stock[]> {
-  const supabase = await createAdminClient();
-
-  const { data, error } = await supabase
-    .from("stocks")
-    .select("*")
-    .order("name");
-
-  if (error) {
-    throw new Error(`주식 목록 조회 실패: ${error.message}`);
+  try {
+    return await db.query.stocks.findMany({
+      orderBy: [asc(stocks.name)],
+    });
+  } catch (error) {
+    throw new Error(`주식 목록 조회 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
-
-  return data || [];
 }
 
 // 주식 생성
 export async function createStock(stockData: CreateStockData): Promise<Stock> {
-  const supabase = await createAdminClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await currentUser();
   if (!user) {
     throw new Error("사용자 인증에 실패했습니다. 다시 로그인해주세요.");
   }
 
-  const { data, error } = await supabase
-    .from("stocks")
-    .insert([{ ...stockData, created_by: user.id }])
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`주식 생성 실패: ${error.message}`);
+  try {
+    const [data] = await db.insert(stocks).values({ ...stockData, createdBy: user.id }).returning();
+    if (!data) {
+      throw new Error("주식 생성 후 데이터 반환에 실패했습니다.");
+    }
+    revalidatePath("/stocks");
+    return data;
+  } catch (error) {
+    throw new Error(`주식 생성 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
-
-  revalidatePath("/stocks");
-  return data;
 }
 
 // 주식 수정
 export async function updateStock(stockData: UpdateStockData): Promise<Stock> {
-  const supabase = await createAdminClient();
-
-  const { data, error } = await supabase
-    .from("stocks")
-    .update({
-      name: stockData.name,
-      industry_sector: stockData.industry_sector,
-      remarks: stockData.remarks,
-      market_country_code: stockData.market_country_code,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", stockData.id)
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`주식 수정 실패: ${error.message}`);
+  try {
+    const { id, ...updateData } = stockData;
+    const [data] = await db
+      .update(stocks)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(stocks.id, id))
+      .returning();
+    if (!data) {
+      throw new Error("주식 수정 후 데이터 반환에 실패했습니다.");
+    }
+    revalidatePath("/stocks");
+    return data;
+  } catch (error) {
+    throw new Error(`주식 수정 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
-
-  revalidatePath("/stocks");
-  return data;
 }
 
 // 주식 삭제
 export async function deleteStock(stockId: string): Promise<void> {
-  const supabase = await createAdminClient();
-
-  const { error } = await supabase.from("stocks").delete().eq("id", stockId);
-
-  if (error) {
-    throw new Error(`주식 삭제 실패: ${error.message}`);
+  try {
+    await db.delete(stocks).where(eq(stocks.id, stockId));
+    revalidatePath("/stocks");
+  } catch (error) {
+    throw new Error(`주식 삭제 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
   }
-
-  revalidatePath("/stocks");
 }
