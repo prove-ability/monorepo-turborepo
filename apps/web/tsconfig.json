@@ -3,6 +3,7 @@
   "compilerOptions": {
     "incremental": true,
     "paths": {
+      "@repo/db": ["../../packages/db/src"],
       "@/*": ["./src/*"]
     },
     "plugins": [

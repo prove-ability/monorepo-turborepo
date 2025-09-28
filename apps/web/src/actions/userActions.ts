@@ -3,6 +3,8 @@
 import { createWebClient } from "@/lib/supabase/server";
 import { Holding, Ranking, User } from "@/types/ranking";
 import { redirect } from "next/navigation";
+import { db, users, classes, wallets, holdings, classStockPrices } from "@repo/db";
+import { eq, or, like, and, desc, asc, ne, InferSelectModel } from "drizzle-orm";
 
 export interface LoginResult {
   success: boolean;
@@ -50,16 +52,14 @@ export async function loginStudent(
       };
     }
 
-    // users 테이블에서 사용자 정보 가져오기
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .select(
-        "user_id, name, login_id, nickname, phone, grade, school_name, class_id"
-      )
-      .eq("user_id", authData.user.id)
-      .single();
+    // users 테이블에서 사용자 정보 가져오기 (Drizzle 사용)
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, authData.user.id),
+    });
 
-    if (userError || !user) {
+    if (!user) {
+      // Supabase Auth에는 사용자가 있지만 DB에 없는 경우, 로그아웃 처리
+      await supabase.auth.signOut();
       return {
         success: false,
         message: "사용자 정보를 찾을 수 없습니다. 관리자에게 문의하세요.",
@@ -71,14 +71,14 @@ export async function loginStudent(
       success: true,
       message: "로그인 성공",
       user: {
-        user_id: user.user_id,
+        user_id: user.id,
         name: user.name,
-        login_id: user.login_id,
+        login_id: user.loginId,
         nickname: user.nickname,
         phone: user.phone,
-        grade: user.grade,
-        school_name: user.school_name,
-        class_id: user.class_id,
+        grade: user.grade ? parseInt(user.grade, 10) : null,
+        school_name: user.schoolName,
+        class_id: user.classId,
       },
     };
   } catch (error) {
@@ -100,52 +100,30 @@ export async function updateNickname(
   nickname: string
 ): Promise<UpdateNicknameResult> {
   try {
+    // TODO: 인증 시스템 교체 시, 사용자 인증 로직 수정 필요
     const supabase = await createWebClient();
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
-    // 현재 로그인된 사용자 확인
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return {
-        success: false,
-        message: "로그인이 필요합니다.",
-      };
+    if (authError || !authUser) {
+      return { success: false, message: "로그인이 필요합니다." };
     }
 
-    // 닉네임 유효성 검사
-    if (!nickname.trim()) {
-      return {
-        success: false,
-        message: "닉네임을 입력해주세요.",
-      };
+    const trimmedNickname = nickname.trim();
+    if (!trimmedNickname) {
+      return { success: false, message: "닉네임을 입력해주세요." };
+    }
+    if (trimmedNickname.length < 2 || trimmedNickname.length > 10) {
+      return { success: false, message: "닉네임은 2-10자 사이로 입력해주세요." };
     }
 
-    if (nickname.length < 2 || nickname.length > 10) {
-      return {
-        success: false,
-        message: "닉네임은 2-10자 사이로 입력해주세요.",
-      };
-    }
-
-    // 닉네임 중복 확인
-    const { data: existingUser, error: checkError } = await supabase
-      .from("users")
-      .select("user_id")
-      .eq("nickname", nickname.trim())
-      .neq("user_id", user.id)
-      .single();
-
-    if (checkError && checkError.code !== "PGRST116") {
-      // PGRST116은 "no rows returned" 에러로, 중복이 없다는 의미
-      console.error("Nickname check error:", checkError);
-      return {
-        success: false,
-        message: "닉네임 확인 중 오류가 발생했습니다.",
-      };
-    }
+    // 닉네임 중복 확인 (Drizzle 사용)
+    const existingUser = await db.query.users.findFirst({
+      where: and(
+        eq(users.nickname, trimmedNickname),
+        ne(users.id, authUser.id)
+      ),
+      columns: { id: true },
+    });
 
     if (existingUser) {
       return {
@@ -154,24 +132,15 @@ export async function updateNickname(
       };
     }
 
-    // users 테이블에서 닉네임 업데이트
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({ nickname: nickname.trim() })
-      .eq("user_id", user.id);
-
-    if (updateError) {
-      console.error("Nickname update error:", updateError);
-      return {
-        success: false,
-        message: "닉네임 설정 중 오류가 발생했습니다.",
-      };
-    }
+    // 닉네임 업데이트 (Drizzle 사용)
+    await db.update(users)
+      .set({ nickname: trimmedNickname })
+      .where(eq(users.id, authUser.id));
 
     return {
       success: true,
       message: "닉네임이 성공적으로 설정되었습니다.",
-      nickname: nickname.trim(),
+      nickname: trimmedNickname,
     };
   } catch (error) {
     console.error("Update nickname error:", error);
@@ -200,161 +169,135 @@ export async function getWallet(userId: string) {
 }
 
 export async function getRankingByClass(classId: string) {
-  const supabase = await createWebClient();
+  try {
+    const classInfo = await db.query.classes.findFirst({
+      where: eq(classes.id, classId),
+      columns: { currentDay: true },
+    });
 
-  const { data: users, error: usersError } = await supabase
-    .from("users")
-    .select("user_id, nickname")
-    .eq("class_id", classId);
+    if (!classInfo) {
+      console.error("클래스 정보를 찾을 수 없습니다.");
+      return [];
+    }
 
-  if (usersError) {
-    console.error("클래스 사용자 조회 실패:", usersError);
-    return [];
-  }
+    const usersInClass = await db.query.users.findMany({
+      where: eq(users.classId, classId),
+      with: {
+        wallet: true,
+        holdings: {
+          with: {
+            stock: {
+              with: {
+                classStockPrices: {
+                  where: eq(classStockPrices.day, classInfo.currentDay),
+                  columns: { price: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
 
-  const rankings = await Promise.all(
-    users.map(async (user: User) => {
-      const { data: wallet, error: walletError } = await supabase
-        .from("wallets")
-        .select("balance")
-        .eq("user_id", user.user_id)
-        .single();
+    type UserWithRelations = typeof usersInClass[number];
 
-      const { data: holdings, error: holdingsError } = await supabase
-        .from("holdings")
-        .select("*, stocks(*)")
-        .eq("user_id", user.user_id);
+    const rankings = usersInClass.map((user: UserWithRelations) => {
+      const walletBalance = user.wallet ? parseFloat(user.wallet.balance) : 0;
+      const holdingsValue = user.holdings.reduce((acc: number, holding: UserWithRelations['holdings'][number]) => {
+        const currentPrice = holding.stock.classStockPrices[0]?.price ? parseFloat(holding.stock.classStockPrices[0].price) : 0;
+        return acc + currentPrice * holding.quantity;
+      }, 0);
 
-      const holdingsValue = holdings
-        ? holdings.reduce((acc: number, holding: Holding) => {
-            const stock = holding.stocks;
-            const currentPrice = stock?.current_price || 0;
-            return acc + currentPrice * holding.quantity;
-          }, 0)
-        : 0;
-
-      const totalAsset = (wallet?.balance || 0) + holdingsValue;
+      const totalAsset = walletBalance + holdingsValue;
 
       return {
         nickname: user.nickname,
         totalAsset,
       };
-    })
-  );
+    });
 
-  rankings.sort((a, b) => {
-    if (b.totalAsset !== a.totalAsset) {
-      return b.totalAsset - a.totalAsset;
-    }
+    type Ranking = typeof rankings[number];
 
-    const aHasNickname = !!a.nickname;
-    const bHasNickname = !!b.nickname;
+    rankings.sort((a: Ranking, b: Ranking) => {
+      if (b.totalAsset !== a.totalAsset) {
+        return b.totalAsset - a.totalAsset;
+      }
+      const aHasNickname = !!a.nickname;
+      const bHasNickname = !!b.nickname;
+      if (aHasNickname && !bHasNickname) return -1;
+      if (!aHasNickname && bHasNickname) return 1;
+      return (a.nickname || "").localeCompare(b.nickname || "");
+    });
 
-    if (aHasNickname && !bHasNickname) {
-      return -1; // a가 더 높은 순위
-    }
-    if (!aHasNickname && bHasNickname) {
-      return 1; // b가 더 높은 순위
-    }
-
-    const nameA = a.nickname || "";
-    const nameB = b.nickname || "";
-    return nameA.localeCompare(nameB);
-  });
-
-  return rankings.map((r, index) => ({ ...r, rank: index + 1 }));
+    return rankings.map((r: Ranking, index: number) => ({ ...r, rank: index + 1 }));
+  } catch (error) {
+    console.error("랭킹 정보 조회 실패:", error);
+    return [];
+  }
 }
 
 export async function getHoldings() {
+  // TODO: Next-Auth 또는 다른 인증 라이브러리로 교체 시, 사용자 인증 로직 수정 필요
   const supabase = await createWebClient();
-
-  const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !authUser) {
-    console.error("사용자 인증 실패:", authError);
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) {
+    console.error("사용자 인증 실패");
     return [];
   }
-
   const userId = authUser.id;
 
-  // 1. 사용자의 보유 주식 목록 조회
-  const { data: holdings, error: holdingsError } = await supabase
-    .from("holdings")
-    .select("stock_id, quantity, average_purchase_price")
-    .eq("user_id", userId);
+  try {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: { classId: true },
+      with: {
+        class: {
+          columns: { currentDay: true },
+        },
+      },
+    });
 
-  if (holdingsError) {
-    console.error("보유 주식 정보 조회 실패:", holdingsError);
+    if (!user || !user.class || !user.classId) {
+      console.error("사용자 또는 클래스 정보를 찾을 수 없습니다.");
+      return [];
+    }
+
+    const classId = user.classId;
+    const currentDay = user.class.currentDay;
+
+    const userHoldings = await db.query.holdings.findMany({
+      where: eq(holdings.userId, userId),
+      with: {
+        stock: {
+          with: {
+            classStockPrices: {
+              where: (prices: InferSelectModel<typeof classStockPrices>, { eq, and }: { eq: any, and: any }) =>
+                and(
+                  eq(prices.classId, classId),
+                  eq(prices.day, currentDay)
+                ),
+              columns: {
+                price: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    type HoldingWithRelations = typeof userHoldings[number];
+
+    return userHoldings.map((h: HoldingWithRelations) => ({
+      stock_id: h.stockId,
+      quantity: h.quantity,
+      average_purchase_price: h.averagePurchasePrice,
+      name: h.stock.name,
+      current_price: h.stock.classStockPrices[0]?.price || null,
+    }));
+  } catch (error) {
+    console.error("보유 주식 정보 조회 실패:", error);
     return [];
   }
-
-  if (!holdings || holdings.length === 0) {
-    return [];
-  }
-
-  const stockIds = holdings.map((h) => h.stock_id);
-
-  // 2. 사용자 정보에서 class_id 조회
-  const { data: user, error: userError } = await supabase
-    .from("users")
-    .select("class_id")
-    .eq("user_id", userId)
-    .single();
-
-  if (userError || !user) {
-    console.error("사용자 정보 조회 실패:", userError);
-    return [];
-  }
-
-  // 3. 클래스 정보에서 현재 Day 조회
-  const { data: classInfo, error: classError } = await supabase
-    .from("classes")
-    .select("current_day")
-    .eq("id", user.class_id)
-    .single();
-
-  if (classError || !classInfo) {
-    console.error("클래스 정보 조회 실패:", classError);
-    return [];
-  }
-
-  // 4. 보유 주식의 현재 가격 정보 조회 (class_stock_prices)
-  const { data: stockPrices, error: stockPricesError } = await supabase
-    .from("class_stock_prices")
-    .select("stock_id, price")
-    .eq("class_id", user.class_id)
-    .eq("day", classInfo.current_day)
-    .in("stock_id", stockIds);
-
-  if (stockPricesError) {
-    console.error("주식 가격 정보 조회 실패:", stockPricesError);
-    return [];
-  }
-
-  // 5. 주식 이름 정보 조회 (stocks)
-  const { data: stocks, error: stocksError } = await supabase
-    .from("stocks")
-    .select("id, name")
-    .in("id", stockIds);
-
-  if (stocksError) {
-    console.error("주식 이름 정보 조회 실패:", stocksError);
-    return [];
-  }
-
-  // 6. 정보 결합
-  const stockPriceMap = new Map(stockPrices.map((p) => [p.stock_id, p.price]));
-  const stockNameMap = new Map(stocks.map((s) => [s.id, s.name]));
-
-  const combinedHoldings = holdings.map((holding) => {
-    return {
-      ...holding,
-      name: stockNameMap.get(holding.stock_id) || null,
-      current_price: stockPriceMap.get(holding.stock_id) || null,
-    };
-  });
-
-  return combinedHoldings;
 }
 
 export async function logoutStudent() {

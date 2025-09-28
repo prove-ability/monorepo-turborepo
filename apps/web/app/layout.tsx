@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { ClerkProvider } from "@clerk/nextjs";
 import Providers from "./providers";
 import AppLayout from "@/components/AppLayout";
 
@@ -25,14 +26,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} h-screen max-w-xl mx-auto bg-gray-50`}
-      >
-        <Providers>
-          <AppLayout>{children}</AppLayout>
-        </Providers>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="ko" suppressHydrationWarning>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} h-screen max-w-xl mx-auto bg-gray-50`}
+        >
+          <Providers>
+            <AppLayout>{children}</AppLayout>
+          </Providers>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

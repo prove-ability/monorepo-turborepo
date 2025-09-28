@@ -2,159 +2,45 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createAdminClient } from "@/lib/supabase/server";
-// 타입 정의를 인라인으로 추가
+import { db, users, classes, wallets } from "@repo/db";
+import { eq, or, like, and, desc, asc } from "drizzle-orm";
+
+// 타입 정의
 interface CreateUserData {
   name: string;
   phone: string;
   grade: number;
-  school_name: string;
-  client_id: string;
-  class_id: string;
-}
-
-// BULK CREATE: 여러 사용자 일괄 생성
-export async function bulkCreateUsers(
-  users: Array<{
-    name: string;
-    phone: string;
-    grade: number;
-    school_name: string;
-    client_id: string;
-    class_id: string;
-  }>
-) {
-  const adminSupabase = await createAdminClient();
-
-  let successCount = 0;
-  let failureCount = 0;
-  const errors: string[] = [];
-
-  for (const u of users) {
-    try {
-      // zod 스키마 재사용을 위해 개별 createUser와 동일한 검증을 수행
-      // 간단 검증: 필수 필드 체크
-      if (!u.name || !u.phone || !u.school_name || !u.class_id) {
-        throw new Error("필수 필드 누락");
-      }
-
-      const loginId = await generateLoginId();
-      const password = generatePassword();
-      const email = `${loginId}@student.local`;
-
-      const { data: authData, error: signUpError } =
-        await adminSupabase.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true,
-        });
-
-      if (signUpError || !authData.user) {
-        throw new Error(`인증 사용자 생성 실패: ${signUpError?.message}`);
-      }
-
-      const { error: insertError } = await adminSupabase.from("users").insert({
-        user_id: authData.user.id,
-        login_id: loginId,
-        password: password,
-        name: u.name,
-        phone: u.phone,
-        grade: u.grade,
-        school_name: u.school_name,
-        class_id: u.class_id,
-      });
-
-      if (insertError) {
-        // Auth 사용자 롤백
-        await adminSupabase.auth.admin.deleteUser(authData.user.id);
-        throw new Error(`사용자 정보 저장 실패: ${insertError.message}`);
-      }
-
-      // 클래스 정보 조회하여 starting_balance 가져오기
-      const { data: classData, error: classError } = await adminSupabase
-        .from("classes")
-        .select("starting_balance")
-        .eq("id", u.class_id)
-        .single();
-
-      if (classError || !classData) {
-        await adminSupabase
-          .from("users")
-          .delete()
-          .eq("user_id", authData.user.id);
-        await adminSupabase.auth.admin.deleteUser(authData.user.id);
-        throw new Error(`클래스 정보 조회 실패: ${classError?.message}`);
-      }
-
-      // 지갑 생성
-      const { error: walletError } = await adminSupabase
-        .from("wallets")
-        .insert({
-          user_id: authData.user.id,
-          balance: classData.starting_balance,
-        });
-
-      if (walletError) {
-        // 사용자 정보 및 Auth 사용자 롤백
-        await adminSupabase
-          .from("users")
-          .delete()
-          .eq("user_id", authData.user.id);
-        await adminSupabase.auth.admin.deleteUser(authData.user.id);
-        throw new Error(`지갑 생성 실패: ${walletError.message}`);
-      }
-
-      successCount++;
-    } catch (e: any) {
-      failureCount++;
-      errors.push(e?.message || "알 수 없는 오류");
-    }
-  }
-
-  revalidatePath("/classes");
-  return { successCount, failureCount, errors };
+  schoolName: string;
+  clientId: string;
+  classId: string;
 }
 
 interface UpdateUserData extends Partial<CreateUserData> {}
 
-// 자동 로그인 ID 생성 함수 (중복 방지 - Auth 시스템 포함)
+// 사용자 데이터 검증 스키마
+const userSchema = z.object({
+  name: z.string().min(1, "이름은 필수입니다"),
+  phone: z.string().min(1, "전화번호는 필수입니다"),
+  grade: z.number().min(1, "학년은 필수입니다.").max(12, "학년은 12를 넘을 수 없습니다."),
+  schoolName: z.string().min(1, "학교명은 필수입니다"),
+  clientId: z.string().min(1, "클라이언트 ID는 필수입니다"),
+  classId: z.string().min(1, "클래스 ID는 필수입니다"),
+});
+
+// 자동 로그인 ID 생성
 async function generateLoginId(): Promise<string> {
-  const adminSupabase = await createAdminClient();
+  const existingUsers = await db.select({ loginId: users.loginId }).from(users);
+  const existingIds = new Set(existingUsers.map((u: { loginId: string | null }) => u.loginId).filter(Boolean) as string[]);
 
-  // public.users 테이블의 기존 login_id들 조회
-  const { data: existingUsers } = await adminSupabase
-    .from("users")
-    .select("login_id")
-    .order("login_id");
-
-  // Auth 시스템의 모든 사용자 조회
-  const { data: authUsers } = await adminSupabase.auth.admin.listUsers();
-
-  const existingIds = new Set(
-    existingUsers?.map((user) => user.login_id) || []
-  );
-
-  // Auth 시스템에서 student.local 도메인 사용자들의 login_id 추가
-  authUsers?.users?.forEach((authUser) => {
-    if (authUser.email && authUser.email.endsWith("@student.local")) {
-      const loginId = authUser.email.split("@")[0];
-      existingIds.add(loginId);
-    }
-  });
-
-  // user001부터 시작하여 중복되지 않는 ID 찾기
-  // 더 높은 번호부터 시작하여 기존 사용자와 충돌 방지
-  let counter =
-    Math.max(
-      ...Array.from(existingIds).map((id) => {
+  let counter = 1;
+  if (existingIds.size > 0) {
+    counter = Math.max(...Array.from(existingIds).map((id) => {
         const match = id.match(/user(\d+)/);
-        return match ? parseInt(match[1]) : 0;
-      }),
-      0
-    ) + 1;
+        return match && match[1] ? parseInt(match[1], 10) : 0;
+      }), 0) + 1;
+  }
 
   let newLoginId: string;
-
   do {
     newLoginId = `user${counter.toString().padStart(3, "0")}`;
     counter++;
@@ -163,283 +49,188 @@ async function generateLoginId(): Promise<string> {
   return newLoginId;
 }
 
-// 자동 비밀번호 생성 함수 (영문 + 숫자 4자리)
+// 자동 비밀번호 생성
 function generatePassword(): string {
   const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const numbers = "0123456789";
-
   let password = "";
-  // 영문 2자리
   for (let i = 0; i < 3; i++) {
     password += letters.charAt(Math.floor(Math.random() * letters.length));
   }
-  // 숫자 2자리
   for (let i = 0; i < 2; i++) {
     password += numbers.charAt(Math.floor(Math.random() * numbers.length));
   }
-
   return password;
 }
 
-// 사용자 데이터 검증 스키마 (ID와 비밀번호는 자동 생성되므로 제외)
-const userSchema = z.object({
-  name: z.string().min(1, "이름은 필수입니다"),
-  phone: z.string().min(1, "전화번호는 필수입니다"),
-  grade: z.number().min(1).max(12),
-  school_name: z.string().min(1, "학교명은 필수입니다"),
-  client_id: z.string().min(1, "클라이언트 ID는 필수입니다"),
-  class_id: z.string().min(1, "클래스 ID는 필수입니다"),
-});
+// BULK CREATE: 여러 사용자 일괄 생성
+export async function bulkCreateUsers(usersData: CreateUserData[]) {
+  let successCount = 0;
+  let failureCount = 0;
+  const errors: string[] = [];
+
+  for (const u of usersData) {
+    try {
+      const validatedData = userSchema.parse(u);
+      const loginId = await generateLoginId();
+      const password = generatePassword();
+
+      const [newUser] = await db.insert(users).values({
+        loginId,
+        password, // TODO: 해싱 필요
+        name: validatedData.name,
+        phone: validatedData.phone,
+        grade: String(validatedData.grade),
+        schoolName: validatedData.schoolName,
+        classId: validatedData.classId,
+      }).returning({ id: users.id });
+
+      const classData = await db.query.classes.findFirst({
+        where: eq(classes.id, validatedData.classId),
+        columns: { startingBalance: true },
+      });
+
+      if (!classData) {
+        await db.delete(users).where(eq(users.id, newUser.id)); // 롤백
+        throw new Error(`클래스 정보 조회 실패: ${validatedData.classId}`);
+      }
+
+      await db.insert(wallets).values({
+        userId: newUser.id,
+        balance: String(classData.startingBalance),
+      });
+
+      successCount++;
+    } catch (e: any) {
+      failureCount++;
+      const error = e instanceof Error ? e : new Error("An unknown error occurred");
+      errors.push(`${u.name}: ${error.message}`);
+    }
+  }
+
+  revalidatePath("/classes");
+  return { successCount, failureCount, errors };
+}
 
 // CREATE: 새 사용자 생성
-export async function createUser(
-  data: Omit<CreateUserData, "login_id" | "password">
-) {
-  let authDataObject;
-
+export async function createUser(data: CreateUserData) {
   try {
-    const adminSupabase = await createAdminClient();
-
-    // 데이터 검증
     const validatedData = userSchema.parse(data);
-
-    // 자동으로 로그인 ID와 비밀번호 생성
     const loginId = await generateLoginId();
     const password = generatePassword();
 
-    // Supabase Auth에 사용자 생성 (서비스 역할 키 사용)
-    const email = `${loginId}@student.local`;
-
-    const { data: authData, error: signUpError } =
-      await adminSupabase.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-      });
-
-    authDataObject = authData;
-
-    if (signUpError || !authData.user) {
-      return {
-        error: { _form: [`인증 사용자 생성 실패: ${signUpError?.message}`] },
-      };
-    }
-
-    // users 테이블에 사용자 정보 저장 (password 포함) - 관리자 권한으로 실행
-    const { error: insertError } = await adminSupabase.from("users").insert({
-      user_id: authData.user.id,
-      login_id: loginId,
-      password: password, // 관리용 비밀번호 저장
+    const [newUser] = await db.insert(users).values({
+      loginId,
+      password, // TODO: 해싱 필요
       name: validatedData.name,
       phone: validatedData.phone,
-      grade: validatedData.grade,
-      school_name: validatedData.school_name,
-      class_id: validatedData.class_id,
+      grade: String(validatedData.grade),
+      schoolName: validatedData.schoolName,
+      classId: validatedData.classId,
+    }).returning({ id: users.id });
+
+    const classData = await db.query.classes.findFirst({
+      where: eq(classes.id, validatedData.classId),
+      columns: { startingBalance: true },
     });
 
-    if (insertError) {
-      // Auth 사용자 삭제 (롤백)
-      await adminSupabase.auth.admin.deleteUser(authData.user.id);
-      return {
-        error: { _form: [`사용자 정보 저장 실패: ${insertError.message}`] },
-      };
+    if (!classData) {
+      await db.delete(users).where(eq(users.id, newUser.id)); // 롤백
+      return { error: { _form: ["클래스 정보 조회에 실패했습니다."] } };
     }
 
-    // 클래스 정보 조회하여 starting_balance 가져오기
-    const { data: classData, error: classError } = await adminSupabase
-      .from("classes")
-      .select("starting_balance")
-      .eq("id", validatedData.class_id)
-      .single();
-
-    if (classError || !classData) {
-      await adminSupabase
-        .from("users")
-        .delete()
-        .eq("user_id", authData.user.id);
-      await adminSupabase.auth.admin.deleteUser(authData.user.id);
-      return {
-        error: {
-          _form: [`클래스 정보 조회에 실패했습니다: ${classError?.message}`],
-        },
-      };
-    }
-
-    // 지갑 생성
-    const { error: walletError } = await adminSupabase.from("wallets").insert({
-      user_id: authData.user.id,
-      balance: classData.starting_balance,
+    await db.insert(wallets).values({
+      userId: newUser.id,
+      balance: String(classData.startingBalance),
     });
-
-    if (walletError) {
-      // 사용자 정보 및 Auth 사용자 롤백
-      await adminSupabase
-        .from("users")
-        .delete()
-        .eq("user_id", authData.user.id);
-      await adminSupabase.auth.admin.deleteUser(authData.user.id);
-      return {
-        error: {
-          _form: [`지갑 생성에 실패했습니다: ${walletError.message}`],
-        },
-      };
-    }
 
     revalidatePath("/classes");
-
     return {
       success: true,
       message: `사용자가 성공적으로 등록되었습니다!\n로그인 ID: ${loginId}\n비밀번호: ${password}`,
       data: { loginId, password },
     };
-  } catch (error) {
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error("An unknown error occurred");
     if (error instanceof z.ZodError) {
-      const fieldErrors: Record<string, string[]> = {};
-      error.errors.forEach((err) => {
-        if (err.path && err.path.length > 0) {
-          const fieldName = err.path[0];
-          if (typeof fieldName === "string") {
-            fieldErrors[fieldName] = [err.message];
-          }
-        }
-      });
-      const adminSupabase = await createAdminClient();
-      await adminSupabase.auth.admin.deleteUser(authDataObject?.user?.id!);
-      return { error: fieldErrors };
+      return { error: error.flatten().fieldErrors };
     }
-
-    return {
-      error: { _form: ["사용자 등록 중 오류가 발생했습니다."] },
-    };
+    return { error: { _form: [`사용자 등록 중 오류가 발생했습니다: ${error.message}`] } };
   }
 }
 
-// READ: 모든 사용자 조회 (클라이언트, 클래스 정보 포함)
+// READ: 모든 사용자 조회
 export async function getUsers() {
   try {
-    const supabase = await createAdminClient();
-
-    const { data, error } = await supabase
-      .from("users")
-      .select(
-        `
-        *,
-        classes (
-          id,
-          name,
-          clients (
-            id,
-            name
-          )
-        )
-      `
-      )
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      throw error;
-    }
-
+    const data = await db.query.users.findMany({
+      with: {
+        class: { with: { client: true } },
+      },
+      orderBy: [desc(users.createdAt)],
+    });
     return { success: true, data };
-  } catch (error) {
-    return {
-      success: false,
-      error: "사용자 목록을 불러오는데 실패했습니다.",
-    };
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error("An unknown error occurred");
+    return { success: false, error: `사용자 목록을 불러오는데 실패했습니다: ${error.message}` };
   }
 }
 
 // READ: 특정 클래스의 사용자들 조회 (검색 기능 포함)
 export async function getUsersByClass(classId: string, searchTerm?: string) {
-  // RLS 정책을 우회하기 위해 관리자 클라이언트 사용
-  const supabase = await createAdminClient();
+  try {
+    const conditions = [eq(users.classId, classId)];
+    if (searchTerm?.trim()) {
+      const searchPattern = `%${searchTerm.trim()}%`;
+      conditions.push(or(like(users.name, searchPattern), like(users.phone, searchPattern), like(users.schoolName, searchPattern), like(users.loginId, searchPattern))!);
+    }
 
-  // classId로 필터링하여 해당 클래스의 학생들만 조회
-  let query = supabase.from("users").select("*").eq("class_id", classId);
-
-  // 검색어가 있으면 이름, 전화번호, 학교명으로 검색
-  if (searchTerm && searchTerm.trim()) {
-    query = query.or(
-      `name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,school_name.ilike.%${searchTerm}%,login_id.ilike.%${searchTerm}%`
-    );
-  }
-
-  const { data, error } = await query.order("name");
-
-  if (error) {
+    const data = await db.query.users.findMany({
+      where: and(...conditions.filter(Boolean)),
+      orderBy: [asc(users.name)],
+    });
+    return { success: true, data: data || [] };
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error("An unknown error occurred");
     throw new Error(`사용자 조회 실패: ${error.message}`);
   }
-
-  return { success: true, data: data || [] };
 }
 
 // UPDATE: 사용자 정보 수정
 export async function updateUser(userId: string, data: UpdateUserData) {
   try {
-    const supabase = await createAdminClient();
+    const updateData = {
+      name: data.name,
+      phone: data.phone,
+      grade: data.grade ? String(data.grade) : undefined,
+      schoolName: data.schoolName,
+      classId: data.classId,
+    };
 
-    const { error } = await supabase
-      .from("users")
-      .update(data)
-      .eq("user_id", userId);
-
-    if (error) {
-      throw error;
-    }
-
+    await db.update(users).set(updateData).where(eq(users.id, userId));
     revalidatePath("/classes");
-
-    return {
-      success: true,
-      message: "사용자 정보가 성공적으로 수정되었습니다.",
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: "사용자 정보 수정에 실패했습니다.",
-    };
+    return { success: true, message: "사용자 정보가 성공적으로 수정되었습니다." };
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error("An unknown error occurred");
+    return { success: false, error: `사용자 정보 수정에 실패했습니다: ${error.message}` };
   }
 }
 
 // DELETE: 사용자 삭제
 export async function deleteUser(userId: string) {
   try {
-    const supabase = await createAdminClient();
-
-    // users 테이블에서 삭제 (CASCADE로 auth.users도 자동 삭제됨)
-    const { error } = await supabase
-      .from("users")
-      .delete()
-      .eq("user_id", userId);
-
-    if (error) {
-      throw error;
-    }
-
+    await db.delete(wallets).where(eq(wallets.userId, userId));
+    await db.delete(users).where(eq(users.id, userId));
     revalidatePath("/classes");
-
-    return {
-      success: true,
-      message: "사용자가 성공적으로 삭제되었습니다.",
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: "사용자 삭제에 실패했습니다.",
-    };
+    return { success: true, message: "사용자가 성공적으로 삭제되었습니다." };
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error("An unknown error occurred");
+    return { success: false, error: `사용자 삭제에 실패했습니다: ${error.message}` };
   }
 }
 
 // LOGOUT: 사용자 로그아웃
 export async function logoutUser() {
-  const supabase = await createAdminClient();
-
-  const { error } = await supabase.auth.signOut();
-
-  if (error) {
-    throw new Error(`로그아웃 실패: ${error.message}`);
-  }
-
-  // 로그아웃 후 로그인 페이지로 리다이렉트
+  // TODO: 인증 시스템 구현 후, 로그아웃 로직 추가 필요
+  console.log("logoutUser function called. Auth system needed.");
   revalidatePath("/");
 }

@@ -26,6 +26,8 @@ export const classes = pgTable('classes', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
   createdBy: uuid('created_by'),
+  clientId: uuid('client_id').references(() => clients.id),
+  managerId: uuid('manager_id').references(() => managers.id),
 });
 
 export const news = pgTable('news', {
@@ -118,6 +120,28 @@ export const walletsRelations = relations(wallets, ({ one }) => ({
   user: one(users, {
     fields: [wallets.userId],
     references: [users.id],
+  }),
+}));
+
+export const classesRelations = relations(classes, ({ one }) => ({
+  client: one(clients, {
+    fields: [classes.clientId],
+    references: [clients.id],
+  }),
+  manager: one(managers, {
+    fields: [classes.managerId],
+    references: [managers.id],
+  }),
+}));
+
+export const managersRelations = relations(managers, ({ one }) => ({
+  user: one(users, {
+    fields: [managers.managerId],
+    references: [users.id],
+  }),
+  client: one(clients, {
+    fields: [managers.clientId],
+    references: [clients.id],
   }),
 }));
 

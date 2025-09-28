@@ -1,6 +1,6 @@
 {
-  "id": "84bc192a-3e63-428d-957b-c7baa9cfb859",
-  "prevId": "78d7c4d4-6e75-453c-9467-7e61268388af",
+  "id": "424fa703-5b47-4bd4-bca7-fa2144458864",
+  "prevId": "3987fc8b-12a6-495a-9016-e507777b8b45",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -154,10 +154,49 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
+        },
+        "client_id": {
+          "name": "client_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "manager_id": {
+          "name": "manager_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "classes_client_id_clients_id_fk": {
+          "name": "classes_client_id_clients_id_fk",
+          "tableFrom": "classes",
+          "tableTo": "clients",
+          "columnsFrom": [
+            "client_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "classes_manager_id_managers_id_fk": {
+          "name": "classes_manager_id_managers_id_fk",
+          "tableFrom": "classes",
+          "tableTo": "managers",
+          "columnsFrom": [
+            "manager_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
