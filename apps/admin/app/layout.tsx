@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Providers from "./providers";
+import { Suspense } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 // import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 // import { DataTable } from "@/components/data-table";
@@ -49,7 +50,9 @@ export default function RootLayout({
                   } as React.CSSProperties
                 }
               >
-                <AppSidebar variant="inset" />
+                                <Suspense fallback={<div>Loading sidebar...</div>}>
+                  <AppSidebar variant="inset" />
+                </Suspense>
                 <SidebarInset>
                   <SiteHeader />
                   <div className="flex flex-1 flex-col">

@@ -174,10 +174,3 @@ export async function deleteUser(userId: string) {
     };
   }
 }
-
-// LOGOUT: 사용자 로그아웃
-export async function logoutUser() {
-  // TODO: 인증 시스템 구현 후, 로그아웃 로직 추가 필요
-  console.log("logoutUser function called. Auth system needed.");
-  revalidatePath("/");
-}

@@ -11,10 +11,9 @@ import {
   IconSearch,
   IconSettings,
 } from "@tabler/icons-react";
-
+import { UserButton } from "@stackframe/stack";
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
-import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -170,13 +169,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      {/* <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavDocuments items={data.documents} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
-      </SidebarContent>
+      </SidebarContent> */}
       <SidebarFooter>
-        <NavUser />
+        <UserButton />
       </SidebarFooter>
     </Sidebar>
   );

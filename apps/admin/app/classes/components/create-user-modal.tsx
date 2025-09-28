@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@repo/ui";
-import { createUser } from "@/actions/userActions";
+import { createUserWithStack } from "@/actions/userActions";
 import type { CreateUserData } from "@/types/user";
 
 interface CreateUserModalProps {
