@@ -1,4 +1,4 @@
-import { pgTable, text, uuid, timestamp, integer, jsonb, numeric, pgEnum, foreignKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, uuid, timestamp, integer, jsonb, numeric, pgEnum, foreignKey, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enum for transaction type
@@ -10,7 +10,7 @@ export const users = pgTable('users', {
   loginId: text('login_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
-  classId: uuid('class_id').references(() => classes.id),
+  classId: uuid('class_id').references((): AnyPgColumn => classes.id),
   nickname: text('nickname'),
   grade: text('grade'),
   phone: text('phone'),
@@ -26,8 +26,9 @@ export const classes = pgTable('classes', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
   createdBy: uuid('created_by'),
-  clientId: uuid('client_id').references(() => clients.id),
-  managerId: uuid('manager_id').references(() => managers.id),
+  clientId: uuid('client_id').references((): AnyPgColumn => clients.id),
+  managerId: uuid('manager_id').references((): AnyPgColumn => managers.id),
+  currentDay: integer('current_day'),
 });
 
 export const news = pgTable('news', {
@@ -39,7 +40,7 @@ export const news = pgTable('news', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
   createdBy: uuid('created_by'),
-  classId: uuid('class_id').references(() => classes.id),
+  classId: uuid('class_id').references((): AnyPgColumn => classes.id),
 });
 
 export const stocks = pgTable('stocks', {
@@ -55,32 +56,32 @@ export const stocks = pgTable('stocks', {
 
 export const classStockPrices = pgTable('class_stock_prices', {
   id: uuid('id').primaryKey().defaultRandom(),
-  classId: uuid('class_id').references(() => classes.id),
-  stockId: uuid('stock_id').references(() => stocks.id),
+  classId: uuid('class_id').references((): AnyPgColumn => classes.id),
+  stockId: uuid('stock_id').references((): AnyPgColumn => stocks.id),
   day: integer('day'),
   price: numeric('price'),
-  newsId: uuid('news_id').references(() => news.id),
+  newsId: uuid('news_id').references((): AnyPgColumn => news.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
 });
 
 export const wallets = pgTable('wallets', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id),
+  userId: uuid('user_id').references((): AnyPgColumn => users.id),
   balance: numeric('balance'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
 export const transactions = pgTable('transactions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  walletId: uuid('wallet_id').references(() => wallets.id),
-  stockId: uuid('stock_id').references(() => stocks.id),
+  walletId: uuid('wallet_id').references((): AnyPgColumn => wallets.id),
+  stockId: uuid('stock_id').references((): AnyPgColumn => stocks.id),
   type: transactionTypeEnum('type'),
   quantity: integer('quantity'),
   price: numeric('price'),
   day: integer('day'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  classId: uuid('class_id').references(() => classes.id),
+  classId: uuid('class_id').references((): AnyPgColumn => classes.id),
 });
 
 export const clients = pgTable('clients', {
@@ -96,8 +97,8 @@ export const managers = pgTable('managers', {
     id: uuid('id').primaryKey().defaultRandom(),
     startDate: timestamp('start_date', { withTimezone: true }),
     endDate: timestamp('end_date', { withTimezone: true }),
-    managerId: uuid('manager_id').references(() => users.id),
-    clientId: uuid('client_id').references(() => clients.id),
+    managerId: uuid('manager_id').references((): AnyPgColumn => users.id),
+    clientId: uuid('client_id').references((): AnyPgColumn => clients.id),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }),
     createdBy: uuid('created_by'),
@@ -105,7 +106,7 @@ export const managers = pgTable('managers', {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ one }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   class: one(classes, {
     fields: [users.classId],
     references: [classes.id],
@@ -114,6 +115,7 @@ export const usersRelations = relations(users, ({ one }) => ({
     fields: [users.id],
     references: [wallets.userId],
   }),
+  holdings: many(holdings),
 }));
 
 export const walletsRelations = relations(wallets, ({ one }) => ({
@@ -142,6 +144,27 @@ export const managersRelations = relations(managers, ({ one }) => ({
   client: one(clients, {
     fields: [managers.clientId],
     references: [clients.id],
+  }),
+}));
+
+export const holdings = pgTable('holdings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references((): AnyPgColumn => users.id),
+  stockId: uuid('stock_id').references((): AnyPgColumn => stocks.id),
+  quantity: integer('quantity'),
+  averagePurchasePrice: numeric('average_purchase_price'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }),
+});
+
+export const holdingsRelations = relations(holdings, ({ one }) => ({
+  user: one(users, {
+    fields: [holdings.userId],
+    references: [users.id],
+  }),
+  stock: one(stocks, {
+    fields: [holdings.stockId],
+    references: [stocks.id],
   }),
 }));
 
