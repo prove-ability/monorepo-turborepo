@@ -4,7 +4,7 @@
     "incremental": true,
     "paths": {
       "@repo/db": ["../../packages/db/src"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*", "./*"]
     },
     "plugins": [
       {

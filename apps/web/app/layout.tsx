@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { ClerkProvider } from "@clerk/nextjs";
 import Providers from "./providers";
 import AppLayout from "@/components/AppLayout";
+import { StackProvider, StackTheme } from "@stackframe/stack";
+import { stackServerApp } from "@/stack/server";
 
 import "./globals.css";
 
@@ -26,16 +27,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="ko" suppressHydrationWarning>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} h-screen max-w-xl mx-auto bg-gray-50`}
-        >
-          <Providers>
-            <AppLayout>{children}</AppLayout>
-          </Providers>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="ko" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} h-screen max-w-xl mx-auto bg-gray-50`}
+      >
+        <StackProvider app={stackServerApp}>
+          <StackTheme>
+            <Providers>
+              <AppLayout>{children}</AppLayout>
+            </Providers>
+          </StackTheme>
+        </StackProvider>
+      </body>
+    </html>
   );
 }
