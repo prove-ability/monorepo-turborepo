@@ -108,119 +108,119 @@ export function CreateClassModal({
         <div className="text-center py-4">데이터를 불러오는 중...</div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                수업명 *
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              수업명 *
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
 
-            <div>
-              <label
-                htmlFor="starting_balance"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                학생 시작 금액
-              </label>
-              <input
-                type="number"
-                id="starting_balance"
-                name="starting_balance"
-                defaultValue={0}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
+          <div>
+            <label
+              htmlFor="starting_balance"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              학생 시작 금액
+            </label>
+            <input
+              type="number"
+              id="starting_balance"
+              name="starting_balance"
+              defaultValue={0}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+          </div>
 
-            <div>
-              <label
-                htmlFor="client_id"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                클라이언트 *
-              </label>
-              <select
-                id="client_id"
-                name="client_id"
-                required
-                value={selectedClientId}
-                onChange={(e) => setSelectedClientId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">클라이언트를 선택하세요</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="manager_id"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                담당 매니저 *
-              </label>
-              <select
-                id="manager_id"
-                name="manager_id"
-                required
-                disabled={!selectedClientId}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              >
-                <option value="">
-                  {selectedClientId
-                    ? "매니저를 선택하세요"
-                    : "먼저 클라이언트를 선택하세요"}
+          <div>
+            <label
+              htmlFor="clientId"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              클라이언트 *
+            </label>
+            <select
+              id="clientId"
+              name="clientId"
+              required
+              value={selectedClientId}
+              onChange={(e) => setSelectedClientId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">클라이언트를 선택하세요</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
                 </option>
-                {filteredManagers.map((manager) => (
-                  <option key={manager.id} value={manager.id}>
-                    {manager.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              ))}
+            </select>
+          </div>
 
-            <div>
-              <label
-                htmlFor="start_date"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                시작일 *
-              </label>
-              <input
-                type="date"
-                id="start_date"
-                name="start_date"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+          <div>
+            <label
+              htmlFor="managerId"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              담당 매니저 *
+            </label>
+            <select
+              id="managerId"
+              name="managerId"
+              required
+              disabled={!selectedClientId}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            >
+              <option value="">
+                {selectedClientId
+                  ? "매니저를 선택하세요"
+                  : "먼저 클라이언트를 선택하세요"}
+              </option>
+              {filteredManagers.map((manager) => (
+                <option key={manager.id} value={manager.id}>
+                  {manager.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div>
-              <label
-                htmlFor="end_date"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                종료일 (선택사항)
-              </label>
-              <input
-                type="date"
-                id="end_date"
-                name="end_date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+          <div>
+            <label
+              htmlFor="start_date"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              시작일 *
+            </label>
+            <input
+              type="date"
+              id="start_date"
+              name="start_date"
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="end_date"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              종료일 (선택사항)
+            </label>
+            <input
+              type="date"
+              id="end_date"
+              name="end_date"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
           <div className="flex gap-2 justify-end pt-4">
             <Button
