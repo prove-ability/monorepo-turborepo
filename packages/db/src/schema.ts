@@ -14,7 +14,7 @@ import { relations } from "drizzle-orm";
 // Enums
 export const transactionTypeEnum = pgEnum("transaction_type", ["buy", "sell"]);
 
-export const users = pgTable("users", {
+export const guests = pgTable("guests", {
   id: uuid("id").primaryKey().defaultRandom(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -101,7 +101,7 @@ export const classStockPrices = pgTable("class_stock_prices", {
 
 export const wallets = pgTable("wallets", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").references((): AnyPgColumn => users.id),
+  userId: uuid("user_id").references((): AnyPgColumn => guests.id),
   balance: numeric("balance"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -151,22 +151,22 @@ export const managers = pgTable("managers", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ one, many }) => ({
+export const guestsRelations = relations(guests, ({ one, many }) => ({
   class: one(classes, {
-    fields: [users.classId],
+    fields: [guests.classId],
     references: [classes.id],
   }),
   wallet: one(wallets, {
-    fields: [users.id],
+    fields: [guests.id],
     references: [wallets.userId],
   }),
   holdings: many(holdings),
 }));
 
 export const walletsRelations = relations(wallets, ({ one }) => ({
-  user: one(users, {
+  user: one(guests, {
     fields: [wallets.userId],
-    references: [users.id],
+    references: [guests.id],
   }),
 }));
 
@@ -194,7 +194,7 @@ export const managersRelations = relations(managers, ({ one }) => ({
 
 export const holdings = pgTable("holdings", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").references((): AnyPgColumn => users.id),
+  userId: uuid("user_id").references((): AnyPgColumn => guests.id),
   classId: uuid("class_id").references((): AnyPgColumn => classes.id),
   stockId: uuid("stock_id").references((): AnyPgColumn => stocks.id),
   quantity: integer("quantity"),
@@ -208,9 +208,9 @@ export const holdings = pgTable("holdings", {
 });
 
 export const holdingsRelations = relations(holdings, ({ one }) => ({
-  user: one(users, {
+  user: one(guests, {
     fields: [holdings.userId],
-    references: [users.id],
+    references: [guests.id],
   }),
   stock: one(stocks, {
     fields: [holdings.stockId],

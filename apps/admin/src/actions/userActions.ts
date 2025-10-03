@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { db, users, wallets } from "@repo/db";
+import { db, guests, wallets } from "@repo/db";
 import { eq, or, like, and, desc, asc } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
 
@@ -65,7 +65,7 @@ export const createUserWithStack = withAuth(
       const stackUser = await response.json();
 
       // 2. Create user in our database
-      await db.insert(users).values({
+      await db.insert(guests).values({
         name: validatedData.name,
         classId: validatedData.classId,
         mobile_phone: validatedData.email, // 임시로 email 사용
@@ -101,11 +101,11 @@ export const createUserWithStack = withAuth(
 // READ: 모든 사용자 조회
 export async function getUsers() {
   try {
-    const data = await db.query.users.findMany({
+    const data = await db.query.guests.findMany({
       with: {
         class: { with: { client: true } },
       },
-      orderBy: [desc(users.createdAt)],
+      orderBy: [desc(guests.createdAt)],
     });
     return { success: true, data };
   } catch (e) {
@@ -121,21 +121,21 @@ export async function getUsers() {
 // READ: 특정 클래스의 사용자들 조회 (검색 기능 포함)
 export async function getUsersByClass(classId: string, searchTerm?: string) {
   try {
-    const conditions = [eq(users.classId, classId)];
+    const conditions = [eq(guests.classId, classId)];
     if (searchTerm?.trim()) {
       const searchPattern = `%${searchTerm.trim()}%`;
       conditions.push(
         or(
-          like(users.name, searchPattern),
-          like(users.mobile_phone, searchPattern),
-          like(users.affiliation, searchPattern)
+          like(guests.name, searchPattern),
+          like(guests.mobile_phone, searchPattern),
+          like(guests.affiliation, searchPattern)
         )!
       );
     }
 
-    const data = await db.query.users.findMany({
+    const data = await db.query.guests.findMany({
       where: and(...conditions.filter(Boolean)),
-      orderBy: [asc(users.name)],
+      orderBy: [asc(guests.name)],
     });
     return { success: true, data: data || [] };
   } catch (e) {
@@ -158,7 +158,7 @@ export const updateUser = withAuth(
         nickname: data.nickname,
       };
 
-      await db.update(users).set(updateData).where(eq(users.id, userId));
+      await db.update(guests).set(updateData).where(eq(guests.id, userId));
       revalidatePath("/classes");
       return {
         success: true,
@@ -179,7 +179,7 @@ export const updateUser = withAuth(
 export const deleteUser = withAuth(async (user, userId: string) => {
   try {
     await db.delete(wallets).where(eq(wallets.userId, userId));
-    await db.delete(users).where(eq(users.id, userId));
+    await db.delete(guests).where(eq(guests.id, userId));
     revalidatePath("/classes");
     return { success: true, message: "사용자가 성공적으로 삭제되었습니다." };
   } catch (e) {
@@ -212,7 +212,7 @@ export const bulkCreateUsers = withAuth(
       // 각 사용자를 개별적으로 삽입 (일부 실패해도 나머지 진행)
       for (const userData of usersData) {
         try {
-          await db.insert(users).values({
+          await db.insert(guests).values({
             name: userData.name,
             mobile_phone: userData.mobile_phone,
             grade: userData.grade,

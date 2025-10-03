@@ -1,7 +1,7 @@
 "use server";
 
 import { currentUser } from "@clerk/nextjs/server";
-import { db, stocks, classStockPrices, holdings, transactions, users, wallets } from "@repo/db";
+import { db, stocks, classStockPrices, holdings, transactions, guests, wallets } from "@repo/db";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -113,8 +113,8 @@ export async function executeTrade(
 
   try {
     await db.transaction(async (tx: any) => {
-      const user = await tx.query.users.findFirst({
-        where: eq(users.id, authUser.id),
+      const user = await tx.query.guests.findFirst({
+        where: eq(guests.id, authUser.id),
         columns: { id: true, classId: true },
         with: {
           class: { columns: { currentDay: true } },

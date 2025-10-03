@@ -4,7 +4,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { Holding, Ranking, User } from "@/types/ranking";
 import { redirect } from "next/navigation";
-import { db, users, classes, wallets, holdings, classStockPrices } from "@repo/db";
+import { db, guests, classes, wallets, holdings, classStockPrices } from "@repo/db";
 import { eq, or, like, and, desc, asc, ne, InferSelectModel, SQL } from "drizzle-orm";
 
 export interface UpdateNicknameResult {
@@ -32,8 +32,8 @@ export async function updateNickname(
     }
 
     // 닉네임 중복 확인 (Drizzle 사용)
-    const existingUser = await db.query.users.findFirst({
-      where: and(eq(users.nickname, trimmedNickname), ne(users.id, userId)),
+    const existingUser = await db.query.guests.findFirst({
+      where: and(eq(guests.nickname, trimmedNickname), ne(guests.id, userId)),
       columns: { id: true },
     });
 
@@ -45,7 +45,7 @@ export async function updateNickname(
     }
 
     // 닉네임 업데이트 (Drizzle 사용)
-    await db.update(users).set({ nickname: trimmedNickname }).where(eq(users.id, userId));
+    await db.update(guests).set({ nickname: trimmedNickname }).where(eq(guests.id, userId));
 
     return {
       success: true,
@@ -91,8 +91,8 @@ export async function getRankingByClass(classId: string) {
 
     const currentDay = classInfo.currentDay;
 
-    const usersInClass = await db.query.users.findMany({
-      where: eq(users.classId, classId),
+    const usersInClass = await db.query.guests.findMany({
+      where: eq(guests.classId, classId),
       with: {
         wallet: true,
         holdings: {
@@ -154,8 +154,8 @@ export async function getHoldings() {
   const userId = user.id;
 
   try {
-    const userWithClass = await db.query.users.findFirst({
-      where: eq(users.id, userId),
+    const userWithClass = await db.query.guests.findFirst({
+      where: eq(guests.id, userId),
       columns: { classId: true },
       with: {
         class: {
