@@ -1,0 +1,1 @@
+ALTER TABLE "classes" ALTER COLUMN "manager_id" SET NOT NULL;

@@ -59,8 +59,12 @@ export const classes = pgTable("classes", {
   currentDay: integer("current_day"),
   status: text("status"),
   createdBy: uuid("created_by").notNull(),
-  clientId: uuid("client_id").references((): AnyPgColumn => clients.id),
-  managerId: uuid("manager_id").references((): AnyPgColumn => managers.id),
+  clientId: uuid("client_id")
+    .references((): AnyPgColumn => clients.id)
+    .notNull(),
+  managerId: uuid("manager_id")
+    .references((): AnyPgColumn => managers.id)
+    .notNull(),
 });
 
 export const news = pgTable("news", {

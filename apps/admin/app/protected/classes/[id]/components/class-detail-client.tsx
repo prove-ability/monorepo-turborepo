@@ -6,11 +6,17 @@ import { ArrowLeft, Search, Users, Calendar, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getUsersByClass } from "@/actions/userActions";
 import { StudentBulkUpload } from "./StudentBulkUpload";
+import { Class, Client, Manager } from "@/types";
 
 type Student = Awaited<ReturnType<typeof getUsersByClass>>["data"][number];
 
+interface ClassWithRelations extends Class {
+  client: Client;
+  manager: Manager;
+}
+
 interface ClassDetailClientProps {
-  classData: any; // Using any to bypass the complex type issue for now
+  classData: ClassWithRelations;
   classId: string;
 }
 
@@ -97,7 +103,7 @@ export function ClassDetailClient({
             <div>
               <p className="text-sm text-gray-500">클라이언트</p>
               <p className="font-semibold">
-                {classData.clients?.name || "미지정"}
+                {classData.client.name || "미지정"}
               </p>
             </div>
           </div>
@@ -107,18 +113,7 @@ export function ClassDetailClient({
             <div>
               <p className="text-sm text-gray-500">매니저</p>
               <p className="font-semibold">
-                {classData.managers?.name || "미지정"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Calendar className="w-5 h-5 text-purple-500" />
-            <div>
-              <p className="text-sm text-gray-500">수업 기간</p>
-              <p className="font-semibold">
-                {formatDate(classData.start_date)} ~{" "}
-                {classData.end_date ? formatDate(classData.end_date) : "진행중"}
+                {classData.manager.name || "미지정"}
               </p>
             </div>
           </div>
@@ -134,7 +129,7 @@ export function ClassDetailClient({
             </h2>
             <StudentBulkUpload
               classId={classId}
-              clientId={classData.client_id}
+              clientId={classData.clientId}
               onCompleted={async () => {
                 await fetchStudents();
               }}
