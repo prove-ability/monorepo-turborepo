@@ -25,7 +25,7 @@ export const guests = pgTable("guests", {
     .notNull(),
   nickname: text("nickname"),
   name: text("name").notNull(),
-  mobile_phone: text("mobile_phone").notNull(),
+  mobilePhone: text("mobile_phone").notNull(),
   affiliation: text("affiliation").notNull(),
   grade: text("grade").notNull(),
   classId: uuid("class_id")
@@ -126,29 +126,29 @@ export const transactions = pgTable("transactions", {
 export const clients = pgTable("clients", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  mobile_phone: text("mobile_phone"),
+  mobilePhone: text("mobile_phone"),
   email: text("email"),
-  created_at: timestamp("created_at", { withTimezone: true })
+  createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-  created_by: uuid("created_by").notNull(),
+  createdBy: uuid("created_by").notNull(),
 });
 
 export const managers = pgTable("managers", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  mobile_phone: text("mobile_phone"),
+  mobilePhone: text("mobile_phone"),
   email: text("email"),
-  client_id: uuid("client_id").references((): AnyPgColumn => clients.id, {
+  clientId: uuid("client_id").references((): AnyPgColumn => clients.id, {
     onDelete: "cascade",
   }),
-  created_at: timestamp("created_at", { withTimezone: true })
+  createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-  updated_at: timestamp("updated_at", { withTimezone: true })
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .$onUpdate(() => new Date())
     .notNull(),
-  created_by: uuid("created_by").notNull(),
+  createdBy: uuid("created_by").notNull(),
 });
 
 // Relations
@@ -188,7 +188,7 @@ export const clientsRelations = relations(clients, ({ many }) => ({
 
 export const managersRelations = relations(managers, ({ one }) => ({
   client: one(clients, {
-    fields: [managers.client_id],
+    fields: [managers.clientId],
     references: [clients.id],
   }),
 }));
