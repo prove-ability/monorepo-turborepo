@@ -40,12 +40,16 @@ import {
 
 interface StockManagementProps {
   stocks: Stock[];
-  onRefresh: () => void;
+  onStockCreated: (stock: Stock) => void;
+  onStockUpdated: (stock: Stock) => void;
+  onStockDeleted: (stockId: string) => void;
 }
 
 export default function StockManagement({
   stocks,
-  onRefresh,
+  onStockCreated,
+  onStockUpdated,
+  onStockDeleted,
 }: StockManagementProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -72,10 +76,17 @@ export default function StockManagement({
 
     setLoading(true);
     try {
-      await createStock(formData);
+      const result = await createStock(formData);
+      // ActionState 체크: success 필드가 있으면 에러 응답
+      if ("success" in result && !result.success) {
+        alert(result.message || "주식 생성에 실패했습니다.");
+        return;
+      }
+      // 타입 단언: ActionState가 아니므로 Stock 타입
+      const stock = result as Stock;
       setIsCreateDialogOpen(false);
       resetForm();
-      onRefresh();
+      onStockCreated(stock);
     } catch (error) {
       console.error("주식 생성 실패:", error);
       alert("주식 생성에 실패했습니다.");
@@ -93,11 +104,18 @@ export default function StockManagement({
         id: editingStock.id,
         ...formData,
       };
-      await updateStock(updateData);
+      const result = await updateStock(updateData);
+      // ActionState 체크: success 필드가 있으면 에러 응답
+      if ("success" in result && !result.success) {
+        alert(result.message || "주식 수정에 실패했습니다.");
+        return;
+      }
+      // 타입 단언: ActionState가 아니므로 Stock 타입
+      const stock = result as Stock;
       setIsEditDialogOpen(false);
       setEditingStock(null);
       resetForm();
-      onRefresh();
+      onStockUpdated(stock);
     } catch (error) {
       console.error("주식 수정 실패:", error);
       alert("주식 수정에 실패했습니다.");
@@ -112,7 +130,7 @@ export default function StockManagement({
     setLoading(true);
     try {
       await deleteStock(stock.id);
-      onRefresh();
+      onStockDeleted(stock.id);
     } catch (error) {
       console.error("주식 삭제 실패:", error);
       alert("주식 삭제에 실패했습니다.");
@@ -308,9 +326,7 @@ export default function StockManagement({
                 />
               </div>
               <div>
-                <Label htmlFor="edit-marketCountryCode">
-                  시장 국가 코드 *
-                </Label>
+                <Label htmlFor="edit-marketCountryCode">시장 국가 코드 *</Label>
                 <Select
                   value={formData.marketCountryCode}
                   onValueChange={(value: "KR" | "US" | "JP" | "CN") =>

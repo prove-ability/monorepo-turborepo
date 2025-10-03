@@ -25,8 +25,18 @@ export default function StockManagementPage() {
     }
   };
 
-  const refreshData = () => {
-    loadStocks();
+  const handleStockCreated = (newStock: Stock) => {
+    setStocks((prev) => [...prev, newStock]);
+  };
+
+  const handleStockUpdated = (updatedStock: Stock) => {
+    setStocks((prev) =>
+      prev.map((stock) => (stock.id === updatedStock.id ? updatedStock : stock))
+    );
+  };
+
+  const handleStockDeleted = (deletedStockId: string) => {
+    setStocks((prev) => prev.filter((stock) => stock.id !== deletedStockId));
   };
 
   if (loading) {
@@ -46,11 +56,16 @@ export default function StockManagementPage() {
             게임에서 사용할 주식 종목을 관리합니다 (모든 클래스 공통)
           </p>
         </div>
-        <Button onClick={refreshData}>새로고침</Button>
+        <Button onClick={loadStocks}>새로고침</Button>
       </div>
 
       {/* 주식 관리 컴포넌트 */}
-      <StockManagement stocks={stocks} onRefresh={refreshData} />
+      <StockManagement
+        stocks={stocks}
+        onStockCreated={handleStockCreated}
+        onStockUpdated={handleStockUpdated}
+        onStockDeleted={handleStockDeleted}
+      />
     </div>
   );
 }
