@@ -136,6 +136,7 @@ export function EditClassModal({
       setIsSubmitting(false);
     }
   };
+  console.log(classData);
 
   return (
     <Modal

@@ -1,0 +1,1 @@
+ALTER TABLE "classes" RENAME COLUMN "day" TO "total_days";
