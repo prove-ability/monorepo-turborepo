@@ -36,10 +36,25 @@ export function ClassList() {
     async function loadClasses() {
       try {
         setLoading(true);
-        const fetchedClasses = await getClasses();
-        console.log(fetchedClasses);
-        setClasses(fetchedClasses.data || []);
-        setError(null);
+        const result = await getClasses();
+
+        // Check for authentication or API errors
+        if (!result.success) {
+          const errorMsg =
+            "message" in result
+              ? result.message
+              : "error" in result && result.error instanceof Error
+                ? result.error.message
+                : "데이터를 불러오는데 실패했습니다.";
+          setError(errorMsg || "인증에 실패했습니다.");
+          return;
+        }
+
+        // Success case: result has 'data' property
+        if ("data" in result && result.data) {
+          setClasses(result.data);
+          setError(null);
+        }
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다."
@@ -53,8 +68,12 @@ export function ClassList() {
   }, []);
 
   const onClassUpdated = async () => {
-    const fetchedClasses = await getClasses();
-    setClasses(fetchedClasses.data || []);
+    const result = await getClasses();
+
+    // Only update if successful and has data
+    if (result.success && "data" in result && result.data) {
+      setClasses(result.data);
+    }
   };
 
   if (loading) {
