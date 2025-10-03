@@ -128,16 +128,17 @@ export const clients = pgTable("clients", {
 
 export const managers = pgTable("managers", {
   id: uuid("id").primaryKey().defaultRandom(),
-  start_date: timestamp("start_date"),
-  end_date: timestamp("end_date"),
-  manager_id: uuid("manager_id").references((): AnyPgColumn => users.id),
+  name: text("name").notNull(),
+  mobile_phone: text("mobile_phone"),
+  email: text("email"),
   client_id: uuid("client_id").references((): AnyPgColumn => clients.id),
-  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updated_at: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
-  ),
+  created_at: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true })
+    .$onUpdate(() => new Date())
+    .notNull(),
   created_by: uuid("created_by").notNull(),
-  current_day: integer("current_day"),
 });
 
 // Relations
@@ -176,10 +177,6 @@ export const clientsRelations = relations(clients, ({ many }) => ({
 }));
 
 export const managersRelations = relations(managers, ({ one }) => ({
-  user: one(users, {
-    fields: [managers.manager_id],
-    references: [users.id],
-  }),
   client: one(clients, {
     fields: [managers.client_id],
     references: [clients.id],
