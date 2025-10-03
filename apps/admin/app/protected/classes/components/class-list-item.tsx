@@ -48,8 +48,10 @@ export function ClassListItem({
     setIsDeleting(true);
     try {
       const result = await deleteClass(classId);
-      if (result?.error) {
+      if ("error" in result && result.error) {
         alert("삭제 중 오류가 발생했습니다.");
+      } else if ("success" in result && !result.success) {
+        alert(result.message || "삭제 중 오류가 발생했습니다.");
       } else {
         onClassUpdated();
       }
