@@ -22,6 +22,13 @@
       "when": 1759062920075,
       "tag": "0002_zippy_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1759459724530,
+      "tag": "0003_lumpy_maximus",
+      "breakpoints": true
     }
   ]
 }
