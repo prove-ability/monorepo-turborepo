@@ -33,9 +33,8 @@ import {
   updateStockPrice,
   deleteStockPrice,
 } from "@/actions/gameActions";
-import { type Stock } from "@/actions/stockActions";
 import { getNews } from "@/actions/newsActions";
-import { ClassStockPrice, ClassStockPriceInput, News } from "@/types";
+import { ClassStockPrice, ClassStockPriceInput, News, Stock } from "@/types";
 
 interface PriceManagementProps {
   prices: ClassStockPrice[];

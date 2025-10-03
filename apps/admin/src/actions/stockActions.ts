@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { db, stocks } from "@repo/db";
 import { eq, asc } from "drizzle-orm";
-import { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import { InferInsertModel } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
+import { Stock } from "@/types";
 
-export type Stock = InferSelectModel<typeof stocks>;
 export type CreateStockData = Omit<
   InferInsertModel<typeof stocks>,
   "id" | "createdAt" | "updatedAt" | "createdBy"
@@ -18,7 +18,7 @@ export async function getStocks(): Promise<Stock[]> {
   // 현재 사용자 인증 확인
   const { stackServerApp } = await import("@/stack/server");
   const user = await stackServerApp.getUser();
-  
+
   if (!user) {
     throw new Error("사용자 인증에 실패했습니다.");
   }
