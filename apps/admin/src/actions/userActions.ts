@@ -9,11 +9,11 @@ import { withAuth } from "@/lib/safe-action";
 // 타입 정의
 interface CreateUserData {
   name: string;
-  phone: string;
-  grade: number;
-  schoolName: string;
-  clientId: string;
+  mobile_phone: string;
+  grade: string;
+  affiliation: string;
   classId: string;
+  nickname?: string;
 }
 
 interface UpdateUserData extends Partial<CreateUserData> {}
@@ -68,7 +68,9 @@ export const createUserWithStack = withAuth(
       await db.insert(users).values({
         name: validatedData.name,
         classId: validatedData.classId,
-        auth_id: stackUser.id,
+        mobile_phone: validatedData.email, // 임시로 email 사용
+        affiliation: "미정", // 기본값
+        grade: "미정", // 기본값
       });
 
       revalidatePath("/classes");
@@ -125,8 +127,8 @@ export async function getUsersByClass(classId: string, searchTerm?: string) {
       conditions.push(
         or(
           like(users.name, searchPattern),
-          like(users.phone, searchPattern),
-          like(users.schoolName, searchPattern)
+          like(users.mobile_phone, searchPattern),
+          like(users.affiliation, searchPattern)
         )!
       );
     }
@@ -149,10 +151,11 @@ export const updateUser = withAuth(
     try {
       const updateData = {
         name: data.name,
-        phone: data.phone,
-        grade: data.grade ? String(data.grade) : undefined,
-        schoolName: data.schoolName,
+        mobile_phone: data.mobile_phone,
+        grade: data.grade,
+        affiliation: data.affiliation,
         classId: data.classId,
+        nickname: data.nickname,
       };
 
       await db.update(users).set(updateData).where(eq(users.id, userId));
@@ -195,11 +198,11 @@ export const bulkCreateUsers = withAuth(
     user,
     usersData: Array<{
       name: string;
-      phone: string;
-      grade: number;
-      school_name: string;
-      client_id: string;
+      mobile_phone: string;
+      grade: string;
+      affiliation: string;
       class_id: string;
+      nickname?: string;
     }>
   ) => {
     let successCount = 0;
@@ -211,10 +214,11 @@ export const bulkCreateUsers = withAuth(
         try {
           await db.insert(users).values({
             name: userData.name,
-            phone: userData.phone,
-            grade: String(userData.grade),
-            schoolName: userData.school_name,
+            mobile_phone: userData.mobile_phone,
+            grade: userData.grade,
+            affiliation: userData.affiliation,
             classId: userData.class_id,
+            nickname: userData.nickname,
           });
           successCount++;
         } catch (err) {

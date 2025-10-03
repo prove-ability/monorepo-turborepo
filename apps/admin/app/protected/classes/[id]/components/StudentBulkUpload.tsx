@@ -39,9 +39,9 @@ interface ValidatedRow {
   errors: string[];
   normalized?: {
     name: string;
-    phone: string;
-    school_name: string;
-    grade: number;
+    mobile_phone: string;
+    affiliation: string;
+    grade: string;
   };
 }
 
@@ -70,16 +70,14 @@ function validateRows(rows: ParsedRow[]): ValidatedRow[] {
     const errors: string[] = [];
     const name = row.name?.trim();
     const phoneRaw = row.phone?.replace(/[^\d]/g, "");
-    const school_name = row.school?.trim();
-    const gradeNum = Number(row.grade);
+    const affiliation = row.school?.trim();
+    const gradeStr = String(row.grade).trim();
 
     if (!name) errors.push("이름 누락");
     if (!phoneRaw) errors.push("전화번호 누락");
     else if (!phoneRegex.test(phoneRaw)) errors.push("전화번호 형식 오류");
-    if (!school_name) errors.push("학교명 누락");
-    if (!Number.isFinite(gradeNum)) errors.push("학년 숫자 아님");
-    else if (gradeNum < 1 || gradeNum > 12)
-      errors.push("학년 범위(1~12) 벗어남");
+    if (!affiliation) errors.push("소속 누락");
+    if (!gradeStr) errors.push("학년 누락");
 
     return {
       row,
@@ -87,7 +85,7 @@ function validateRows(rows: ParsedRow[]): ValidatedRow[] {
       errors,
       normalized:
         errors.length === 0
-          ? { name, phone: phoneRaw, school_name, grade: gradeNum }
+          ? { name, mobile_phone: phoneRaw, affiliation, grade: gradeStr }
           : undefined,
     };
   });
@@ -149,10 +147,9 @@ export function StudentBulkUpload({
       .filter((v) => v.valid && v.normalized)
       .map((v) => ({
         name: v.normalized!.name,
-        phone: v.normalized!.phone,
+        mobile_phone: v.normalized!.mobile_phone,
         grade: v.normalized!.grade,
-        school_name: v.normalized!.school_name,
-        client_id: clientId,
+        affiliation: v.normalized!.affiliation,
         class_id: classId,
       }));
 

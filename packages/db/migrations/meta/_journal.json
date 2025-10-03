@@ -78,6 +78,27 @@
       "when": 1759493978859,
       "tag": "0010_fat_frightful_four",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1759496446809,
+      "tag": "0011_lethal_molly_hayes",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1759497043548,
+      "tag": "0012_careless_moon_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1759497201350,
+      "tag": "0013_misty_harry_osborn",
+      "breakpoints": true
     }
   ]
 }

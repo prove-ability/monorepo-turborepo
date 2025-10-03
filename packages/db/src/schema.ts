@@ -11,30 +11,25 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-// Enum for transaction type
+// Enums
 export const transactionTypeEnum = pgEnum("transaction_type", ["buy", "sell"]);
-
-export const adminRoleEnum = pgEnum("admin_role", [
-  "superadmin",
-  "admin",
-  "manager",
-]);
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  auth_id: text("auth_id").unique(), // From Stack Auth
-  name: text("name"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .$onUpdate(() => new Date())
     .notNull(),
-  classId: uuid("class_id").references((): AnyPgColumn => classes.id),
   nickname: text("nickname"),
-  grade: text("grade"),
-  phone: text("phone"),
-  schoolName: text("school_name"),
+  name: text("name").notNull(),
+  mobile_phone: text("mobile_phone").notNull(),
+  affiliation: text("affiliation").notNull(),
+  grade: text("grade").notNull(),
+  classId: uuid("class_id")
+    .references((): AnyPgColumn => classes.id)
+    .notNull(),
 });
 
 export const classes = pgTable("classes", {
