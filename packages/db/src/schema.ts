@@ -77,10 +77,10 @@ export const stocks = pgTable("stocks", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .$onUpdate(() => new Date())
     .notNull(),
-  name: text("name"),
-  industrySector: text("industry_sector"),
+  name: text("name").notNull(),
+  industrySector: text("industry_sector").notNull(),
   remarks: text("remarks"),
-  marketCountryCode: text("market_country_code"),
+  marketCountryCode: text("market_country_code").notNull(),
   createdBy: uuid("created_by").notNull(),
 });
 
