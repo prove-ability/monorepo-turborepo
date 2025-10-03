@@ -1,11 +1,15 @@
-
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
-import { Holding, Ranking, User } from "@/types/ranking";
-import { redirect } from "next/navigation";
-import { db, guests, classes, wallets, holdings, classStockPrices } from "@repo/db";
-import { eq, or, like, and, desc, asc, ne, InferSelectModel, SQL } from "drizzle-orm";
+import { stackServerApp } from "@/stack/server";
+import {
+  db,
+  guests,
+  classes,
+  wallets,
+  holdings,
+  classStockPrices,
+} from "@repo/db";
+import { eq, and, ne, InferSelectModel } from "drizzle-orm";
 
 export interface UpdateNicknameResult {
   success: boolean;
@@ -17,7 +21,7 @@ export async function updateNickname(
   nickname: string
 ): Promise<UpdateNicknameResult> {
   try {
-    const user = await currentUser();
+    const user = await stackServerApp.getUser();
     if (!user) {
       return { success: false, message: "로그인이 필요합니다." };
     }
@@ -28,7 +32,10 @@ export async function updateNickname(
       return { success: false, message: "닉네임을 입력해주세요." };
     }
     if (trimmedNickname.length < 2 || trimmedNickname.length > 10) {
-      return { success: false, message: "닉네임은 2-10자 사이로 입력해주세요." };
+      return {
+        success: false,
+        message: "닉네임은 2-10자 사이로 입력해주세요.",
+      };
     }
 
     // 닉네임 중복 확인 (Drizzle 사용)
@@ -45,7 +52,10 @@ export async function updateNickname(
     }
 
     // 닉네임 업데이트 (Drizzle 사용)
-    await db.update(guests).set({ nickname: trimmedNickname }).where(eq(guests.id, userId));
+    await db
+      .update(guests)
+      .set({ nickname: trimmedNickname })
+      .where(eq(guests.id, userId));
 
     return {
       success: true,
@@ -111,13 +121,17 @@ export async function getRankingByClass(classId: string) {
     });
 
     const rankings = usersInClass.map((user) => {
-      const walletBalance = user.wallet ? parseFloat(user.wallet.balance || '0') : 0;
+      const walletBalance = user.wallet
+        ? parseFloat(user.wallet.balance || "0")
+        : 0;
 
       const holdingsValue = user.holdings.reduce((acc, holding) => {
         if (!holding.stock || !holding.quantity) {
           return acc;
         }
-        const priceInfo = holding.stock.classStockPrices[0] as { price: string | null } | undefined;
+        const priceInfo = holding.stock.classStockPrices[0] as
+          | { price: string | null }
+          | undefined;
         const currentPrice = priceInfo?.price ? parseFloat(priceInfo.price) : 0;
         return acc + currentPrice * holding.quantity;
       }, 0);
@@ -138,7 +152,6 @@ export async function getRankingByClass(classId: string) {
     });
 
     return rankings.map((r, index) => ({ ...r, rank: index + 1 }));
-
   } catch (error) {
     console.error("랭킹 정보 조회 실패:", error);
     return [];
@@ -146,7 +159,7 @@ export async function getRankingByClass(classId: string) {
 }
 
 export async function getHoldings() {
-  const user = await currentUser();
+  const user = await stackServerApp.getUser();
   if (!user) {
     console.error("사용자 인증 실패");
     return [];
@@ -164,7 +177,12 @@ export async function getHoldings() {
       },
     });
 
-    if (!userWithClass || !userWithClass.class || !userWithClass.classId || userWithClass.class.currentDay === null) {
+    if (
+      !userWithClass ||
+      !userWithClass.class ||
+      !userWithClass.classId ||
+      userWithClass.class.currentDay === null
+    ) {
       console.error("사용자 또는 클래스 정보를 찾을 수 없습니다.");
       return [];
     }
@@ -178,11 +196,10 @@ export async function getHoldings() {
         stock: {
           with: {
             classStockPrices: {
-              where: (prices: InferSelectModel<typeof classStockPrices>, { eq, and }: { eq: any, and: any }) =>
-                and(
-                  eq(prices.classId, classId),
-                  eq(prices.day, currentDay)
-                ),
+              where: (
+                prices: InferSelectModel<typeof classStockPrices>,
+                { eq, and }: { eq: any; and: any }
+              ) => and(eq(prices.classId, classId), eq(prices.day, currentDay)),
               columns: {
                 price: true,
               },
@@ -196,12 +213,13 @@ export async function getHoldings() {
       stock_id: h.stockId,
       quantity: h.quantity,
       average_purchase_price: h.averagePurchasePrice,
-      name: h.stock?.name || 'N/A',
-      current_price: (h.stock?.classStockPrices[0] as { price: string | null } | undefined)?.price || null,
+      name: h.stock?.name || "N/A",
+      current_price:
+        (h.stock?.classStockPrices[0] as { price: string | null } | undefined)
+          ?.price || null,
     }));
   } catch (error) {
     console.error("보유 주식 정보 조회 실패:", error);
     return [];
   }
 }
-

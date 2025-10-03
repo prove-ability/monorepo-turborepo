@@ -1,7 +1,14 @@
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
-import { db, stocks, classStockPrices, holdings, transactions, guests, wallets } from "@repo/db";
+import { stackServerApp } from "@/stack/server";
+import {
+  db,
+  classStockPrices,
+  holdings,
+  transactions,
+  guests,
+  wallets,
+} from "@repo/db";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -21,12 +28,16 @@ export async function getStocks(classId: string, day: number) {
 
     // 주식별로 현재가와 전일가를 찾아서 등락률을 계산합니다.
     const processedStocks = stockData.map((stock) => {
-      const prices = stock.classStockPrices as { day: number, price: string }[];
-      const currentPriceInfo = prices.find(p => p.day === day);
-      const prevPriceInfo = prices.find(p => p.day === day - 1);
+      const prices = stock.classStockPrices as { day: number; price: string }[];
+      const currentPriceInfo = prices.find((p) => p.day === day);
+      const prevPriceInfo = prices.find((p) => p.day === day - 1);
 
-      const currentPrice = currentPriceInfo ? parseFloat(currentPriceInfo.price) : 0;
-      const prevPrice = prevPriceInfo ? parseFloat(prevPriceInfo.price) : currentPrice; // 전일 가격 없으면 현재가로
+      const currentPrice = currentPriceInfo
+        ? parseFloat(currentPriceInfo.price)
+        : 0;
+      const prevPrice = prevPriceInfo
+        ? parseFloat(prevPriceInfo.price)
+        : currentPrice; // 전일 가격 없으면 현재가로
 
       const priceChange = currentPrice - prevPrice;
       const changeRate = prevPrice === 0 ? 0 : (priceChange / prevPrice) * 100;
@@ -77,13 +88,18 @@ export async function getClassPortfolio(
     });
 
     return portfolioData
-      .filter(item => item.stock && (item.stock.classStockPrices as any[]).length > 0)
-      .map(item => ({
+      .filter(
+        (item) =>
+          item.stock && (item.stock.classStockPrices as any[]).length > 0
+      )
+      .map((item) => ({
         quantity: item.quantity || 0,
         stocks: {
           id: item.stock!.id,
-          name: item.stock!.name || 'N/A',
-          class_stock_prices: (item.stock!.classStockPrices as { price: string }[]).map(p => ({ price: parseFloat(p.price) })),
+          name: item.stock!.name || "N/A",
+          class_stock_prices: (
+            item.stock!.classStockPrices as { price: string }[]
+          ).map((p) => ({ price: parseFloat(p.price) })),
         },
       }));
   } catch (error) {
@@ -102,7 +118,7 @@ interface TradeParams {
 export async function executeTrade(
   params: TradeParams
 ): Promise<{ success?: boolean; error?: string }> {
-  const user = await currentUser();
+  const user = await stackServerApp.getUser();
   if (!user) {
     return { error: "사용자를 찾을 수 없습니다." };
   }
@@ -133,19 +149,30 @@ export async function executeTrade(
           throw new Error("자산이 부족합니다.");
         }
 
-        await tx.update(wallets)
+        await tx
+          .update(wallets)
           .set({ balance: String(walletBalance - totalValue) })
           .where(eq(wallets.id, user.wallet.id));
 
         const holding = await tx.query.holdings.findFirst({
-          where: and(eq(holdings.userId, user.id), eq(holdings.stockId, stockId)),
+          where: and(
+            eq(holdings.userId, user.id),
+            eq(holdings.stockId, stockId)
+          ),
         });
 
         if (holding) {
           const newQuantity = holding.quantity + quantity;
-          const newAvgPrice = (holding.quantity * parseFloat(holding.averagePurchasePrice) + totalValue) / newQuantity;
-          await tx.update(holdings)
-            .set({ quantity: newQuantity, averagePurchasePrice: String(newAvgPrice) })
+          const newAvgPrice =
+            (holding.quantity * parseFloat(holding.averagePurchasePrice) +
+              totalValue) /
+            newQuantity;
+          await tx
+            .update(holdings)
+            .set({
+              quantity: newQuantity,
+              averagePurchasePrice: String(newAvgPrice),
+            })
             .where(eq(holdings.id, holding.id));
         } else {
           await tx.insert(holdings).values({
@@ -158,19 +185,24 @@ export async function executeTrade(
         }
       } else if (action === "sell") {
         const holding = await tx.query.holdings.findFirst({
-          where: and(eq(holdings.userId, user.id), eq(holdings.stockId, stockId)),
+          where: and(
+            eq(holdings.userId, user.id),
+            eq(holdings.stockId, stockId)
+          ),
         });
 
         if (!holding || holding.quantity < quantity) {
           throw new Error("보유 수량이 부족합니다.");
         }
 
-        await tx.update(wallets)
+        await tx
+          .update(wallets)
           .set({ balance: String(walletBalance + totalValue) })
           .where(eq(wallets.id, user.wallet.id));
 
         if (holding.quantity > quantity) {
-          await tx.update(holdings)
+          await tx
+            .update(holdings)
             .set({ quantity: holding.quantity - quantity })
             .where(eq(holdings.id, holding.id));
         } else {
