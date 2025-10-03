@@ -1,14 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { db, dbWithTransaction, classStockPrices, news as newsSchema } from "@repo/db";
+import {
+  db,
+  dbWithTransaction,
+  classStockPrices,
+  news as newsSchema,
+} from "@repo/db";
 import { eq, and, desc, count, sql, lte } from "drizzle-orm";
-import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
-
-export type ClassStockPrice = InferSelectModel<typeof classStockPrices>;
-export type CreateStockPriceData = InferInsertModel<typeof classStockPrices>;
-export type UpdateStockPriceData = CreateStockPriceData & { id: string };
+import { ClassStockPrice, ClassStockPriceInput, News } from "@/types";
 
 export interface GameData {
   classId: string;
@@ -32,7 +33,7 @@ export async function getClassStockPrices(
   // 현재 사용자 인증 확인
   const { stackServerApp } = await import("@/stack/server");
   const user = await stackServerApp.getUser();
-  
+
   if (!user) {
     throw new Error("사용자 인증에 실패했습니다.");
   }
@@ -44,9 +45,9 @@ export async function getClassStockPrices(
       where: eq(classes.createdBy, user.id),
       columns: { id: true },
     });
-    
+
     const userClassIds = userClasses.map((c) => c.id);
-    
+
     const conditions = [];
     if (classId) {
       // 해당 클래스가 사용자의 것인지 확인
@@ -62,7 +63,7 @@ export async function getClassStockPrices(
         return []; // 사용자의 클래스가 없으면 빈 배열 반환
       }
     }
-    
+
     if (day !== undefined) {
       conditions.push(eq(classStockPrices.day, day));
     }
@@ -82,7 +83,7 @@ export async function getClassStockPrices(
 
 // 주식 가격 생성
 export const createStockPrice = withAuth(
-  async (user, priceData: CreateStockPriceData): Promise<ClassStockPrice> => {
+  async (user, priceData: ClassStockPriceInput): Promise<ClassStockPrice> => {
     try {
       const [data] = await db
         .insert(classStockPrices)
@@ -103,9 +104,12 @@ export const createStockPrice = withAuth(
 
 // 주식 가격 수정
 export const updateStockPrice = withAuth(
-  async (user, priceData: UpdateStockPriceData): Promise<ClassStockPrice> => {
+  async (user, priceData: ClassStockPriceInput): Promise<ClassStockPrice> => {
     try {
       const { id, ...updateData } = priceData;
+      if (!id) {
+        throw new Error("주식 가격 ID가 필요합니다.");
+      }
       const [data] = await db
         .update(classStockPrices)
         .set({ ...updateData, updatedAt: new Date() })
@@ -154,7 +158,7 @@ export const createGameDay = withAuth(
           createdBy: userId,
         }));
 
-        let createdNews: InferSelectModel<typeof newsSchema>[] = [];
+        let createdNews: News[] = [];
         if (newsToInsert.length > 0) {
           createdNews = await tx
             .insert(newsSchema)
@@ -204,7 +208,7 @@ export async function getGameProgress(classId: string): Promise<{
   // 현재 사용자 인증 확인
   const { stackServerApp } = await import("@/stack/server");
   const user = await stackServerApp.getUser();
-  
+
   if (!user) {
     throw new Error("사용자 인증에 실패했습니다.");
   }
@@ -216,7 +220,7 @@ export async function getGameProgress(classId: string): Promise<{
       where: and(eq(classes.id, classId), eq(classes.createdBy, user.id)),
       columns: { id: true },
     });
-    
+
     if (!classData) {
       throw new Error("권한이 없거나 존재하지 않는 클래스입니다.");
     }
