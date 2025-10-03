@@ -13,6 +13,7 @@ import { relations } from "drizzle-orm";
 
 // Enums
 export const transactionTypeEnum = pgEnum("transaction_type", ["buy", "sell"]);
+export const countryCodeEnum = pgEnum("country_code", ["KR", "US", "JP", "CN"]);
 
 export const guests = pgTable("guests", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -80,7 +81,7 @@ export const stocks = pgTable("stocks", {
   name: text("name").notNull(),
   industrySector: text("industry_sector").notNull(),
   remarks: text("remarks"),
-  marketCountryCode: text("market_country_code").notNull(),
+  marketCountryCode: countryCodeEnum("market_country_code").notNull(),
   createdBy: uuid("created_by").notNull(),
 });
 

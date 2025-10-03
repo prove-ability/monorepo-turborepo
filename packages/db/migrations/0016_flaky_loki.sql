@@ -1,0 +1,2 @@
+CREATE TYPE "public"."country_code" AS ENUM('KR', 'US', 'JP', 'CN');--> statement-breakpoint
+ALTER TABLE "stocks" ALTER COLUMN "market_country_code" SET DATA TYPE "public"."country_code" USING "market_country_code"::"public"."country_code";
