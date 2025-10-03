@@ -2,6 +2,7 @@
 
 import {
   db,
+  dbWithTransaction,
   classes,
   clients,
   managers,
@@ -115,7 +116,7 @@ export const updateClass = withAuth(
 export const deleteClass = withAuth(async (user, classId: string) => {
   try {
     // 트랜잭션을 사용하여 모든 삭제 작업을 원자적으로 처리
-    await db.transaction(async (tx) => {
+    await dbWithTransaction.transaction(async (tx) => {
       // 1) 먼저 의존 데이터 삭제: 주식 가격 -> 뉴스 -> guests -> 클래스
       await tx
         .delete(classStockPrices)
