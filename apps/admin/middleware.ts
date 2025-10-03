@@ -3,7 +3,6 @@ import { stackServerApp } from "./stack/server";
 
 export async function middleware(request: NextRequest) {
   const user = await stackServerApp.getUser();
-  console.log("user", user);
   if (!user) {
     return NextResponse.redirect(new URL("/handler/sign-in", request.url));
   }
