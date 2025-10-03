@@ -28,27 +28,27 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "dashboard",
+      url: "protected/dashboard",
       icon: IconDashboard,
     },
     {
       title: "고객사 관리",
-      url: "clients",
+      url: "protected/clients",
       icon: IconListDetails,
     },
     {
       title: "클래스 관리",
-      url: "classes",
+      url: "protected/classes",
       icon: IconListDetails,
     },
     {
       title: "주식 관리",
-      url: "stock-management",
+      url: "protected/stock-management",
       icon: IconInnerShadowTop,
     },
     {
       title: "게임 관리",
-      url: "game-management",
+      url: "protected/game-management",
       icon: IconFileAi,
     },
     // {

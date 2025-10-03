@@ -1,9 +1,12 @@
-import { Button } from "@repo/ui";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  return (
-    <div>
-      <Button>admindlqslek</Button>
-    </div>
-  );
+  const router = useRouter();
+  useEffect(() => {
+    router.push("/protected/dashboard");
+  }, []);
+  return <div></div>;
 }

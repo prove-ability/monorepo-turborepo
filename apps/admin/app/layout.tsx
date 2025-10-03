@@ -50,7 +50,7 @@ export default function RootLayout({
                   } as React.CSSProperties
                 }
               >
-                                <Suspense fallback={<div>Loading sidebar...</div>}>
+                <Suspense fallback={<div>Loading sidebar...</div>}>
                   <AppSidebar variant="inset" />
                 </Suspense>
                 <SidebarInset>
