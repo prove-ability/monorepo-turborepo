@@ -15,8 +15,17 @@ export type UpdateStockData = CreateStockData & { id: string };
 
 // 주식 목록 조회
 export async function getStocks(): Promise<Stock[]> {
+  // 현재 사용자 인증 확인
+  const { stackServerApp } = await import("@/stack/server");
+  const user = await stackServerApp.getUser();
+  
+  if (!user) {
+    throw new Error("사용자 인증에 실패했습니다.");
+  }
+
   try {
     return await db.query.stocks.findMany({
+      where: eq(stocks.createdBy, user.id),
       orderBy: [asc(stocks.name)],
     });
   } catch (error) {

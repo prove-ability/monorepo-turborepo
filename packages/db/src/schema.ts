@@ -33,7 +33,9 @@ export const users = pgTable("users", {
   auth_id: text("auth_id").unique(), // From Stack Auth
   name: text("name"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+    () => new Date()
+  ),
   classId: uuid("class_id").references((): AnyPgColumn => classes.id),
   nickname: text("nickname"),
   grade: text("grade"),
@@ -47,7 +49,9 @@ export const classes = pgTable("classes", {
   day: integer("day"),
   status: text("status"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+    () => new Date()
+  ),
   createdBy: uuid("created_by"),
   clientId: uuid("client_id").references((): AnyPgColumn => clients.id),
   managerId: uuid("manager_id").references((): AnyPgColumn => managers.id),
@@ -61,7 +65,9 @@ export const news = pgTable("news", {
   content: text("content"),
   relatedStockIds: jsonb("related_stock_ids").$type<string[]>(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+    () => new Date()
+  ),
   createdBy: uuid("created_by"),
   classId: uuid("class_id").references((): AnyPgColumn => classes.id),
 });
@@ -69,7 +75,9 @@ export const news = pgTable("news", {
 export const stocks = pgTable("stocks", {
   id: uuid("id").primaryKey().defaultRandom(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+    () => new Date()
+  ),
   name: text("name"),
   industrySector: text("industry_sector"),
   remarks: text("remarks"),
@@ -85,7 +93,9 @@ export const classStockPrices = pgTable("class_stock_prices", {
   price: numeric("price"),
   newsId: uuid("news_id").references((): AnyPgColumn => news.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+    () => new Date()
+  ),
 });
 
 export const wallets = pgTable("wallets", {
@@ -123,7 +133,9 @@ export const managers = pgTable("managers", {
   manager_id: uuid("manager_id").references((): AnyPgColumn => users.id),
   client_id: uuid("client_id").references((): AnyPgColumn => clients.id),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updated_at: timestamp("updated_at", { withTimezone: true }),
+  updated_at: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+    () => new Date()
+  ),
   created_by: uuid("created_by"),
   current_day: integer("current_day"),
 });
@@ -182,7 +194,9 @@ export const holdings = pgTable("holdings", {
   quantity: integer("quantity"),
   averagePurchasePrice: numeric("average_purchase_price"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+    () => new Date()
+  ),
 });
 
 export const holdingsRelations = relations(holdings, ({ one }) => ({

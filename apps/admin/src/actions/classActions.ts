@@ -157,11 +157,22 @@ export const deleteClass = withAuth(async (user, classId: string) => {
 
 // 클라이언트와 매니저 목록 조회 (폼에서 사용)
 export async function getClientsAndManagers() {
+  // 현재 사용자 인증 확인
+  const { stackServerApp } = await import("@/stack/server");
+  const user = await stackServerApp.getUser();
+  
+  if (!user) {
+    throw new Error("사용자 인증에 실패했습니다.");
+  }
+
   try {
     const clientsData = await db
       .select({ id: clients.id, name: clients.name })
-      .from(clients);
+      .from(clients)
+      .where(eq(clients.created_by, user.id));
+    
     const managersData = await db.query.managers.findMany({
+      where: eq(managers.created_by, user.id),
       with: {
         user: {
           columns: {
@@ -195,8 +206,17 @@ export async function getClientsAndManagers() {
 
 // READ: 모든 클래스 조회
 export async function getClasses() {
+  // 현재 사용자 인증 확인
+  const { stackServerApp } = await import("@/stack/server");
+  const user = await stackServerApp.getUser();
+  
+  if (!user) {
+    throw new Error("사용자 인증에 실패했습니다.");
+  }
+
   try {
     const rawData = await db.query.classes.findMany({
+      where: eq(classes.createdBy, user.id),
       with: {
         client: true,
         manager: {

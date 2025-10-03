@@ -29,11 +29,40 @@ export async function getClassStockPrices(
   classId?: string,
   day?: number
 ): Promise<ClassStockPrice[]> {
+  // 현재 사용자 인증 확인
+  const { stackServerApp } = await import("@/stack/server");
+  const user = await stackServerApp.getUser();
+  
+  if (!user) {
+    throw new Error("사용자 인증에 실패했습니다.");
+  }
+
   try {
+    // 먼저 사용자의 클래스만 조회
+    const { classes } = await import("@repo/db");
+    const userClasses = await db.query.classes.findMany({
+      where: eq(classes.createdBy, user.id),
+      columns: { id: true },
+    });
+    
+    const userClassIds = userClasses.map((c) => c.id);
+    
     const conditions = [];
     if (classId) {
+      // 해당 클래스가 사용자의 것인지 확인
+      if (!userClassIds.includes(classId)) {
+        throw new Error("권한이 없습니다.");
+      }
       conditions.push(eq(classStockPrices.classId, classId));
+    } else {
+      // classId가 없으면 사용자의 모든 클래스에 대한 데이터만 조회
+      if (userClassIds.length > 0) {
+        conditions.push(sql`${classStockPrices.classId} IN ${userClassIds}`);
+      } else {
+        return []; // 사용자의 클래스가 없으면 빈 배열 반환
+      }
     }
+    
     if (day !== undefined) {
       conditions.push(eq(classStockPrices.day, day));
     }
@@ -172,7 +201,26 @@ export async function getGameProgress(classId: string): Promise<{
   totalNews: number;
   totalPrices: number;
 }> {
+  // 현재 사용자 인증 확인
+  const { stackServerApp } = await import("@/stack/server");
+  const user = await stackServerApp.getUser();
+  
+  if (!user) {
+    throw new Error("사용자 인증에 실패했습니다.");
+  }
+
   try {
+    // 먼저 해당 클래스가 사용자의 것인지 확인
+    const { classes } = await import("@repo/db");
+    const classData = await db.query.classes.findFirst({
+      where: and(eq(classes.id, classId), eq(classes.createdBy, user.id)),
+      columns: { id: true },
+    });
+    
+    if (!classData) {
+      throw new Error("권한이 없거나 존재하지 않는 클래스입니다.");
+    }
+
     const maxDayResult = await db
       .select({ value: sql`max(${classStockPrices.day})`.mapWith(Number) })
       .from(classStockPrices)
