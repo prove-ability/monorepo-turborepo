@@ -22,10 +22,8 @@ export function ManagerListItem({
     setIsDeleting(true);
     try {
       const result = await deleteManager(manager.id);
-      if (result.error) {
-        const errorMessage =
-          "_form" in result.error ? result.error._form?.[0] : "알 수 없는 오류";
-        alert("삭제 실패: " + errorMessage);
+      if (!result.success) {
+        alert("삭제 실패: " + result.message);
       } else {
         alert(result.message);
         handleManagerDeleted(manager.id);
