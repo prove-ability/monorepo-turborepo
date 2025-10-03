@@ -204,11 +204,7 @@ export default function GameDayManagement({
         news: [news],
       };
 
-      if (!user?.id) {
-        alert("사용자 정보를 가져올 수 없습니다. 다시 로그인해주세요.");
-        return;
-      }
-      await createGameDay(gameData, user.id);
+      await createGameDay(gameData);
 
       // 해당 뉴스를 목록에서 제거
       const updatedNewsItems = newsItems.filter(

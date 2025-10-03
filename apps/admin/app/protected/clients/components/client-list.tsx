@@ -101,7 +101,7 @@ export function ClientList({
             <div>
               <h3 className="font-bold text-lg">{client.name}</h3>
               <p className="text-sm text-gray-500">
-                {client.email} | {client.phone}
+                {client.email} | {client.mobile_phone}
               </p>
             </div>
             <div className="flex gap-2">

@@ -119,7 +119,7 @@ export const transactions = pgTable("transactions", {
 
 export const clients = pgTable("clients", {
   id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name"),
+  name: text("name").notNull(),
   mobile_phone: text("mobile_phone"),
   email: text("email"),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
