@@ -3,7 +3,8 @@ import type { User } from "@stackframe/stack";
 
 // 모든 액션이 반환할 공통 상태 타입을 정의합니다.
 export interface ActionState {
-  message: string;
+  message?: string;
+  error?: Record<string, string[]>;
   errors?: Record<string, string[]> | null;
   success: boolean;
 }

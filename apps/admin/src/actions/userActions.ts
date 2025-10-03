@@ -75,16 +75,22 @@ export const createUserWithStack = withAuth(
       return {
         success: true,
         message: "학생 계정이 성공적으로 생성되었습니다.",
+        error: undefined,
       };
     } catch (e) {
       const error =
         e instanceof Error ? e : new Error("An unknown error occurred");
       if (error instanceof z.ZodError) {
-        return { success: false, error: error.flatten().fieldErrors };
+        return {
+          success: false,
+          error: error.flatten().fieldErrors,
+          message: undefined,
+        };
       }
       return {
         success: false,
         error: { _form: [`사용자 생성 중 오류 발생: ${error.message}`] },
+        message: undefined,
       };
     }
   }
