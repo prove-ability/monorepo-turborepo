@@ -12,12 +12,18 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { withAuth } from "@/lib/safe-action";
+import { Class, Manager, Client } from "@/types";
+
+export interface ClassWithRelations extends Class {
+  client: Client | null;
+  manager: Manager | null;
+}
 
 const classSchema = z.object({
   name: z.string().min(1, "수업명은 필수입니다."),
   managerId: z.string().min(1, "매니저 선택은 필수입니다."),
   clientId: z.string().min(1, "클라이언트 선택은 필수입니다."),
-  day: z.coerce.number().min(0, "Day는 0 이상이어야 합니다.").optional(),
+  totalDays: z.coerce.number().min(0, "총 수업일은 0 이상이어야 합니다.").optional(),
   currentDay: z.coerce
     .number()
     .min(1, "현재 Day는 1 이상이어야 합니다.")
@@ -40,7 +46,7 @@ export const createClass = withAuth(async (user, formData: FormData) => {
         name: validation.data.name,
         managerId: validation.data.managerId,
         clientId: validation.data.clientId,
-        day: validation.data.day,
+        totalDays: validation.data.totalDays,
         currentDay: validation.data.currentDay,
         createdBy: user.id,
       })

@@ -59,21 +59,22 @@ export default function GameManagementPage() {
 
   const loadInitialData = async () => {
     try {
-      const [classesData, stocksData] = await Promise.all([
+      const [classesResponse, stocksData] = await Promise.all([
         getClasses(),
         getStocks(),
       ]);
 
+      const classesData = classesResponse.data || [];
       setClasses(classesData);
       setStocks(stocksData);
 
       if (classesData.length > 0) {
         // 기본 선택: 첫 고객사 및 해당 고객사의 첫 클래스
-        const firstClientId = classesData[0]?.clients?.id;
+        const firstClientId = (classesData[0] as any)?.client?.id;
         if (firstClientId) {
           setSelectedClientId(firstClientId);
           const firstClassOfClient = classesData.find(
-            (c) => c?.clients?.id === firstClientId
+            (c) => (c as any)?.client?.id === firstClientId
           );
           setSelectedClass(firstClassOfClient?.id || classesData[0]?.id || "");
         } else {
@@ -91,7 +92,7 @@ export default function GameManagementPage() {
   useEffect(() => {
     if (!selectedClientId) return;
     const classesOfClient = classes.filter(
-      (c) => c?.clients?.id === selectedClientId
+      (c) => (c as any)?.client?.id === selectedClientId
     );
     if (classesOfClient.length === 0) {
       // 해당 고객사에 클래스가 없으면 선택 해제
@@ -140,10 +141,10 @@ export default function GameManagementPage() {
     }
   };
 
-  // 현재 선택된 클래스의 current_day 가져오기
+  // 현재 선택된 클래스의 currentDay 가져오기
   const getCurrentDay = () => {
     const selectedClassData = classes.find((c) => c.id === selectedClass);
-    return selectedClassData?.current_day || 1;
+    return selectedClassData?.currentDay || 1;
   };
 
   // Day 감소 (바로 실행)
@@ -232,7 +233,7 @@ export default function GameManagementPage() {
               // classes 목록에서 고객사를 유일값으로 도출
               const map = new Map<string, { id: string; name: string }>();
               classes.forEach((c) => {
-                const client = (c as any)?.clients as
+                const client = (c as any)?.client as
                   | { id: string; name: string }
                   | undefined;
                 if (client?.id && !map.has(client.id)) {
@@ -266,7 +267,7 @@ export default function GameManagementPage() {
           <div className="flex flex-wrap gap-2">
             {(selectedClientId
               ? classes.filter(
-                  (c) => (c as any)?.clients?.id === selectedClientId
+                  (c) => (c as any)?.client?.id === selectedClientId
                 )
               : classes
             ).map((cls) => (
@@ -340,7 +341,7 @@ export default function GameManagementPage() {
                     const selectedClassData = classes.find(
                       (c) => c.id === selectedClass
                     );
-                    const currentDay = selectedClassData?.current_day || 1;
+                    const currentDay = selectedClassData?.currentDay || 1;
 
                     return (
                       <div className="border-t pt-4">
