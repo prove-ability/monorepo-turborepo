@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@repo/ui";
 import { createUserWithStack } from "@/actions/userActions";
-import type { CreateUserData } from "@/types/user";
+import { Modal } from "@/components/common/modal";
 
 interface CreateUserModalProps {
   isOpen: boolean;
@@ -29,25 +29,28 @@ export function CreateUserModal({
     setErrors({});
 
     const formData = new FormData(e.currentTarget);
-    const userData: CreateUserData = {
-      name: formData.get("name") as string,
-      phone: formData.get("phone") as string,
-      grade: parseInt(formData.get("grade") as string),
-      school_name: formData.get("school_name") as string,
-      client_id: clientId,
-      class_id: classId,
-    };
+    
+    // client_id와 class_id를 FormData에 추가
+    formData.set("client_id", clientId);
+    formData.set("class_id", classId);
 
     try {
-      const result = await createUser(userData);
+      const result = await createUserWithStack(formData);
 
-      if (result.error) {
+      // withAuth의 ActionState 타입 처리
+      if ("success" in result && !result.success) {
+        alert(`등록 실패: ${result.message}`);
+        return;
+      }
+
+      // 액션의 실제 반환 타입 처리
+      if ("error" in result && result.error) {
         if ("_form" in result.error) {
           alert("등록 실패: " + result.error._form?.[0]);
         } else {
-          setErrors(result.error);
+          setErrors(result.error as Record<string, string[]>);
         }
-      } else {
+      } else if ("message" in result && result.message) {
         // 생성된 계정 정보를 표시
         alert(result.message);
         setIsOpen(false);
@@ -63,23 +66,14 @@ export function CreateUserModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">새 학생 등록</h2>
-          <Button
-            onClick={() => setIsOpen(false)}
-            variant="ghost"
-            className="text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </Button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Modal
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      title="새 학생 등록"
+      size="md"
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="name"
@@ -166,25 +160,24 @@ export function CreateUserModal({
             )}
           </div>
 
-          <div className="flex gap-2 pt-4">
-            <Button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              variant="outline"
-              className="flex-1"
-            >
-              취소
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              {isSubmitting ? "등록 중..." : "등록"}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex gap-2 pt-4">
+          <Button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            variant="outline"
+            className="flex-1"
+          >
+            취소
+          </Button>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+          >
+            {isSubmitting ? "등록 중..." : "등록"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

@@ -1,10 +1,12 @@
+"use client";
+
 import { Button } from "@repo/ui";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Dialog } from "radix-ui";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useState } from "react";
 import { createClientAction } from "@/actions/clientActions";
+import { Modal } from "@/components/common/modal";
 
 export type CreateClientInputs = {
   name: string;
@@ -74,29 +76,25 @@ export function CreateClientModal({
   };
 
   // 모달이 닫힐 때 상태 초기화
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
-    if (!open) {
-      reset();
-      setError(null);
-      setSuccessMessage(null);
-    }
+  const handleClose = () => {
+    setIsOpen(false);
+    reset();
+    setError(null);
+    setSuccessMessage(null);
   };
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
-      <Dialog.Trigger asChild>
-        <Button onClick={() => setIsOpen(true)}>신규 고객사 추가</Button>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-blackA6 data-[state=open]:animate-overlayShow" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[85vh] w-[90vw] max-w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-md bg-white p-[25px] shadow-lg focus:outline-none data-[state=open]:animate-contentShow z-20">
-          <Dialog.Title className="m-0 text-[17px] font-bold text-gray-900">
-            신규 고객사 추가
-          </Dialog.Title>
-          <Dialog.Description className="mb-5 mt-2.5 text-[15px] leading-normal text-gray-600">
-            새로운 고객사의 정보를 입력해주세요.
-          </Dialog.Description>
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="신규 고객사 추가"
+      size="md"
+    >
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          새로운 고객사의 정보를 입력해주세요.
+        </p>
+      </div>
 
           {/* 에러 메시지 표시 */}
           {error && (
@@ -148,19 +146,20 @@ export function CreateClientModal({
                 />
               </fieldset>
             </div>
-            <div className="flex gap-2 justify-end">
-              <Dialog.Close asChild>
-                <Button type="button" variant="secondary" disabled={isLoading}>
-                  닫기
-                </Button>
-              </Dialog.Close>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "저장 중..." : "저장"}
-              </Button>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        <div className="flex gap-2 justify-end">
+          <Button 
+            type="button" 
+            variant="secondary" 
+            disabled={isLoading}
+            onClick={handleClose}
+          >
+            닫기
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "저장 중..." : "저장"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }
