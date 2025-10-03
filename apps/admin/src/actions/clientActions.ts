@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@repo/db";
 import { clients } from "@repo/db/schema";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
 
 const clientSchema = z.object({
@@ -82,5 +82,34 @@ export const deleteClientAction = withAuth(async (_user, id: string) => {
   } catch (error) {
     console.error("데이터베이스 오류:", error);
     return { message: "데이터베이스 오류", success: false };
+  }
+});
+
+export const getClients = withAuth(async (user) => {
+  try {
+    const clientData = await db.query.clients.findMany({
+      where: eq(clients.created_by, user.id),
+      columns: {
+        id: true,
+        name: true,
+        mobile_phone: true,
+        email: true,
+        created_at: true,
+        created_by: true,
+      },
+      with: {
+        managers: true,
+      },
+      orderBy: [desc(clients.created_at)],
+    });
+
+    return { data: clientData, success: true };
+  } catch (error) {
+    console.error("클라이언트 조회 오류:", error);
+    return {
+      data: [],
+      success: false,
+      message: "클라이언트 목록을 불러오는 중 오류가 발생했습니다.",
+    };
   }
 });
