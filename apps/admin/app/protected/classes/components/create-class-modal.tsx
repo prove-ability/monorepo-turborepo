@@ -3,17 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@repo/ui";
 import { createClass, getClientsAndManagers } from "@/actions/classActions";
-
-interface Client {
-  id: string;
-  name: string;
-}
-
-interface Manager {
-  id: string;
-  name: string;
-  client_id: string;
-}
+import { Manager, Client } from "@/types";
 
 interface CreateClassModalProps {
   isOpen: boolean;
@@ -26,10 +16,12 @@ export function CreateClassModal({
   setIsOpen,
   onClassCreated,
 }: CreateClassModalProps) {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [managers, setManagers] = useState<Manager[]>([]);
+  const [clients, setClients] = useState<Partial<Client>[]>([]);
+  const [managers, setManagers] = useState<Partial<Manager>[]>([]);
   const [selectedClientId, setSelectedClientId] = useState("");
-  const [filteredManagers, setFilteredManagers] = useState<Manager[]>([]);
+  const [filteredManagers, setFilteredManagers] = useState<Partial<Manager>[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -71,16 +63,26 @@ export function CreateClassModal({
 
     try {
       const result = await createClass(formData);
-      if (result.error) {
+
+      // withAuth의 ActionState 타입 처리 (errors 필드)
+      if ("success" in result && !result.success) {
+        alert(`생성 실패: ${result.message}`);
+        return;
+      }
+
+      // 액션의 실제 반환 타입 처리 (error 필드)
+      if ("error" in result && result.error) {
         if ("_form" in result.error) {
           alert("생성 실패: " + result.error._form?.[0]);
         } else {
           const errors = Object.values(result.error).flat();
           alert("생성 실패: " + errors.join(", "));
         }
-      } else {
+      } else if ("message" in result && result.message) {
         alert(result.message);
-        onClassCreated(result.data);
+        if ("data" in result && result.data) {
+          onClassCreated(result.data);
+        }
         setIsOpen(false);
         // 폼 리셋
         (e.target as HTMLFormElement).reset();

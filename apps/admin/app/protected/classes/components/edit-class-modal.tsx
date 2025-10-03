@@ -3,17 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@repo/ui";
 import { updateClass, getClientsAndManagers } from "@/actions/classActions";
-
-interface Client {
-  id: string;
-  name: string;
-}
-
-interface Manager {
-  id: string;
-  name: string;
-  client_id: string;
-}
+import { Manager, Client } from "@/types";
 
 interface ClassData {
   id: string;
@@ -40,13 +30,15 @@ export function EditClassModal({
   classData,
   onClassUpdated,
 }: EditClassModalProps) {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [managers, setManagers] = useState<Manager[]>([]);
+  const [clients, setClients] = useState<Partial<Client>[]>([]);
+  const [managers, setManagers] = useState<Partial<Manager>[]>([]);
   const [selectedClientId, setSelectedClientId] = useState(classData.client_id);
   const [selectedManagerId, setSelectedManagerId] = useState(
     classData.manager_id
   );
-  const [filteredManagers, setFilteredManagers] = useState<Manager[]>([]);
+  const [filteredManagers, setFilteredManagers] = useState<Partial<Manager>[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -136,10 +128,17 @@ export function EditClassModal({
     try {
       const result = await updateClass(classData.id, formData);
 
-      if (result?.error) {
+      // withAuth의 ActionState 타입 처리 (errors 필드)
+      if ("success" in result && !result.success) {
+        alert(`수정 실패: ${result.message}`);
+        return;
+      }
+
+      // 액션의 실제 반환 타입 처리 (error 필드)
+      if ("error" in result && result.error) {
         const errorMessages = Object.values(result.error).flat().join(", ");
         alert(`수정 실패: ${errorMessages}`);
-      } else if (result?.data) {
+      } else if ("data" in result && result.data) {
         alert("수업이 성공적으로 수정되었습니다.");
         onClassUpdated(result.data);
         setIsOpen(false);

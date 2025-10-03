@@ -152,7 +152,7 @@ export async function getClientsAndManagers() {
   // 현재 사용자 인증 확인
   const { stackServerApp } = await import("@/stack/server");
   const user = await stackServerApp.getUser();
-  
+
   if (!user) {
     throw new Error("사용자 인증에 실패했습니다.");
   }
@@ -162,7 +162,7 @@ export async function getClientsAndManagers() {
       .select({ id: clients.id, name: clients.name })
       .from(clients)
       .where(eq(clients.created_by, user.id));
-    
+
     const managersData = await db.query.managers.findMany({
       where: eq(managers.created_by, user.id),
     });
@@ -170,7 +170,7 @@ export async function getClientsAndManagers() {
     const formattedManagers = managersData.map((m) => ({
       id: m.id,
       name: m.name, // managers 테이블에 직접 name 필드가 있음
-      clientId: m.client_id,
+      client_id: m.client_id,
     }));
 
     return {
@@ -192,7 +192,7 @@ export async function getClasses() {
   // 현재 사용자 인증 확인
   const { stackServerApp } = await import("@/stack/server");
   const user = await stackServerApp.getUser();
-  
+
   if (!user) {
     throw new Error("사용자 인증에 실패했습니다.");
   }
