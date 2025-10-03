@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  getClasses,
-  type ClassWithRelations,
-} from "@/actions/classActions";
+import { getClasses } from "@/actions/classActions";
 import { Button } from "@repo/ui";
 import { CreateClassModal } from "./create-class-modal";
 import { EditClassModal } from "./edit-class-modal";
 import { ClassListItem } from "./class-list-item";
+import { Class, Manager, Client } from "@/types";
+
+interface ClassWithRelations extends Class {
+  client: Client | null;
+  manager: Manager | null;
+}
 
 export function ClassList() {
   const [classes, setClasses] = useState<ClassWithRelations[]>([]);
@@ -34,7 +37,8 @@ export function ClassList() {
       try {
         setLoading(true);
         const fetchedClasses = await getClasses();
-        setClasses(fetchedClasses);
+        console.log(fetchedClasses);
+        setClasses(fetchedClasses.data || []);
         setError(null);
       } catch (err) {
         setError(
@@ -50,7 +54,7 @@ export function ClassList() {
 
   const onClassUpdated = async () => {
     const fetchedClasses = await getClasses();
-    setClasses(fetchedClasses);
+    setClasses(fetchedClasses.data || []);
   };
 
   if (loading) {

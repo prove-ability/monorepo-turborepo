@@ -24,30 +24,6 @@ const classSchema = z.object({
     .optional(),
 });
 
-export type Class = z.infer<typeof classSchema>;
-
-// 데이터베이스에서 조회된 클래스 타입 (id 포함)
-export type ClassWithId = Class & {
-  id: string;
-  created_at?: string;
-  updated_at?: string;
-};
-
-// getClasses 함수의 반환 타입
-export type ClassWithRelations = {
-  id: string;
-  name: string;
-  start_date: string;
-  end_date?: string;
-  manager_id: string;
-  client_id: string;
-  current_day?: number;
-  created_at: string;
-  updated_at: string;
-  clients: { id: string; name: string } | null;
-  managers: { id: string; name: string } | null;
-};
-
 // CREATE: 새로운 클래스 생성
 export const createClass = withAuth(async (user, formData: FormData) => {
   const rawData = Object.fromEntries(formData.entries());
@@ -198,7 +174,7 @@ export async function getClasses() {
   }
 
   try {
-    const rawData = await db.query.classes.findMany({
+    const classesData = await db.query.classes.findMany({
       where: eq(classes.createdBy, user.id),
       with: {
         client: true,
@@ -207,33 +183,20 @@ export async function getClasses() {
       orderBy: (classes, { desc }) => [desc(classes.createdAt)],
     });
 
-    // Transform data to match component expectations
-    const data = rawData.map((cls) => ({
-      id: cls.id,
-      name: cls.name || "",
-      start_date: cls.createdAt?.toISOString() || "",
-      end_date: cls.updatedAt?.toISOString(),
-      manager_id: cls.managerId || "",
-      client_id: cls.clientId || "",
-      current_day: cls.currentDay || 1,
-      created_at: cls.createdAt?.toISOString() || "",
-      updated_at: cls.updatedAt?.toISOString() || "",
-      clients: cls.client
-        ? { id: cls.client.id, name: cls.client.name || "" }
-        : null,
-      managers: cls.manager
-        ? { id: cls.manager.id, name: cls.manager.name || "" }
-        : null,
-    }));
-
-    return data;
+    return {
+      data: classesData,
+      error: null,
+      success: true,
+    };
   } catch (e) {
     const error =
       e instanceof Error ? e : new Error("An unknown error occurred");
     console.error("클래스 목록을 불러오는 중 오류가 발생했습니다:", error);
-    throw new Error(
-      `클래스 목록을 불러오는 중 오류가 발생했습니다: ${error.message}`
-    );
+    return {
+      data: null,
+      error,
+      success: false,
+    };
   }
 }
 

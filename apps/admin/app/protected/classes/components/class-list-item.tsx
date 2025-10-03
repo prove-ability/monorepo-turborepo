@@ -5,20 +5,11 @@ import { Button } from "@repo/ui";
 import { deleteClass } from "@/actions/classActions";
 import { CreateUserModal } from "./create-user-modal";
 import { useRouter } from "next/navigation";
+import { Class, Manager, Client } from "@/types";
 
-interface ClassWithRelations {
-  id: string;
-  name: string;
-  start_date: string;
-  end_date?: string;
-  manager_id: string;
-  client_id: string;
-  current_day?: number;
-  created_at: string;
-  updated_at: string;
-  starting_balance?: number;
-  clients: { id: string; name: string } | null;
-  managers: { id: string; name: string } | null;
+interface ClassWithRelations extends Class {
+  client: Client | null;
+  manager: Manager | null;
 }
 
 interface ClassListItemProps {
@@ -75,32 +66,27 @@ export function ClassListItem({
         <div className="text-sm text-gray-600 space-y-1 mt-2">
           <p>
             <span className="font-medium">클라이언트:</span>{" "}
-            {classItem.clients?.name || "데이터 없음"}
+            {classItem.client?.name || "데이터 없음"}
           </p>
           <p>
             <span className="font-medium">담당 매니저:</span>{" "}
-            {classItem.managers?.name || "데이터 없음"}
+            {classItem.manager?.name || "데이터 없음"}
           </p>
           <p>
-            <span className="font-medium">시작일:</span>{" "}
-            {new Date(classItem.start_date).toLocaleDateString("ko-KR")}
+            <span className="font-medium">생성일:</span>{" "}
+            {new Date(classItem.createdAt).toLocaleDateString("ko-KR")}
           </p>
-          {classItem.end_date && (
+          {classItem.updatedAt && (
             <p>
-              <span className="font-medium">종료일:</span>{" "}
-              {new Date(classItem.end_date).toLocaleDateString("ko-KR")}
+              <span className="font-medium">수정일:</span>{" "}
+              {new Date(classItem.updatedAt).toLocaleDateString("ko-KR")}
             </p>
           )}
           <p>
             <span className="font-medium">현재 Day:</span>{" "}
             <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-              Day {classItem.current_day || 1}
+              Day {classItem.currentDay || 1}
             </span>
-          </p>
-          <p>
-            <span className="font-medium">시작 금액:</span>{" "}
-            {classItem.starting_balance?.toLocaleString() + " 원" ||
-              "데이터 없음"}
           </p>
         </div>
       </div>
@@ -128,7 +114,9 @@ export function ClassListItem({
           수정
         </Button>
         <Button
-          onClick={() => handleDeleteClass(classItem.id, classItem.name)}
+          onClick={() =>
+            handleDeleteClass(classItem.id, classItem.name || "수업")
+          }
           disabled={isDeleting}
           className="text-xs text-red-500 hover:bg-red-50 px-2 py-1"
           variant="ghost"
@@ -141,7 +129,7 @@ export function ClassListItem({
         isOpen={isStudentModalOpen}
         setIsOpen={setIsStudentModalOpen}
         classId={classItem.id}
-        clientId={classItem.client_id}
+        clientId={classItem.clientId || ""}
         onUserCreated={onClassUpdated}
       />
     </div>

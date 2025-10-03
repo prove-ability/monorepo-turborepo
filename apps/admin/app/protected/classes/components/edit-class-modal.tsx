@@ -3,26 +3,19 @@
 import { useState, useEffect } from "react";
 import { Button } from "@repo/ui";
 import { updateClass, getClientsAndManagers } from "@/actions/classActions";
-import { Manager, Client } from "@/types";
+import { Manager, Client, Class } from "@/types";
 import { Modal } from "@/components/common/modal";
 
-interface ClassData {
-  id: string;
-  name: string;
-  start_date: string;
-  end_date?: string;
-  manager_id: string;
-  client_id: string;
-  starting_balance?: number;
-  clients: { id: string; name: string } | null;
-  managers: { id: string; name: string } | null;
+interface ClassData extends Class {
+  client: Client | null;
+  manager: Manager | null;
 }
 
 interface EditClassModalProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   classData: ClassData;
-  onClassUpdated: (updatedClass: any) => void;
+  onClassUpdated: (updatedClass: ClassData) => void;
 }
 
 export function EditClassModal({
@@ -33,9 +26,11 @@ export function EditClassModal({
 }: EditClassModalProps) {
   const [clients, setClients] = useState<Partial<Client>[]>([]);
   const [managers, setManagers] = useState<Partial<Manager>[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState(classData.client_id);
+  const [selectedClientId, setSelectedClientId] = useState(
+    classData.clientId || ""
+  );
   const [selectedManagerId, setSelectedManagerId] = useState(
-    classData.manager_id
+    classData.managerId || ""
   );
   const [filteredManagers, setFilteredManagers] = useState<Partial<Manager>[]>(
     []
@@ -44,19 +39,16 @@ export function EditClassModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    start_date: "",
-    end_date: "",
-    manager_id: "",
-    client_id: "",
-    starting_balance: 0,
+    managerId: "",
+    clientId: "",
   });
 
   useEffect(() => {
     if (isOpen) {
       loadClientsAndManagers();
-      setSelectedClientId(classData.client_id);
+      setSelectedClientId(classData.clientId || "");
     }
-  }, [isOpen, classData.client_id]);
+  }, [isOpen, classData.clientId]);
 
   useEffect(() => {
     if (selectedClientId) {
@@ -66,28 +58,21 @@ export function EditClassModal({
       setFilteredManagers(filtered);
 
       // 클라이언트가 변경되면 매니저 선택 초기화 (단, 초기 로드 시에는 유지)
-      if (selectedClientId !== classData.client_id) {
+      if (selectedClientId !== classData.clientId) {
         setSelectedManagerId("");
       }
     } else {
       setFilteredManagers([]);
       setSelectedManagerId("");
     }
-  }, [selectedClientId, managers, classData.client_id]);
+  }, [selectedClientId, managers, classData.clientId]);
 
   useEffect(() => {
     if (classData) {
       setFormData({
-        name: classData.name,
-        start_date: classData.start_date
-          ? (classData.start_date.split("T")[0] ?? "")
-          : "",
-        end_date: classData.end_date
-          ? (classData.end_date.split("T")[0] ?? "")
-          : "",
-        manager_id: classData.manager_id,
-        client_id: classData.client_id,
-        starting_balance: classData.starting_balance || 0,
+        name: classData.name || "",
+        managerId: classData.managerId || "",
+        clientId: classData.clientId || "",
       });
     }
   }, [classData]);
@@ -163,26 +148,26 @@ export function EditClassModal({
         <div className="text-center py-4">데이터를 불러오는 중...</div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                수업명 *
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                required
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="수업명을 입력하세요"
-              />
-            </div>
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              수업명 *
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="수업명을 입력하세요"
+            />
+          </div>
 
-            <div className="mb-4">
+          {/* <div className="mb-4">
               <label
                 htmlFor="starting_balance"
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -193,100 +178,65 @@ export function EditClassModal({
                 type="number"
                 id="starting_balance"
                 name="starting_balance"
-                value={formData.starting_balance}
+                value={formData.startingBalance}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 placeholder="예: 100000"
               />
-            </div>
+            </div> */}
 
-            <div>
-              <label
-                htmlFor="client_id"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                클라이언트 *
-              </label>
-              <select
-                id="client_id"
-                name="client_id"
-                required
-                value={selectedClientId}
-                onChange={(e) => setSelectedClientId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">클라이언트를 선택하세요</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="manager_id"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                담당 매니저 *
-              </label>
-              <select
-                id="manager_id"
-                name="manager_id"
-                required
-                disabled={!selectedClientId}
-                value={selectedManagerId}
-                onChange={(e) => setSelectedManagerId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              >
-                <option value="">
-                  {selectedClientId
-                    ? "매니저를 선택하세요"
-                    : "먼저 클라이언트를 선택하세요"}
+          <div>
+            <label
+              htmlFor="clientId"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              클라이언트 *
+            </label>
+            <select
+              id="clientId"
+              name="clientId"
+              required
+              value={selectedClientId || ""}
+              onChange={(e) => setSelectedClientId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">클라이언트를 선택하세요</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
                 </option>
-                {filteredManagers.map((manager) => (
-                  <option key={manager.id} value={manager.id}>
-                    {manager.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              ))}
+            </select>
+          </div>
 
-            <div>
-              <label
-                htmlFor="start_date"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                시작일 *
-              </label>
-              <input
-                type="date"
-                id="start_date"
-                name="start_date"
-                required
-                value={formData.start_date}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="end_date"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                종료일 (선택사항)
-              </label>
-              <input
-                type="date"
-                id="end_date"
-                name="end_date"
-                value={formData.end_date || ""}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+          <div>
+            <label
+              htmlFor="managerId"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              담당 매니저 *
+            </label>
+            <select
+              id="managerId"
+              name="managerId"
+              required
+              disabled={!selectedClientId}
+              value={selectedManagerId || ""}
+              onChange={(e) => setSelectedManagerId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            >
+              <option value="">
+                {selectedClientId
+                  ? "매니저를 선택하세요"
+                  : "먼저 클라이언트를 선택하세요"}
+              </option>
+              {filteredManagers.map((manager) => (
+                <option key={manager.id} value={manager.id}>
+                  {manager.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="flex gap-2 justify-end pt-4">
             <Button
