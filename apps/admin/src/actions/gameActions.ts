@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { db, classStockPrices, news as newsSchema } from "@repo/db";
+import { db, dbWithTransaction, classStockPrices, news as newsSchema } from "@repo/db";
 import { eq, and, desc, count, sql, lte } from "drizzle-orm";
 import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
@@ -143,7 +143,7 @@ export const createGameDay = withAuth(
   async (user, gameData: GameData): Promise<void> => {
     const userId = user.id;
     try {
-      await db.transaction(async (tx) => {
+      await dbWithTransaction.transaction(async (tx) => {
         // 1. 뉴스 생성
         const newsToInsert = gameData.news.map((news) => ({
           day: gameData.day,
