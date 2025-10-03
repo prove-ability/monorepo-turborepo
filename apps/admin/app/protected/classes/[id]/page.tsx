@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { getClassById } from "@/actions/classActions";
 import { ClassDetailClient } from "./components/class-detail-client";
-import UserManagement from "./components/UserManagement";
 
 interface ClassDetailPageProps {
   params: Promise<{
@@ -23,7 +22,6 @@ export default async function ClassDetailPage({
   return (
     <div className="space-y-6">
       <ClassDetailClient classData={classInfo.data} classId={id} />
-      <UserManagement classId={id} />
     </div>
   );
 }
