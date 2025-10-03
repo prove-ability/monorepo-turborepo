@@ -7,6 +7,7 @@ import {
   managers,
   classStockPrices,
   news,
+  guests,
 } from "@repo/db";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -113,22 +114,26 @@ export const updateClass = withAuth(
 // DELETE: 클래스 삭제
 export const deleteClass = withAuth(async (user, classId: string) => {
   try {
-    // 1) 먼저 의존 데이터 삭제: 주식 가격 -> 뉴스 -> 클래스
-    await db
-      .delete(classStockPrices)
-      .where(eq(classStockPrices.classId, classId));
-    await db.delete(news).where(eq(news.classId, classId));
+    // 트랜잭션을 사용하여 모든 삭제 작업을 원자적으로 처리
+    await db.transaction(async (tx) => {
+      // 1) 먼저 의존 데이터 삭제: 주식 가격 -> 뉴스 -> guests -> 클래스
+      await tx
+        .delete(classStockPrices)
+        .where(eq(classStockPrices.classId, classId));
+      await tx.delete(news).where(eq(news.classId, classId));
+      await tx.delete(guests).where(eq(guests.classId, classId));
 
-    // 2) 마지막으로 클래스 삭제
-    await db.delete(classes).where(eq(classes.id, classId));
+      // 2) 마지막으로 클래스 삭제
+      await tx.delete(classes).where(eq(classes.id, classId));
+    });
 
     revalidatePath("/admin/classes");
-    return { message: "수업 및 관련 정보가 삭제되었습니다." };
+    return { message: "수업 및 관련 정보가 삭제되었습니다.", success: true };
   } catch (e) {
     const error =
       e instanceof Error ? e : new Error("An unknown error occurred");
     console.error("클래스 삭제 실패:", error);
-    return { error: { _form: [error.message] } };
+    return { error: { _form: [error.message] }, success: false };
   }
 });
 
