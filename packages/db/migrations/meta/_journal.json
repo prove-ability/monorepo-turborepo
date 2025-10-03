@@ -57,6 +57,13 @@
       "when": 1759473384664,
       "tag": "0007_icy_morbius",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1759474160124,
+      "tag": "0008_silent_ghost_rider",
+      "breakpoints": true
     }
   ]
 }
