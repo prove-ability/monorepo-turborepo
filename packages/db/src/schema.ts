@@ -36,9 +36,9 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
-  ),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .$onUpdate(() => new Date())
+    .notNull(),
   classId: uuid("class_id").references((): AnyPgColumn => classes.id),
   nickname: text("nickname"),
   grade: text("grade"),
@@ -51,9 +51,9 @@ export const classes = pgTable("classes", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
-  ),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .$onUpdate(() => new Date())
+    .notNull(),
   name: text("name"),
   totalDays: integer("total_days"),
   currentDay: integer("current_day"),
@@ -72,9 +72,9 @@ export const news = pgTable("news", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
-  ),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .$onUpdate(() => new Date())
+    .notNull(),
   createdBy: uuid("created_by").notNull(),
   classId: uuid("class_id").references((): AnyPgColumn => classes.id),
 });
@@ -84,9 +84,9 @@ export const stocks = pgTable("stocks", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
-  ),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .$onUpdate(() => new Date())
+    .notNull(),
   name: text("name"),
   industrySector: text("industry_sector"),
   remarks: text("remarks"),
@@ -104,9 +104,9 @@ export const classStockPrices = pgTable("class_stock_prices", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
-  ),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
 export const wallets = pgTable("wallets", {
@@ -212,9 +212,9 @@ export const holdings = pgTable("holdings", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-    () => new Date()
-  ),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
 export const holdingsRelations = relations(holdings, ({ one }) => ({
