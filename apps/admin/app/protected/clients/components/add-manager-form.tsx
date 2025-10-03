@@ -66,6 +66,7 @@ export function AddManagerForm({
       />
       <input
         className="border p-1 rounded"
+        placeholder="휴대폰 번호"
         id="phone"
         name="phone"
         value={mobile}

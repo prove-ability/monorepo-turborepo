@@ -8,6 +8,7 @@ import { withAuth } from "@/lib/safe-action";
 
 const managerSchema = z.object({
   name: z.string().min(1, "매니저 이름은 필수입니다."),
+  mobile_phone: z.string().optional().or(z.literal("")),
   email: z
     .string()
     .email("유효한 이메일을 입력하세요.")
@@ -19,6 +20,7 @@ export const createManager = withAuth(
   async (user, clientId: string, formData: FormData) => {
     const rawData = {
       name: formData.get("name"),
+      mobile_phone: formData.get("mobile_phone"),
       email: formData.get("email"),
     };
 
@@ -53,6 +55,7 @@ export const updateManager = withAuth(
   async (user, managerId: string, formData: FormData) => {
     const rawData = {
       name: formData.get("name"),
+      mobile_phone: formData.get("mobile_phone"),
       email: formData.get("email"),
     };
 
