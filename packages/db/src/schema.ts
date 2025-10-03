@@ -20,15 +20,6 @@ export const adminRoleEnum = pgEnum("admin_role", [
   "manager",
 ]);
 
-export const admins = pgTable("admins", {
-  id: uuid("id").primaryKey(), // This should correspond to the auth.users.id
-  email: text("email").unique(),
-  role: adminRoleEnum("role").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
-
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   auth_id: text("auth_id").unique(), // From Stack Auth
