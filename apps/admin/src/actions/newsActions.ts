@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { db, news } from "@repo/db";
 import { eq, and, desc, count } from "drizzle-orm";
-import { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import { InferInsertModel } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
+import { News } from "@/types";
 
-export type News = InferSelectModel<typeof news>;
 export type CreateNewsData = Omit<
   InferInsertModel<typeof news>,
   "id" | "createdAt" | "updatedAt" | "createdBy"
@@ -18,7 +18,7 @@ export async function getNews(day?: number): Promise<News[]> {
   // 현재 사용자 인증 확인
   const { stackServerApp } = await import("@/stack/server");
   const user = await stackServerApp.getUser();
-  
+
   if (!user) {
     throw new Error("사용자 인증에 실패했습니다.");
   }
@@ -31,9 +31,9 @@ export async function getNews(day?: number): Promise<News[]> {
       where: eq(classes.createdBy, user.id),
       columns: { id: true },
     });
-    
+
     const userClassIds = userClasses.map((c) => c.id);
-    
+
     if (userClassIds.length === 0) {
       return []; // 사용자의 클래스가 없으면 빈 배열 반환
     }
@@ -118,7 +118,7 @@ export async function getNewsCountByDay(day: number): Promise<number> {
   // 현재 사용자 인증 확인
   const { stackServerApp } = await import("@/stack/server");
   const user = await stackServerApp.getUser();
-  
+
   if (!user) {
     throw new Error("사용자 인증에 실패했습니다.");
   }
@@ -131,9 +131,9 @@ export async function getNewsCountByDay(day: number): Promise<number> {
       where: eq(classes.createdBy, user.id),
       columns: { id: true },
     });
-    
+
     const userClassIds = userClasses.map((c) => c.id);
-    
+
     if (userClassIds.length === 0) {
       return 0; // 사용자의 클래스가 없으면 0 반환
     }
@@ -158,7 +158,7 @@ export async function getNewsByClassAndDay(
   // 현재 사용자 인증 확인
   const { stackServerApp } = await import("@/stack/server");
   const user = await stackServerApp.getUser();
-  
+
   if (!user) {
     throw new Error("사용자 인증에 실패했습니다.");
   }
@@ -170,7 +170,7 @@ export async function getNewsByClassAndDay(
       where: and(eq(classes.id, classId), eq(classes.createdBy, user.id)),
       columns: { id: true },
     });
-    
+
     if (!classData) {
       throw new Error("권한이 없거나 존재하지 않는 클래스입니다.");
     }

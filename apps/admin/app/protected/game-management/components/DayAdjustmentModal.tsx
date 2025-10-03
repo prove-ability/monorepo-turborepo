@@ -12,12 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getNewsByClassAndDay, type News } from "@/actions/newsActions";
-import {
-  getClassStockPrices,
-  type ClassStockPrice,
-} from "@/actions/gameActions";
-import { type Stock } from "@/actions/stockActions";
+import { getNewsByClassAndDay } from "@/actions/newsActions";
+import { getClassStockPrices } from "@/actions/gameActions";
+import { ClassStockPrice, Stock, News } from "@/types";
 
 interface DayAdjustmentModalProps {
   isOpen: boolean;
@@ -104,8 +101,8 @@ export function DayAdjustmentModal({
   // 전날 대비 변화 계산 헬퍼
   const getPrevPrice = (stockId?: string) => {
     if (!stockId) return undefined;
-    const prev = prevPrices.find((p) => p.stock_id === stockId);
-    return prev?.price;
+    const prev = prevPrices.find((p) => p.stockId === stockId);
+    return prev?.price ? Number(prev.price) : undefined;
   };
   const getChangeInfo = (stockId?: string, current?: number) => {
     const prev = getPrevPrice(stockId);
@@ -126,8 +123,7 @@ export function DayAdjustmentModal({
     if (!stockId || prevNews.length === 0) return [] as News[];
     return prevNews.filter(
       (n) =>
-        Array.isArray(n.related_stock_ids) &&
-        n.related_stock_ids?.includes(stockId)
+        Array.isArray(n.relatedStockIds) && n.relatedStockIds?.includes(stockId)
     );
   };
 
@@ -223,12 +219,12 @@ export function DayAdjustmentModal({
                           >
                             <div className="flex items-baseline justify-between gap-3">
                               <div className="font-medium text-lg">
-                                {getStockName(price.stock_id || "")}
+                                {getStockName(price.stockId || "")}
                               </div>
                               {(() => {
                                 const { delta, dir, percent } = getChangeInfo(
-                                  price.stock_id,
-                                  price.price
+                                  price.stockId || undefined,
+                                  price.price ? Number(price.price) : undefined
                                 );
                                 const textColor =
                                   dir === "up"
@@ -251,7 +247,7 @@ export function DayAdjustmentModal({
                                 return (
                                   <div className="text-right">
                                     <div className="text-xl md:text-2xl font-extrabold text-blue-600">
-                                      ₩{price.price.toLocaleString()}
+                                      ₩{Number(price.price).toLocaleString()}
                                     </div>
                                     <div
                                       className={`text-xs font-medium inline-block rounded px-1.5 py-0.5 border ${badgeTone} ${textColor}`}
@@ -277,7 +273,7 @@ export function DayAdjustmentModal({
 
                             {(() => {
                               const related = getPrevRelatedNews(
-                                price.stock_id
+                                price.stockId || undefined
                               );
                               return (
                                 <div className="mt-2 pt-2 border-t">
