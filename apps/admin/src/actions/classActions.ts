@@ -178,6 +178,51 @@ export async function getClientsAndManagers() {
   }
 }
 
+// READ: 모든 클래스 조회
+export async function getClasses() {
+  try {
+    const rawData = await db.query.classes.findMany({
+      with: {
+        client: true,
+        manager: {
+          with: {
+            user: true,
+          },
+        },
+      },
+      orderBy: (classes, { desc }) => [desc(classes.createdAt)],
+    });
+
+    // Transform data to match component expectations
+    const data = rawData.map((cls) => ({
+      id: cls.id,
+      name: cls.name || "",
+      start_date: cls.createdAt?.toISOString() || "",
+      end_date: cls.updatedAt?.toISOString(),
+      manager_id: cls.managerId || "",
+      client_id: cls.clientId || "",
+      current_day: cls.currentDay || 1,
+      created_at: cls.createdAt?.toISOString() || "",
+      updated_at: cls.updatedAt?.toISOString() || "",
+      clients: cls.client
+        ? { id: cls.client.id, name: cls.client.name || "" }
+        : null,
+      managers: cls.manager?.user
+        ? { id: cls.manager.id, name: cls.manager.user.name || "" }
+        : null,
+    }));
+
+    return data;
+  } catch (e) {
+    const error =
+      e instanceof Error ? e : new Error("An unknown error occurred");
+    console.error("클래스 목록을 불러오는 중 오류가 발생했습니다:", error);
+    throw new Error(
+      `클래스 목록을 불러오는 중 오류가 발생했습니다: ${error.message}`
+    );
+  }
+}
+
 // 클래스의 current_day 업데이스트
 export const updateClassCurrentDay = withAuth(
   async (user, classId: string, currentDay: number) => {
