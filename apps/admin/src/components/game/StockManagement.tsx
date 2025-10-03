@@ -53,17 +53,17 @@ export default function StockManagement({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CreateStockData>({
     name: "",
-    industry_sector: "",
+    industrySector: "",
     remarks: "",
-    market_country_code: "KR",
+    marketCountryCode: "KR",
   });
 
   const resetForm = () => {
     setFormData({
       name: "",
-      industry_sector: "",
+      industrySector: "",
       remarks: "",
-      market_country_code: "KR",
+      marketCountryCode: "KR",
     });
   };
 
@@ -125,9 +125,9 @@ export default function StockManagement({
     setEditingStock(stock);
     setFormData({
       name: stock.name,
-      industry_sector: stock.industry_sector || "",
+      industrySector: stock.industrySector || "",
       remarks: stock.remarks || "",
-      market_country_code: stock.market_country_code,
+      marketCountryCode: stock.marketCountryCode,
     });
     setIsEditDialogOpen(true);
   };
@@ -170,25 +170,25 @@ export default function StockManagement({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="industry_sector">산업 섹터</Label>
+                  <Label htmlFor="industrySector">산업 섹터</Label>
                   <Input
-                    id="industry_sector"
-                    value={formData.industry_sector}
+                    id="industrySector"
+                    value={formData.industrySector}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({
                         ...formData,
-                        industry_sector: e.target.value,
+                        industrySector: e.target.value,
                       })
                     }
                     placeholder="예: 반도체"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="market_country_code">시장 국가 코드 *</Label>
+                  <Label htmlFor="marketCountryCode">시장 국가 코드 *</Label>
                   <Select
-                    value={formData.market_country_code}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, market_country_code: value })
+                    value={formData.marketCountryCode}
+                    onValueChange={(value: "KR" | "US" | "JP" | "CN") =>
+                      setFormData({ ...formData, marketCountryCode: value })
                     }
                   >
                     <SelectTrigger>
@@ -206,7 +206,7 @@ export default function StockManagement({
                   <Label htmlFor="remarks">비고</Label>
                   <Textarea
                     id="remarks"
-                    value={formData.remarks}
+                    value={formData.remarks || ""}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                       setFormData({ ...formData, remarks: e.target.value })
                     }
@@ -247,8 +247,8 @@ export default function StockManagement({
                 <div className="flex-1">
                   <h4 className="font-semibold">{stock.name}</h4>
                   <div className="text-sm text-muted-foreground space-y-1">
-                    <p>산업: {stock.industry_sector || "미지정"}</p>
-                    <p>시장: {stock.market_country_code}</p>
+                    <p>산업: {stock.industrySector || "미지정"}</p>
+                    <p>시장: {stock.marketCountryCode}</p>
                     {stock.remarks && <p>비고: {stock.remarks}</p>}
                   </div>
                 </div>
@@ -294,27 +294,27 @@ export default function StockManagement({
                 />
               </div>
               <div>
-                <Label htmlFor="edit-industry_sector">산업 섹터</Label>
+                <Label htmlFor="edit-industrySector">산업 섹터</Label>
                 <Input
-                  id="edit-industry_sector"
-                  value={formData.industry_sector}
+                  id="edit-industrySector"
+                  value={formData.industrySector}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      industry_sector: e.target.value,
+                      industrySector: e.target.value,
                     })
                   }
                   placeholder="예: 반도체"
                 />
               </div>
               <div>
-                <Label htmlFor="edit-market_country_code">
+                <Label htmlFor="edit-marketCountryCode">
                   시장 국가 코드 *
                 </Label>
                 <Select
-                  value={formData.market_country_code}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, market_country_code: value })
+                  value={formData.marketCountryCode}
+                  onValueChange={(value: "KR" | "US" | "JP" | "CN") =>
+                    setFormData({ ...formData, marketCountryCode: value })
                   }
                 >
                   <SelectTrigger>
@@ -332,7 +332,7 @@ export default function StockManagement({
                 <Label htmlFor="edit-remarks">비고</Label>
                 <Textarea
                   id="edit-remarks"
-                  value={formData.remarks}
+                  value={formData.remarks || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, remarks: e.target.value })
                   }
