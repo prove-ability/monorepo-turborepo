@@ -107,7 +107,6 @@ export function ClientList({
             <div className="flex gap-2">
               {/* <Button className="text-sm text-blue-500">수정</Button> */}
               <Button
-                className="text-red-500"
                 onClick={(e) => {
                   e.stopPropagation(); // 클릭 이벤트 버블링 방지
                   handleClientDelete(client.id, client.name);
