@@ -49,7 +49,7 @@ export const createClientAction = withAuth(
 );
 
 export const updateClientAction = withAuth(
-  async (user, id: string, prevState: any, formData: FormData) => {
+  async (_user, id: string, prevState: any, formData: FormData) => {
     const rawData = Object.fromEntries(formData.entries());
     const validatedFields = clientSchema.safeParse(rawData);
 
@@ -74,12 +74,13 @@ export const updateClientAction = withAuth(
   }
 );
 
-export const deleteClientAction = withAuth(async (user, id: string) => {
+export const deleteClientAction = withAuth(async (_user, id: string) => {
   try {
     await db.delete(clients).where(eq(clients.id, id));
     revalidatePath("/admin/clients");
     return { message: "고객사가 성공적으로 삭제되었습니다.", success: true };
   } catch (error) {
+    console.error("데이터베이스 오류:", error);
     return { message: "데이터베이스 오류", success: false };
   }
 });

@@ -131,7 +131,9 @@ export const managers = pgTable("managers", {
   name: text("name").notNull(),
   mobile_phone: text("mobile_phone"),
   email: text("email"),
-  client_id: uuid("client_id").references((): AnyPgColumn => clients.id),
+  client_id: uuid("client_id").references((): AnyPgColumn => clients.id, {
+    onDelete: "cascade",
+  }),
   created_at: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

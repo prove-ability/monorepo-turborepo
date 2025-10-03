@@ -43,6 +43,13 @@
       "when": 1759468281053,
       "tag": "0006_lucky_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1759468718504,
+      "tag": "0006_odd_stingray",
+      "breakpoints": true
     }
   ]
 }
