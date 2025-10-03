@@ -58,13 +58,16 @@ export function AddManagerForm({
       <input
         className="border p-1 rounded"
         placeholder="이름"
+        name="name"
+        id="name"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
       />
       <input
         className="border p-1 rounded"
-        placeholder="연락처"
+        id="phone"
+        name="phone"
         value={mobile}
         onChange={(e) => setMobile(e.target.value)}
       />
