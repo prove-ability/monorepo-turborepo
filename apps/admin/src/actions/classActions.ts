@@ -33,6 +33,21 @@ export type ClassWithId = Class & {
   updated_at?: string;
 };
 
+// getClasses 함수의 반환 타입
+export type ClassWithRelations = {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date?: string;
+  manager_id: string;
+  client_id: string;
+  current_day?: number;
+  created_at: string;
+  updated_at: string;
+  clients: { id: string; name: string } | null;
+  managers: { id: string; name: string } | null;
+};
+
 // CREATE: 새로운 클래스 생성
 export const createClass = withAuth(async (user, formData: FormData) => {
   const rawData = Object.fromEntries(formData.entries());

@@ -1,25 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getClasses } from "@/actions/classActions";
+import {
+  getClasses,
+  type ClassWithRelations,
+} from "@/actions/classActions";
 import { Button } from "@repo/ui";
 import { CreateClassModal } from "./create-class-modal";
 import { EditClassModal } from "./edit-class-modal";
 import { ClassListItem } from "./class-list-item";
-
-interface ClassWithRelations {
-  id: string;
-  name: string;
-  start_date: string;
-  end_date?: string;
-  manager_id: string;
-  client_id: string;
-  current_day?: number;
-  created_at: string;
-  updated_at: string;
-  clients: { id: string; name: string } | null;
-  managers: { id: string; name: string } | null;
-}
 
 export function ClassList() {
   const [classes, setClasses] = useState<ClassWithRelations[]>([]);

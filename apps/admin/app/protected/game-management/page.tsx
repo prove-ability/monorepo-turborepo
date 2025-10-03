@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   getClasses,
   updateClassCurrentDay,
-  type ClassWithId,
+  type ClassWithRelations,
 } from "@/actions/classActions";
 import { DayAdjustmentModal } from "./components/DayAdjustmentModal";
 import { getStocks, type Stock } from "@/actions/stockActions";
@@ -26,7 +26,7 @@ import GameDayManagement from "@/components/game/GameDayManagement";
 import PriceManagement from "@/components/game/PriceManagement";
 
 export default function GameManagementPage() {
-  const [classes, setClasses] = useState<ClassWithId[]>([]);
+  const [classes, setClasses] = useState<ClassWithRelations[]>([]);
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [prices, setPrices] = useState<ClassStockPrice[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
@@ -69,17 +69,15 @@ export default function GameManagementPage() {
 
       if (classesData.length > 0) {
         // 기본 선택: 첫 고객사 및 해당 고객사의 첫 클래스
-        const firstClientId = (classesData[0] as any)?.clients?.id as
-          | string
-          | undefined;
+        const firstClientId = classesData[0]?.clients?.id;
         if (firstClientId) {
           setSelectedClientId(firstClientId);
           const firstClassOfClient = classesData.find(
-            (c) => (c as any)?.clients?.id === firstClientId
+            (c) => c?.clients?.id === firstClientId
           );
-          setSelectedClass(firstClassOfClient?.id || classesData[0].id);
+          setSelectedClass(firstClassOfClient?.id || classesData[0]?.id || "");
         } else {
-          setSelectedClass(classesData[0].id);
+          setSelectedClass(classesData[0]?.id || "");
         }
       }
     } catch (error) {
@@ -93,7 +91,7 @@ export default function GameManagementPage() {
   useEffect(() => {
     if (!selectedClientId) return;
     const classesOfClient = classes.filter(
-      (c) => (c as any)?.clients?.id === selectedClientId
+      (c) => c?.clients?.id === selectedClientId
     );
     if (classesOfClient.length === 0) {
       // 해당 고객사에 클래스가 없으면 선택 해제
