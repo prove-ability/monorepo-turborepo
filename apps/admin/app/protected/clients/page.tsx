@@ -24,19 +24,7 @@ export default async function ClientsPage() {
         created_by: true,
       },
       with: {
-        managers: {
-          columns: {
-            id: true,
-            start_date: true,
-            end_date: true,
-            manager_id: true,
-            client_id: true,
-            created_at: true,
-            updated_at: true,
-            created_by: true,
-            current_day: true,
-          },
-        },
+        managers: true,
       },
       orderBy: [desc(clients.created_at)],
     });

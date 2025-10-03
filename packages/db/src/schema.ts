@@ -25,14 +25,14 @@ export const admins = pgTable("admins", {
   id: uuid("id").primaryKey(), // This should correspond to the auth.users.id
   email: text("email").unique(),
   role: adminRoleEnum("role").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   auth_id: text("auth_id").unique(), // From Stack Auth
   name: text("name"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
@@ -48,7 +48,7 @@ export const classes = pgTable("classes", {
   name: text("name"),
   day: integer("day"),
   status: text("status"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
@@ -64,7 +64,7 @@ export const news = pgTable("news", {
   title: text("title"),
   content: text("content"),
   relatedStockIds: jsonb("related_stock_ids").$type<string[]>(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
@@ -74,7 +74,7 @@ export const news = pgTable("news", {
 
 export const stocks = pgTable("stocks", {
   id: uuid("id").primaryKey().defaultRandom(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
@@ -92,7 +92,7 @@ export const classStockPrices = pgTable("class_stock_prices", {
   day: integer("day"),
   price: numeric("price"),
   newsId: uuid("news_id").references((): AnyPgColumn => news.id),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
@@ -102,7 +102,7 @@ export const wallets = pgTable("wallets", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").references((): AnyPgColumn => users.id),
   balance: numeric("balance"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const transactions = pgTable("transactions", {
@@ -113,7 +113,7 @@ export const transactions = pgTable("transactions", {
   quantity: integer("quantity"),
   price: numeric("price"),
   day: integer("day"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   classId: uuid("class_id").references((): AnyPgColumn => classes.id),
 });
 
@@ -122,7 +122,7 @@ export const clients = pgTable("clients", {
   name: text("name").notNull(),
   mobile_phone: text("mobile_phone"),
   email: text("email"),
-  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   created_by: uuid("created_by").notNull(),
 });
 
@@ -190,7 +190,7 @@ export const holdings = pgTable("holdings", {
   stockId: uuid("stock_id").references((): AnyPgColumn => stocks.id),
   quantity: integer("quantity"),
   averagePurchasePrice: numeric("average_purchase_price"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),

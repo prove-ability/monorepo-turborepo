@@ -26,22 +26,22 @@
     {
       "idx": 3,
       "version": "7",
-      "when": 1759459724530,
-      "tag": "0003_lumpy_maximus",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
       "when": 1759462880912,
       "tag": "0004_minor_human_robot",
       "breakpoints": true
     },
     {
-      "idx": 5,
+      "idx": 4,
       "version": "7",
       "when": 1759466062740,
       "tag": "0005_dusty_spencer_smythe",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1759468281053,
+      "tag": "0006_lucky_gateway",
       "breakpoints": true
     }
   ]

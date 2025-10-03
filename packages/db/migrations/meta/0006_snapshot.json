@@ -1,6 +1,6 @@
 {
-  "id": "78f56f12-f732-4fc4-974e-aa2afa750db4",
-  "prevId": "41ec803f-3765-4dd4-8aa9-60abca2e646e",
+  "id": "359a960c-4464-439f-a54b-a1c619fb944c",
+  "prevId": "28e9e8e3-6c02-4d4e-b76e-6fe0056ce28e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -31,7 +31,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         }
       },
@@ -96,7 +96,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "updated_at": {
@@ -187,7 +187,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "updated_at": {
@@ -200,7 +200,7 @@
           "name": "created_by",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "client_id": {
           "name": "client_id",
@@ -271,7 +271,7 @@
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "mobile_phone": {
           "name": "mobile_phone",
@@ -289,14 +289,14 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "created_by": {
           "name": "created_by",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -352,7 +352,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "updated_at": {
@@ -421,21 +421,21 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "start_date": {
-          "name": "start_date",
-          "type": "timestamp",
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mobile_phone": {
+          "name": "mobile_phone",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "end_date": {
-          "name": "end_date",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "manager_id": {
-          "name": "manager_id",
-          "type": "uuid",
+        "email": {
+          "name": "email",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -449,43 +449,24 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "created_by": {
           "name": "created_by",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
-        },
-        "current_day": {
-          "name": "current_day",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "managers_manager_id_users_id_fk": {
-          "name": "managers_manager_id_users_id_fk",
-          "tableFrom": "managers",
-          "tableTo": "users",
-          "columnsFrom": [
-            "manager_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "managers_client_id_clients_id_fk": {
           "name": "managers_client_id_clients_id_fk",
           "tableFrom": "managers",
@@ -545,7 +526,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "updated_at": {
@@ -558,7 +539,7 @@
           "name": "created_by",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "class_id": {
           "name": "class_id",
@@ -604,7 +585,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "updated_at": {
@@ -641,7 +622,7 @@
           "name": "created_by",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "indexes": {},
@@ -704,7 +685,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "class_id": {
@@ -789,7 +770,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "updated_at": {
@@ -886,7 +867,7 @@
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         }
       },
