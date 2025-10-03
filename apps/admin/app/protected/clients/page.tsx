@@ -6,12 +6,6 @@ import { stackServerApp } from "@/stack/server";
 import { redirect } from "next/navigation";
 
 export default async function ClientsPage() {
-  // 사용자 인증 확인
-  const user = await stackServerApp.getUser();
-  if (!user) {
-    redirect("/login");
-  }
-
   try {
     const clientData = await db.query.clients.findMany({
       where: eq(clients.created_by, user.id),
