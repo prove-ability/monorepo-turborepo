@@ -78,11 +78,7 @@ export const createClass = withAuth(async (user, formData: FormData) => {
       where: eq(classes.id, newClass.id),
       with: {
         client: true,
-        manager: {
-          with: {
-            user: true,
-          },
-        },
+        manager: true,
       },
     });
 
@@ -115,11 +111,7 @@ export const updateClass = withAuth(
         where: eq(classes.id, classId),
         with: {
           client: true,
-          manager: {
-            with: {
-              user: true,
-            },
-          },
+          manager: true,
         },
       });
 
@@ -173,20 +165,11 @@ export async function getClientsAndManagers() {
     
     const managersData = await db.query.managers.findMany({
       where: eq(managers.created_by, user.id),
-      with: {
-        user: {
-          columns: {
-            name: true,
-          },
-        },
-      },
     });
 
-    type ManagerWithUser = (typeof managersData)[number];
-
-    const formattedManagers = managersData.map((m: ManagerWithUser) => ({
+    const formattedManagers = managersData.map((m) => ({
       id: m.id,
-      name: m.user?.name, // user relation을 통해 이름에 접근
+      name: m.name, // managers 테이블에 직접 name 필드가 있음
       clientId: m.client_id,
     }));
 
@@ -219,11 +202,7 @@ export async function getClasses() {
       where: eq(classes.createdBy, user.id),
       with: {
         client: true,
-        manager: {
-          with: {
-            user: true,
-          },
-        },
+        manager: true,
       },
       orderBy: (classes, { desc }) => [desc(classes.createdAt)],
     });
@@ -242,8 +221,8 @@ export async function getClasses() {
       clients: cls.client
         ? { id: cls.client.id, name: cls.client.name || "" }
         : null,
-      managers: cls.manager?.user
-        ? { id: cls.manager.id, name: cls.manager.user.name || "" }
+      managers: cls.manager
+        ? { id: cls.manager.id, name: cls.manager.name || "" }
         : null,
     }));
 
