@@ -133,15 +133,7 @@ export const deleteClass = withAuth(async (user, classId: string) => {
 });
 
 // 클라이언트와 매니저 목록 조회 (폼에서 사용)
-export async function getClientsAndManagers() {
-  // 현재 사용자 인증 확인
-  const { stackServerApp } = await import("@/stack/server");
-  const user = await stackServerApp.getUser();
-
-  if (!user) {
-    throw new Error("사용자 인증에 실패했습니다.");
-  }
-
+export const getClientsAndManagers = withAuth(async (user) => {
   try {
     const clientsData = await db
       .select({ id: clients.id, name: clients.name })
@@ -170,18 +162,10 @@ export async function getClientsAndManagers() {
       `데이터를 불러오는 중 오류가 발생했습니다: ${error.message}`
     );
   }
-}
+});
 
 // READ: 모든 클래스 조회
-export async function getClasses() {
-  // 현재 사용자 인증 확인
-  const { stackServerApp } = await import("@/stack/server");
-  const user = await stackServerApp.getUser();
-
-  if (!user) {
-    throw new Error("사용자 인증에 실패했습니다.");
-  }
-
+export const getClasses = withAuth(async (user) => {
   try {
     const classesData = await db.query.classes.findMany({
       where: eq(classes.createdBy, user.id),
@@ -207,18 +191,10 @@ export async function getClasses() {
       success: false,
     };
   }
-}
+});
 
 // READ: 특정 클래스 조회 (ID로)
-export async function getClassById(classId: string) {
-  // 현재 사용자 인증 확인
-  const { stackServerApp } = await import("@/stack/server");
-  const user = await stackServerApp.getUser();
-
-  if (!user) {
-    throw new Error("사용자 인증에 실패했습니다.");
-  }
-
+export const getClassById = withAuth(async (user, classId: string) => {
   try {
     const classData = await db.query.classes.findFirst({
       where: eq(classes.id, classId),
@@ -252,7 +228,7 @@ export async function getClassById(classId: string) {
       success: false,
     };
   }
-}
+});
 
 // 클래스의 current_day 업데이스트
 export const updateClassCurrentDay = withAuth(

@@ -7,22 +7,6 @@ import { useRouter } from "next/navigation";
 import { getUsersByClass } from "@/actions/userActions";
 import { StudentBulkUpload } from "./StudentBulkUpload";
 
-// NOTE: These types are manually defined to match the expected data structure.
-// It's recommended to generate these from the database schema in the future.
-
-interface ClassData {
-  id: string;
-  name: string | null;
-  createdAt: Date | null;
-  client: { name: string | null } | null;
-  manager: { user: { name: string | null } | null } | null;
-  // The following properties are needed for rendering but might be named differently.
-  // We assume they exist on the object for now.
-  start_date?: string;
-  end_date?: string;
-  client_id: string | null;
-}
-
 type Student = Awaited<ReturnType<typeof getUsersByClass>>["data"][number];
 
 interface ClassDetailClientProps {
@@ -241,7 +225,8 @@ export function ClassDetailClient({
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {student.name ?? "이름 없음"} ({student.nickname || "닉네임 없음"})
+                            {student.name ?? "이름 없음"} (
+                            {student.nickname || "닉네임 없음"})
                           </div>
                           <div className="text-sm text-gray-500">
                             ID: {student.id}
@@ -269,7 +254,9 @@ export function ClassDetailClient({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.createdAt ? formatDate(student.createdAt.toISOString()) : "-"}
+                        {student.createdAt
+                          ? formatDate(student.createdAt.toISOString())
+                          : "-"}
                       </td>
                     </tr>
                   ))}

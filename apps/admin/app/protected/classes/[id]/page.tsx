@@ -14,7 +14,8 @@ export default async function ClassDetailPage({
 }: ClassDetailPageProps) {
   const classInfo = await getClassById(params.id);
 
-  if (!classInfo) {
+  // Type guard: check if the result has 'data' property
+  if (!classInfo || !("data" in classInfo) || !classInfo.data) {
     notFound();
   }
 
