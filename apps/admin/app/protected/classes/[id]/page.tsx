@@ -9,7 +9,9 @@ interface ClassDetailPageProps {
   };
 }
 
-export default async function ClassDetailPage({ params }: ClassDetailPageProps) {
+export default async function ClassDetailPage({
+  params,
+}: ClassDetailPageProps) {
   const classInfo = await getClassById(params.id);
 
   if (!classInfo) {

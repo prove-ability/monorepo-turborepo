@@ -94,7 +94,7 @@ export function ClassListItem({
       <div className="flex flex-wrap gap-1 justify-end">
         <Button
           variant="ghost"
-          onClick={() => router.push(`/classes/${classItem.id}`)}
+          onClick={() => router.push(`/protected/classes/${classItem.id}`)}
           className="text-xs text-blue-500 hover:bg-blue-50 px-2 py-1"
         >
           👁️ 상세

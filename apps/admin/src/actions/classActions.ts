@@ -23,7 +23,10 @@ const classSchema = z.object({
   name: z.string().min(1, "수업명은 필수입니다."),
   managerId: z.string().min(1, "매니저 선택은 필수입니다."),
   clientId: z.string().min(1, "클라이언트 선택은 필수입니다."),
-  totalDays: z.coerce.number().min(0, "총 수업일은 0 이상이어야 합니다.").optional(),
+  totalDays: z.coerce
+    .number()
+    .min(0, "총 수업일은 0 이상이어야 합니다.")
+    .optional(),
   currentDay: z.coerce
     .number()
     .min(1, "현재 Day는 1 이상이어야 합니다.")
@@ -198,6 +201,51 @@ export async function getClasses() {
     const error =
       e instanceof Error ? e : new Error("An unknown error occurred");
     console.error("클래스 목록을 불러오는 중 오류가 발생했습니다:", error);
+    return {
+      data: null,
+      error,
+      success: false,
+    };
+  }
+}
+
+// READ: 특정 클래스 조회 (ID로)
+export async function getClassById(classId: string) {
+  // 현재 사용자 인증 확인
+  const { stackServerApp } = await import("@/stack/server");
+  const user = await stackServerApp.getUser();
+
+  if (!user) {
+    throw new Error("사용자 인증에 실패했습니다.");
+  }
+
+  try {
+    const classData = await db.query.classes.findFirst({
+      where: eq(classes.id, classId),
+      with: {
+        client: true,
+        manager: true,
+      },
+    });
+
+    // 클래스가 없거나 현재 사용자가 생성한 클래스가 아닌 경우
+    if (!classData || classData.createdBy !== user.id) {
+      return {
+        data: null,
+        error: null,
+        success: false,
+      };
+    }
+
+    return {
+      data: classData,
+      error: null,
+      success: true,
+    };
+  } catch (e) {
+    const error =
+      e instanceof Error ? e : new Error("An unknown error occurred");
+    console.error("클래스 정보를 불러오는 중 오류가 발생했습니다:", error);
     return {
       data: null,
       error,

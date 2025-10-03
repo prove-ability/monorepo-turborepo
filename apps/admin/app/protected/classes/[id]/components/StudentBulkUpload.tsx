@@ -160,11 +160,21 @@ export function StudentBulkUpload({
     setResultMsg("");
     try {
       const res = await bulkCreateUsers(payload);
-      if ((res as any)?.error) {
-        setResultMsg(
-          (res as any).error?._form?.join("\n") || "업로드에 실패했습니다."
-        );
-      } else {
+
+      // ActionState 타입 체크 (인증 실패)
+      if ("success" in res && !res.success) {
+        setResultMsg(res.message || "인증에 실패했습니다.");
+        return;
+      }
+
+      // 에러 케이스
+      if ("error" in res && res.error) {
+        setResultMsg(res.error._form?.join("\n") || "업로드에 실패했습니다.");
+        return;
+      }
+
+      // 성공 케이스 - successCount와 failureCount가 있는지 확인
+      if ("successCount" in res && "failureCount" in res) {
         setResultMsg(
           `등록 완료: ${res.successCount}건, 실패: ${res.failureCount}건`
         );

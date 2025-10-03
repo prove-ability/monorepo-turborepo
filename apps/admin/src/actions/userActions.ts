@@ -182,3 +182,51 @@ export const deleteUser = withAuth(async (user, userId: string) => {
     };
   }
 });
+
+// BULK CREATE: 여러 사용자 한번에 생성
+export const bulkCreateUsers = withAuth(
+  async (
+    user,
+    usersData: Array<{
+      name: string;
+      phone: string;
+      grade: number;
+      school_name: string;
+      client_id: string;
+      class_id: string;
+    }>
+  ) => {
+    let successCount = 0;
+    let failureCount = 0;
+
+    try {
+      // 각 사용자를 개별적으로 삽입 (일부 실패해도 나머지 진행)
+      for (const userData of usersData) {
+        try {
+          await db.insert(users).values({
+            name: userData.name,
+            phone: userData.phone,
+            grade: String(userData.grade),
+            schoolName: userData.school_name,
+            classId: userData.class_id,
+          });
+          successCount++;
+        } catch (err) {
+          console.error("Failed to create user:", userData, err);
+          failureCount++;
+        }
+      }
+
+      revalidatePath("/classes");
+      return { successCount, failureCount };
+    } catch (e) {
+      const error =
+        e instanceof Error ? e : new Error("An unknown error occurred");
+      return {
+        error: {
+          _form: [`일괄 등록 중 오류 발생: ${error.message}`],
+        },
+      };
+    }
+  }
+);
