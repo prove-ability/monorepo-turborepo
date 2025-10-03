@@ -52,7 +52,7 @@ export const classes = pgTable("classes", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
-  createdBy: uuid("created_by"),
+  createdBy: uuid("created_by").notNull(),
   clientId: uuid("client_id").references((): AnyPgColumn => clients.id),
   managerId: uuid("manager_id").references((): AnyPgColumn => managers.id),
   currentDay: integer("current_day"),
@@ -68,7 +68,7 @@ export const news = pgTable("news", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
-  createdBy: uuid("created_by"),
+  createdBy: uuid("created_by").notNull(),
   classId: uuid("class_id").references((): AnyPgColumn => classes.id),
 });
 
@@ -82,7 +82,7 @@ export const stocks = pgTable("stocks", {
   industrySector: text("industry_sector"),
   remarks: text("remarks"),
   marketCountryCode: text("market_country_code"),
-  createdBy: uuid("created_by"),
+  createdBy: uuid("created_by").notNull(),
 });
 
 export const classStockPrices = pgTable("class_stock_prices", {
@@ -123,7 +123,7 @@ export const clients = pgTable("clients", {
   mobile_phone: text("mobile_phone"),
   email: text("email"),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  created_by: uuid("created_by"),
+  created_by: uuid("created_by").notNull(),
 });
 
 export const managers = pgTable("managers", {
@@ -136,7 +136,7 @@ export const managers = pgTable("managers", {
   updated_at: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
-  created_by: uuid("created_by"),
+  created_by: uuid("created_by").notNull(),
   current_day: integer("current_day"),
 });
 

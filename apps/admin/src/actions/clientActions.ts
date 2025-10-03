@@ -32,8 +32,10 @@ export const createClientAction = withAuth(
 
     try {
       const dataToInsert = {
-        ...validatedFields.data,
-        createdBy: user.id,
+        name: validatedFields.data.name,
+        mobile_phone: validatedFields.data.mobilePhone,
+        email: validatedFields.data.email,
+        created_by: user.id,
       };
       await db.insert(clients).values(dataToInsert);
       revalidatePath("/admin/clients");
