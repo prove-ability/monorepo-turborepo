@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@repo/ui";
 import { createClass, getClientsAndManagers } from "@/actions/classActions";
 import { Manager, Client } from "@/types";
+import { Modal } from "@/components/common/modal";
 
 interface CreateClassModalProps {
   isOpen: boolean;
@@ -96,26 +97,17 @@ export function CreateClassModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">새 수업 추가</h2>
-          <Button
-            onClick={() => setIsOpen(false)}
-            variant="ghost"
-            className="text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <div className="text-center py-4">데이터를 불러오는 중...</div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <Modal
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      title="새 수업 추가"
+      size="md"
+    >
+      {isLoading ? (
+        <div className="text-center py-4">데이터를 불러오는 중...</div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label
                 htmlFor="name"
@@ -230,26 +222,25 @@ export function CreateClassModal({
               />
             </div>
 
-            <div className="flex gap-2 justify-end pt-4">
-              <Button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                variant="ghost"
-                className="px-4 py-2"
-              >
-                취소
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white"
-              >
-                {isSubmitting ? "생성 중..." : "생성"}
-              </Button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+          <div className="flex gap-2 justify-end pt-4">
+            <Button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              variant="ghost"
+              className="px-4 py-2"
+            >
+              취소
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              {isSubmitting ? "생성 중..." : "생성"}
+            </Button>
+          </div>
+        </form>
+      )}
+    </Modal>
   );
 }
