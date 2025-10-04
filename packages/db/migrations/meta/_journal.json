@@ -162,6 +162,20 @@
       "when": 1759591729039,
       "tag": "0022_jazzy_wong",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1759594594286,
+      "tag": "0023_strong_omega_flight",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1759594716400,
+      "tag": "0024_cheerful_saracen",
+      "breakpoints": true
     }
   ]
 }

@@ -13,8 +13,13 @@ import { relations } from "drizzle-orm";
 
 // Enums
 export const transactionTypeEnum = pgEnum("transaction_type", [
+  "deposit", // 입금
+  "withdrawal", // 출금
+]);
+export const transactionSubTypeEnum = pgEnum("transaction_sub_type", [
   "buy", // 매수
   "sell", // 매도
+  "benefit", // 지원금
 ]);
 export const countryCodeEnum = pgEnum("country_code", ["KR", "US", "JP", "CN"]);
 
@@ -124,10 +129,11 @@ export const transactions = pgTable("transactions", {
   id: uuid("id").primaryKey().defaultRandom(),
   walletId: uuid("wallet_id").references((): AnyPgColumn => wallets.id),
   stockId: uuid("stock_id").references((): AnyPgColumn => stocks.id),
-  type: transactionTypeEnum("type"),
-  quantity: integer("quantity"),
-  price: numeric("price"),
-  day: integer("day"),
+  type: transactionTypeEnum("type").notNull(),
+  subType: transactionSubTypeEnum("sub_type").notNull(),
+  quantity: integer("quantity").notNull(),
+  price: numeric("price").notNull(),
+  day: integer("day").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
