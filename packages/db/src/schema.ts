@@ -104,8 +104,11 @@ export const classStockPrices = pgTable("class_stock_prices", {
 
 export const wallets = pgTable("wallets", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").references((): AnyPgColumn => guests.id),
-  balance: numeric("balance"),
+  guestId: uuid("guest_id")
+    .references((): AnyPgColumn => guests.id)
+    .notNull()
+    .unique(),
+  balance: numeric("balance").default("0").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -159,14 +162,14 @@ export const guestsRelations = relations(guests, ({ one, many }) => ({
   }),
   wallet: one(wallets, {
     fields: [guests.id],
-    references: [wallets.userId],
+    references: [wallets.guestId],
   }),
   holdings: many(holdings),
 }));
 
 export const walletsRelations = relations(wallets, ({ one }) => ({
-  user: one(guests, {
-    fields: [wallets.userId],
+  guest: one(guests, {
+    fields: [wallets.guestId],
     references: [guests.id],
   }),
 }));

@@ -70,7 +70,7 @@ export const createUser = withAuth(async (user, formData: FormData) => {
       validatedData.classId
     );
 
-    await db.insert(guests).values({
+    const [newGuest] = await db.insert(guests).values({
       name: validatedData.name,
       classId: validatedData.classId,
       mobilePhone: validatedData.email, // 임시로 email 사용
@@ -78,6 +78,12 @@ export const createUser = withAuth(async (user, formData: FormData) => {
       grade: "미정", // 기본값
       loginId: loginId,
       password: "youthfinlab1234",
+    }).returning();
+
+    // wallet 자동 생성
+    await db.insert(wallets).values({
+      guestId: newGuest.id,
+      balance: "50000", // 초기 잔액 5만원
     });
 
     revalidatePath("/protected/classes");
@@ -184,7 +190,7 @@ export const updateUser = withAuth(
 // DELETE: 사용자 삭제
 export const deleteUser = withAuth(async (user, userId: string) => {
   try {
-    await db.delete(wallets).where(eq(wallets.userId, userId));
+    await db.delete(wallets).where(eq(wallets.guestId, userId));
     await db.delete(guests).where(eq(guests.id, userId));
     revalidatePath("/classes");
     return { success: true, message: "사용자가 성공적으로 삭제되었습니다." };
@@ -223,7 +229,7 @@ export const bulkCreateUsers = withAuth(
             userData.classId
           );
 
-          await db.insert(guests).values({
+          const [newGuest] = await db.insert(guests).values({
             name: userData.name,
             mobilePhone: userData.mobilePhone,
             grade: userData.grade,
@@ -232,7 +238,14 @@ export const bulkCreateUsers = withAuth(
             nickname: userData.nickname,
             loginId: loginId,
             password: "youthfinlab1234",
+          }).returning();
+
+          // wallet 자동 생성
+          await db.insert(wallets).values({
+            guestId: newGuest.id,
+            balance: "50000", // 초기 잔액 5만원
           });
+          
           successCount++;
         } catch (err) {
           console.error("Failed to create user:", userData, err);
