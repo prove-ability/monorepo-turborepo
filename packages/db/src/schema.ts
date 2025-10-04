@@ -31,6 +31,8 @@ export const guests = pgTable("guests", {
   classId: uuid("class_id")
     .references((): AnyPgColumn => classes.id)
     .notNull(),
+  loginId: text("login_id").notNull().unique(),
+  password: text("password").notNull(),
 });
 
 export const classes = pgTable("classes", {

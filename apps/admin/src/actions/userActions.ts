@@ -6,6 +6,37 @@ import { db, guests, wallets } from "@repo/db";
 import { eq, or, like, and, desc, asc } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
 
+// loginId 생성 헬퍼 함수 (중복 시 숫자 증가)
+async function generateUniqueLoginId(
+  name: string,
+  classId: string
+): Promise<string> {
+  // 같은 클래스 내에서 같은 이름으로 시작하는 모든 loginId 조회
+  const existingUsers = await db.query.guests.findMany({
+    where: and(eq(guests.classId, classId), like(guests.loginId, `${name}%`)),
+    columns: {
+      loginId: true,
+    },
+  });
+
+  // 중복이 없으면 그대로 반환
+  if (existingUsers.length === 0) {
+    return name;
+  }
+
+  // 기존 loginId들 확인
+  const existingLoginIds = new Set(existingUsers.map((u) => u.loginId));
+
+  // 중복이 없으면 그대로 사용
+  if (!existingLoginIds.has(name)) {
+    return name;
+  }
+
+  // 기존 사용자 수 + 1을 다음 번호로 사용
+  // 예: "김철수", "김철수2"가 있으면 length=2, 다음은 "김철수3"
+  return `${name}${existingUsers.length + 1}`;
+}
+
 // 타입 정의
 interface CreateUserData {
   name: string;
@@ -65,12 +96,19 @@ export const createUserWithStack = withAuth(
       const stackUser = await response.json();
 
       // 2. Create user in our database
+      const loginId = await generateUniqueLoginId(
+        validatedData.name,
+        validatedData.classId
+      );
+
       await db.insert(guests).values({
         name: validatedData.name,
         classId: validatedData.classId,
         mobilePhone: validatedData.email, // 임시로 email 사용
         affiliation: "미정", // 기본값
         grade: "미정", // 기본값
+        loginId: loginId,
+        password: "youthfinlab1234",
       });
 
       revalidatePath("/classes");
@@ -212,6 +250,11 @@ export const bulkCreateUsers = withAuth(
       // 각 사용자를 개별적으로 삽입 (일부 실패해도 나머지 진행)
       for (const userData of usersData) {
         try {
+          const loginId = await generateUniqueLoginId(
+            userData.name,
+            userData.classId
+          );
+
           await db.insert(guests).values({
             name: userData.name,
             mobilePhone: userData.mobilePhone,
@@ -219,6 +262,8 @@ export const bulkCreateUsers = withAuth(
             affiliation: userData.affiliation,
             classId: userData.classId,
             nickname: userData.nickname,
+            loginId: loginId,
+            password: "youthfinlab1234",
           });
           successCount++;
         } catch (err) {

@@ -1,3 +1,4 @@
-ALTER TABLE "guests" ADD COLUMN "login_id" text NOT NULL;--> statement-breakpoint
-ALTER TABLE "guests" ADD COLUMN "password" text NOT NULL;--> statement-breakpoint
-ALTER TABLE "guests" ADD CONSTRAINT "guests_login_id_unique" UNIQUE("login_id");
+-- login_id와 password 컬럼은 이미 수동으로 추가됨
+-- ALTER TABLE "guests" ADD COLUMN "login_id" text NOT NULL;--> statement-breakpoint
+-- ALTER TABLE "guests" ADD COLUMN "password" text NOT NULL;--> statement-breakpoint
+-- ALTER TABLE "guests" ADD CONSTRAINT "guests_login_id_unique" UNIQUE("login_id");
