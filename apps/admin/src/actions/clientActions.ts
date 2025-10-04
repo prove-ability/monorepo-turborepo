@@ -33,9 +33,9 @@ export const createClientAction = withAuth(
     try {
       const dataToInsert = {
         name: validatedFields.data.name,
-        mobile_phone: validatedFields.data.mobilePhone,
+        mobilePhone: validatedFields.data.mobilePhone,
         email: validatedFields.data.email,
-        created_by: user.id,
+        createdBy: user.id,
       };
       await db.insert(clients).values(dataToInsert);
       revalidatePath("/admin/clients");
@@ -88,19 +88,19 @@ export const deleteClientAction = withAuth(async (_user, id: string) => {
 export const getClients = withAuth(async (user) => {
   try {
     const clientData = await db.query.clients.findMany({
-      where: eq(clients.created_by, user.id),
+      where: eq(clients.createdBy, user.id),
       columns: {
         id: true,
         name: true,
-        mobile_phone: true,
+        mobilePhone: true,
         email: true,
-        created_at: true,
-        created_by: true,
+        createdAt: true,
+        createdBy: true,
       },
       with: {
         managers: true,
       },
-      orderBy: [desc(clients.created_at)],
+      orderBy: [desc(clients.createdAt)],
     });
 
     return { data: clientData, success: true };
