@@ -1,7 +1,7 @@
 "use server";
 
 import { db, stocks, classStockPrices, classes, news } from "@repo/db";
-import { eq, and, lte, asc } from "drizzle-orm";
+import { eq, and, lte, asc, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
 
 interface StockPriceData {
@@ -106,6 +106,36 @@ export const getStocksWithPrices = withAuth(async (user) => {
     return stocksWithPrices;
   } catch (error) {
     console.error("Failed to fetch stocks with prices:", error);
+    return [];
+  }
+});
+
+// 특정 주식들의 기본 정보 조회
+export const getStockInfo = withAuth(async (user, stockIds: string[]) => {
+  try {
+    if (stockIds.length === 0) return [];
+
+    // 주식 정보 조회
+    const stocksData = await db.query.stocks.findMany({
+      where: inArray(stocks.id, stockIds),
+      columns: {
+        id: true,
+        name: true,
+        industrySector: true,
+        remarks: true,
+        marketCountryCode: true,
+      },
+    });
+
+    return stocksData.map((stock) => ({
+      id: stock.id,
+      name: stock.name,
+      sector: stock.industrySector,
+      remarks: stock.remarks,
+      marketCountry: stock.marketCountryCode,
+    }));
+  } catch (error) {
+    console.error("Failed to fetch stock info:", error);
     return [];
   }
 });

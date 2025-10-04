@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session";
 import { checkNeedsSetup } from "@/actions/profile";
 import { redirect } from "next/navigation";
 import { Newspaper } from "lucide-react";
+import NewsList from "@/src/components/NewsList";
 
 export default async function NewsPage() {
   const user = await getSession();
@@ -38,49 +39,7 @@ export default async function NewsPage() {
       </header>
 
       <main className="px-4 py-6">
-        {allNews.length === 0 ? (
-          <div className="text-center py-12">
-            <Newspaper className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500">오늘의 뉴스가 아직 없습니다.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {allNews.map((news, index) => (
-              <div
-                key={news.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-blue-600">
-                      {index + 1}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 mb-2">
-                      {news.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
-                      {news.content}
-                    </p>
-                    {news.relatedStocks && news.relatedStocks.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {news.relatedStocks.map((stock) => (
-                          <span
-                            key={stock.id}
-                            className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200"
-                          >
-                            📈 {stock.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <NewsList news={allNews} currentDay={currentDay} />
       </main>
     </div>
   );
