@@ -1,7 +1,9 @@
 import { getSession } from "@/lib/session";
 import { logout } from "@/actions/auth";
 import { checkNeedsSetup } from "@/actions/profile";
+import { getStocksWithPrices } from "@/actions/stocks";
 import { redirect } from "next/navigation";
+import StockChart from "@/components/StockChart";
 
 export default async function Home() {
   const user = await getSession();
@@ -16,36 +18,36 @@ export default async function Home() {
     redirect("/setup");
   }
 
+  const stocksData = await getStocksWithPrices();
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            주식 투자 게임
-          </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              {user.name}님 환영합니다
-            </span>
-            <form action={logout}>
-              <button
-                type="submit"
-                className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
-              >
-                로그아웃
-              </button>
-            </form>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <header className="bg-white border-b sticky top-0 z-10">
+        <div className="px-4 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">주식 투자 게임</h1>
+            <p className="text-sm text-gray-600">{user.name}님 환영합니다</p>
           </div>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
+            >
+              로그아웃
+            </button>
+          </form>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="text-2xl font-bold mb-4">메인 페이지</h2>
-          <p className="text-gray-600">
-            로그인에 성공했습니다! 이제 게임 기능을 추가할 수 있습니다.
+      <main className="px-4 py-6">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">주식 가격 차트</h2>
+          <p className="text-sm text-gray-600">
+            Day {stocksData[0]?.currentDay || 0} / {stocksData[0]?.maxDay || 9}
           </p>
         </div>
+
+        <StockChart stocks={stocksData} />
       </main>
     </div>
   );

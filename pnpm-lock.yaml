@@ -247,6 +247,9 @@ importers:
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
+      recharts:
+        specifier: ^3.0.2
+        version: 3.0.2(@types/react@19.1.0)(react-dom@19.1.0(react@19.1.0))(react-is@19.1.0)(react@19.1.0)(redux@5.0.1)
       tailwindcss:
         specifier: ^4.1.11
         version: 4.1.11

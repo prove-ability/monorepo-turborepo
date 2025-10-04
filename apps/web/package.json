@@ -19,6 +19,7 @@
     "@tailwindcss/postcss": "^4.1.11",
     "lucide-react": "^0.525.0",
     "postcss": "^8.5.6",
+    "recharts": "^3.0.2",
     "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
