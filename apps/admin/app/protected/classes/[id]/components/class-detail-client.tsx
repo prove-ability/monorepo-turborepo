@@ -59,7 +59,7 @@ export function ClassDetailClient({
     return students.filter((student) => {
       const name = student.name?.toLowerCase() || "";
       const nickname = student.nickname?.toLowerCase() || "";
-      const mobilePhone = student.mobile_phone || "";
+      const mobilePhone = student.mobilePhone || "";
       const affiliation = student.affiliation?.toLowerCase() || "";
 
       return (
@@ -225,7 +225,7 @@ export function ClassDetailClient({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {student.mobile_phone ?? "-"}
+                          {student.mobilePhone ?? "-"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
