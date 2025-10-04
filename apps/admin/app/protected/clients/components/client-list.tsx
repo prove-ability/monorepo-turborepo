@@ -53,6 +53,10 @@ export function ClientList({
     );
   };
 
+  const handleClientCreated = (newClient: ClientWithManagers) => {
+    setClients((prevClients) => [newClient, ...prevClients]);
+  };
+
   const handleClientDelete = async (clientId: string, clientName: string) => {
     if (
       !confirm(
@@ -87,9 +91,15 @@ export function ClientList({
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setIsCreateClientModalOpen(true)}>
+          + 고객사 추가
+        </Button>
+      </div>
       <CreateClientModal
         isOpen={isCreateClientModalOpen}
         setIsOpen={setIsCreateClientModalOpen}
+        onClientCreated={handleClientCreated}
       />
       {clients.map((client) => (
         <div key={client.id} className="border rounded-lg shadow-sm">

@@ -7,6 +7,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { useState } from "react";
 import { createClientAction } from "@/actions/clientActions";
 import { Modal } from "@/components/common/modal";
+import { Client, Manager } from "@/types";
 
 export type CreateClientInputs = {
   name: string;
@@ -17,11 +18,13 @@ export type CreateClientInputs = {
 interface CreateClientModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  onClientCreated?: (client: Client & { managers: Manager[] }) => void;
 }
 
 export function CreateClientModal({
   isOpen,
   setIsOpen,
+  onClientCreated,
 }: CreateClientModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,11 +55,15 @@ export function CreateClientModal({
         // 폼 초기화
         reset();
 
-        // 1초 후 모달 닫기 및 페이지 새로고침
+        // 새로 생성된 클라이언트 데이터를 부모 컴포넌트에 전달
+        if (onClientCreated && "data" in result && result.data) {
+          onClientCreated({ ...result.data, managers: [] });
+        }
+
+        // 1초 후 모달 닫기
         setTimeout(() => {
           setIsOpen(false);
           setSuccessMessage(null);
-          window.location.reload();
         }, 1000);
       } else {
         // 에러 처리
@@ -96,60 +103,60 @@ export function CreateClientModal({
         </p>
       </div>
 
-          {/* 에러 메시지 표시 */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
-            </div>
-          )}
+      {/* 에러 메시지 표시 */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
 
-          {/* 성공 메시지 표시 */}
-          {successMessage && (
-            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-              {successMessage}
-            </div>
-          )}
+      {/* 성공 메시지 표시 */}
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+          {successMessage}
+        </div>
+      )}
 
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid gap-4 py-4">
-              <fieldset className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  고객사명
-                </Label>
-                <Input
-                  {...register("name")}
-                  id="name"
-                  name="name"
-                  className="col-span-3"
-                />
-              </fieldset>
-              <fieldset className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
-                  이메일
-                </Label>
-                <Input
-                  {...register("email")}
-                  id="email"
-                  name="email"
-                  className="col-span-3"
-                />
-              </fieldset>
-              <fieldset className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="phone" className="text-right">
-                  연락처
-                </Label>
-                <Input
-                  {...register("phone")}
-                  id="phone"
-                  name="phone"
-                  className="col-span-3"
-                />
-              </fieldset>
-            </div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid gap-4 py-4">
+          <fieldset className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              고객사명
+            </Label>
+            <Input
+              {...register("name")}
+              id="name"
+              name="name"
+              className="col-span-3"
+            />
+          </fieldset>
+          <fieldset className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="email" className="text-right">
+              이메일
+            </Label>
+            <Input
+              {...register("email")}
+              id="email"
+              name="email"
+              className="col-span-3"
+            />
+          </fieldset>
+          <fieldset className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="phone" className="text-right">
+              연락처
+            </Label>
+            <Input
+              {...register("phone")}
+              id="phone"
+              name="phone"
+              className="col-span-3"
+            />
+          </fieldset>
+        </div>
         <div className="flex gap-2 justify-end">
-          <Button 
-            type="button" 
-            variant="secondary" 
+          <Button
+            type="button"
+            variant="secondary"
             disabled={isLoading}
             onClick={handleClose}
           >

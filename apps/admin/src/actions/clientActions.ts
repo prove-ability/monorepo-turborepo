@@ -37,9 +37,13 @@ export const createClientAction = withAuth(
         email: validatedFields.data.email,
         createdBy: user.id,
       };
-      await db.insert(clients).values(dataToInsert);
+      const [newClient] = await db.insert(clients).values(dataToInsert).returning();
       revalidatePath("/admin/clients");
-      return { message: "고객사가 성공적으로 생성되었습니다.", success: true };
+      return { 
+        message: "고객사가 성공적으로 생성되었습니다.", 
+        success: true,
+        data: newClient 
+      };
     } catch (error: any) {
       let errorMessage = "데이터베이스 오류";
       if (error.code === "23505") errorMessage = "이미 존재하는 고객사입니다.";
