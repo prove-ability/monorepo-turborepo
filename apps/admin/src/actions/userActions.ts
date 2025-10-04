@@ -5,6 +5,7 @@ import { z } from "zod";
 import { db, guests, wallets } from "@repo/db";
 import { eq, or, like, and, desc, asc } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
+import { INITIAL_WALLET_BALANCE } from "@/config/gameConfig";
 
 // loginId 생성 헬퍼 함수 (중복 시 숫자 증가)
 async function generateUniqueLoginId(
@@ -90,7 +91,7 @@ export const createUser = withAuth(async (user, formData: FormData) => {
     // wallet 자동 생성
     await db.insert(wallets).values({
       guestId: newGuest.id,
-      balance: "50000", // 초기 잔액 5만원
+      balance: INITIAL_WALLET_BALANCE,
     });
 
     revalidatePath("/protected/classes");
@@ -257,7 +258,7 @@ export const bulkCreateUsers = withAuth(
           // wallet 자동 생성
           await db.insert(wallets).values({
             guestId: newGuest.id,
-            balance: "50000", // 초기 잔액 5만원
+            balance: INITIAL_WALLET_BALANCE,
           });
 
           successCount++;
