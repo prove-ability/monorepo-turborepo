@@ -1,15 +1,35 @@
 "use server";
 
-import { db, news, stocks } from "@repo/db";
+import { db, news, stocks, classes } from "@repo/db";
 import { eq, and, asc, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
 
-export const getNewsByClass = withAuth(async (user) => {
+interface RelatedStock {
+  id: string;
+  name: string;
+}
+
+export const getCurrentDayNews = withAuth(async (user) => {
   try {
-    // 해당 클래스의 모든 뉴스 조회 (Day 순으로 정렬)
+    // 클래스의 current_day 조회
+    const classInfo = await db.query.classes.findFirst({
+      where: eq(classes.id, user.classId),
+      columns: {
+        currentDay: true,
+      },
+    });
+
+    if (!classInfo || !classInfo.currentDay) {
+      return [];
+    }
+
+    // current_day의 뉴스만 조회
     const allNews = await db.query.news.findMany({
-      where: eq(news.classId, user.classId),
-      orderBy: [asc(news.day)],
+      where: and(
+        eq(news.classId, user.classId),
+        eq(news.day, classInfo.currentDay)
+      ),
+      orderBy: [asc(news.createdAt)],
     });
 
     // 모든 관련 주식 ID 수집
@@ -37,11 +57,11 @@ export const getNewsByClass = withAuth(async (user) => {
       relatedStocks:
         newsItem.relatedStockIds && Array.isArray(newsItem.relatedStockIds)
           ? newsItem.relatedStockIds
-              .map((id) => ({
-                id: id as string,
-                name: stockMap.get(id as string) || "알 수 없음",
-              }))
-              .filter((stock) => stock.name !== "알 수 없음")
+              .map((id): RelatedStock | null => {
+                const stockName = stockMap.get(id as string);
+                return stockName ? { id: id as string, name: stockName } : null;
+              })
+              .filter((stock): stock is RelatedStock => stock !== null)
           : [],
     }));
 
