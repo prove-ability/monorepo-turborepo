@@ -2,15 +2,9 @@
 
 import { db, news, stocks } from "@repo/db";
 import { eq, and, asc, inArray } from "drizzle-orm";
-import { getSession } from "@/lib/session";
+import { withAuth } from "@/lib/with-auth";
 
-export async function getNewsByClass() {
-  const user = await getSession();
-
-  if (!user) {
-    return [];
-  }
-
+export const getNewsByClass = withAuth(async (user) => {
   try {
     // 해당 클래스의 모든 뉴스 조회 (Day 순으로 정렬)
     const allNews = await db.query.news.findMany({
@@ -56,15 +50,9 @@ export async function getNewsByClass() {
     console.error("Failed to fetch news:", error);
     return [];
   }
-}
+});
 
-export async function getNewsByDay(day: number) {
-  const user = await getSession();
-
-  if (!user) {
-    return [];
-  }
-
+export const getNewsByDay = withAuth(async (user, day: number) => {
   try {
     // 특정 Day의 뉴스만 조회
     const dayNews = await db.query.news.findMany({
@@ -76,4 +64,4 @@ export async function getNewsByDay(day: number) {
     console.error("Failed to fetch news by day:", error);
     return [];
   }
-}
+});
