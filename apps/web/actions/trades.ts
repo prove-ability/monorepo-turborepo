@@ -115,11 +115,12 @@ export const buyStock = withAuth(
           });
         }
 
-        // 5. 거래 내역 추가 (매수)
+        // 5. 거래 내역 추가 (매수 = 출금)
         await tx.insert(transactions).values({
           walletId: userWallet.id,
           stockId: stockId,
-          type: "buy",
+          type: "withdrawal",
+          subType: "buy",
           quantity: quantity,
           price: price,
           day: currentDay,
@@ -231,11 +232,12 @@ export const sellStock = withAuth(
             .where(eq(holdings.id, existingHolding.id));
         }
 
-        // 5. 거래 내역 추가 (매도)
+        // 5. 거래 내역 추가 (매도 = 입금)
         await tx.insert(transactions).values({
           walletId: userWallet.id,
           stockId: stockId,
-          type: "sell",
+          type: "deposit",
+          subType: "sell",
           quantity: quantity,
           price: price,
           day: currentDay,

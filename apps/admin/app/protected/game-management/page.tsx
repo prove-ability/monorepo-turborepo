@@ -13,17 +13,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   getClasses,
   updateClassCurrentDay,
+  incrementDayAndPayAllowance,
   type ClassWithRelations,
 } from "@/actions/classActions";
 import { DayAdjustmentModal } from "./components/DayAdjustmentModal";
-import { getStocks, type Stock } from "@/actions/stockActions";
-import {
-  getClassStockPrices,
-  getGameProgress,
-  type ClassStockPrice,
-} from "@/actions/gameActions";
+import { getStocks } from "@/actions/stockActions";
+import { getClassStockPrices, getGameProgress } from "@/actions/gameActions";
 import GameDayManagement from "@/components/game/GameDayManagement";
 import PriceManagement from "@/components/game/PriceManagement";
+import { ClassStockPrice, Stock } from "@/types";
 
 export default function GameManagementPage() {
   const [classes, setClasses] = useState<ClassWithRelations[]>([]);
@@ -64,7 +62,12 @@ export default function GameManagementPage() {
         getStocks(),
       ]);
 
-      const classesData = classesResponse.data || [];
+      // Type guard: classesResponse가 data 속성을 가지고 있는지 확인
+      const classesData =
+        "data" in classesResponse && classesResponse.data
+          ? classesResponse.data
+          : [];
+
       setClasses(classesData);
       setStocks(stocksData);
 
@@ -188,14 +191,41 @@ export default function GameManagementPage() {
   const handleDayAdjustmentConfirm = async () => {
     if (!selectedClass) return;
 
+    const currentDay = getCurrentDay();
+    const isIncreasing = dayAdjustmentModal.newDay > currentDay;
+
     try {
-      await updateClassCurrentDay(selectedClass, dayAdjustmentModal.newDay);
-      // 클래스 목록 새로고침하여 current_day 반영
-      loadInitialData();
-      alert(`현재 Day가 ${dayAdjustmentModal.newDay}로 업데이트되었습니다.`);
+      if (isIncreasing) {
+        // Day 증가 시: 지원금 지급 포함
+        const result = await incrementDayAndPayAllowance(selectedClass);
+        if (result.success) {
+          loadInitialData();
+          const message =
+            "message" in result && result.message
+              ? result.message
+              : `Day가 증가했습니다.`;
+          alert(message);
+        } else {
+          // error는 string 또는 Record<string, string[]> 형태일 수 있음
+          const errorMsg =
+            "error" in result
+              ? typeof result.error === "string"
+                ? result.error
+                : JSON.stringify(result.error)
+              : "지원금 지급 실패";
+          throw new Error(errorMsg);
+        }
+      } else {
+        // Day 감소 시: 단순 업데이트만
+        await updateClassCurrentDay(selectedClass, dayAdjustmentModal.newDay);
+        loadInitialData();
+        alert(`현재 Day가 ${dayAdjustmentModal.newDay}로 업데이트되었습니다.`);
+      }
     } catch (error) {
       console.error("현재 Day 업데이트 실패:", error);
-      alert("현재 Day 업데이트에 실패했습니다.");
+      alert(
+        `현재 Day 업데이트에 실패했습니다: ${error instanceof Error ? error.message : "알 수 없는 오류"}`
+      );
     }
   };
 
