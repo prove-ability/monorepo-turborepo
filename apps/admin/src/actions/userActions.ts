@@ -70,15 +70,22 @@ export const createUser = withAuth(async (user, formData: FormData) => {
       validatedData.classId
     );
 
-    const [newGuest] = await db.insert(guests).values({
-      name: validatedData.name,
-      classId: validatedData.classId,
-      mobilePhone: validatedData.email, // 임시로 email 사용
-      affiliation: "미정", // 기본값
-      grade: "미정", // 기본값
-      loginId: loginId,
-      password: "youthfinlab1234",
-    }).returning();
+    const [newGuest] = await db
+      .insert(guests)
+      .values({
+        name: validatedData.name,
+        classId: validatedData.classId,
+        mobilePhone: validatedData.email, // 임시로 email 사용
+        affiliation: "미정", // 기본값
+        grade: "미정", // 기본값
+        loginId: loginId,
+        password: "youthfinlab1234",
+      })
+      .returning();
+
+    if (!newGuest) {
+      throw new Error("게스트 생성에 실패했습니다.");
+    }
 
     // wallet 자동 생성
     await db.insert(wallets).values({
@@ -229,23 +236,30 @@ export const bulkCreateUsers = withAuth(
             userData.classId
           );
 
-          const [newGuest] = await db.insert(guests).values({
-            name: userData.name,
-            mobilePhone: userData.mobilePhone,
-            grade: userData.grade,
-            affiliation: userData.affiliation,
-            classId: userData.classId,
-            nickname: userData.nickname,
-            loginId: loginId,
-            password: "youthfinlab1234",
-          }).returning();
+          const [newGuest] = await db
+            .insert(guests)
+            .values({
+              name: userData.name,
+              mobilePhone: userData.mobilePhone,
+              grade: userData.grade,
+              affiliation: userData.affiliation,
+              classId: userData.classId,
+              nickname: userData.nickname,
+              loginId: loginId,
+              password: "youthfinlab1234",
+            })
+            .returning();
+
+          if (!newGuest) {
+            throw new Error("게스트 생성에 실패했습니다.");
+          }
 
           // wallet 자동 생성
           await db.insert(wallets).values({
             guestId: newGuest.id,
             balance: "50000", // 초기 잔액 5만원
           });
-          
+
           successCount++;
         } catch (err) {
           console.error("Failed to create user:", userData, err);
