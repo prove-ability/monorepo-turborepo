@@ -144,16 +144,16 @@ export const getClientsAndManagers = withAuth(async (user) => {
     const clientsData = await db
       .select({ id: clients.id, name: clients.name })
       .from(clients)
-      .where(eq(clients.created_by, user.id));
+      .where(eq(clients.createdBy, user.id));
 
     const managersData = await db.query.managers.findMany({
-      where: eq(managers.created_by, user.id),
+      where: eq(managers.createdBy, user.id),
     });
 
     const formattedManagers = managersData.map((m) => ({
       id: m.id,
       name: m.name, // managers 테이블에 직접 name 필드가 있음
-      client_id: m.client_id,
+      clientId: m.clientId,
     }));
 
     return {

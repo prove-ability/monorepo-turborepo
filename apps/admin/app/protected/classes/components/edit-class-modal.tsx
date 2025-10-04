@@ -53,7 +53,7 @@ export function EditClassModal({
   useEffect(() => {
     if (selectedClientId) {
       const filtered = managers.filter(
-        (manager) => manager.client_id === selectedClientId
+        (manager) => manager.clientId === selectedClientId
       );
       setFilteredManagers(filtered);
 
@@ -94,8 +94,18 @@ export function EditClassModal({
     setIsLoading(true);
     try {
       const data = await getClientsAndManagers();
-      setClients(data.clients);
-      setManagers(data.managers);
+      
+      // withAuth의 ActionState 타입 처리
+      if ("success" in data && !data.success) {
+        alert(`데이터 로드 실패: ${data.message}`);
+        return;
+      }
+      
+      // 성공 시 데이터 설정
+      if ("clients" in data && "managers" in data) {
+        setClients(data.clients);
+        setManagers(data.managers);
+      }
     } catch (error) {
       console.error(error);
       alert("데이터를 불러오는 중 오류가 발생했습니다.");
