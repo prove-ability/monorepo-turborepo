@@ -9,11 +9,11 @@ import { withAuth } from "@/lib/safe-action";
 
 const clientSchema = z.object({
   name: z.string().min(1, { message: "고객사 이름은 필수 항목입니다." }),
-  mobilePhone: z.string().optional(),
+  mobilePhone: z.string().min(1, { message: "연락처는 필수 항목입니다." }),
   email: z
     .string()
     .email({ message: "올바른 이메일 형식을 입력해주세요." })
-    .optional()
+    .min(1, { message: "이메일은 필수 항목입니다." })
     .or(z.literal("")),
 });
 
@@ -37,12 +37,15 @@ export const createClientAction = withAuth(
         email: validatedFields.data.email,
         createdBy: user.id,
       };
-      const [newClient] = await db.insert(clients).values(dataToInsert).returning();
+      const [newClient] = await db
+        .insert(clients)
+        .values(dataToInsert)
+        .returning();
       revalidatePath("/admin/clients");
-      return { 
-        message: "고객사가 성공적으로 생성되었습니다.", 
+      return {
+        message: "고객사가 성공적으로 생성되었습니다.",
         success: true,
-        data: newClient 
+        data: newClient,
       };
     } catch (error: any) {
       let errorMessage = "데이터베이스 오류";
