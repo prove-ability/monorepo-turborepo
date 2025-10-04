@@ -1,9 +1,25 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // 로그인 페이지는 항상 접근 가능
+  if (pathname === "/login") {
+    return NextResponse.next();
+  }
+
+  // 세션 쿠키 확인
+  const sessionCookie = request.cookies.get("guests_session");
+
+  // 세션이 없으면 로그인 페이지로 리다이렉트
+  if (!sessionCookie) {
+    const loginUrl = new URL("/login", request.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
-import { UserButton } from "@stackframe/stack";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,12 +17,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <div className="p-4 h-full bg-white">
-        <div className="flex justify-end mb-4">
-          <UserButton />
-        </div>
-        {children}
-      </div>
+      <div className="max-w-xl mx-auto h-full min-h-screen">{children}</div>
       <BottomNav />
     </>
   );
