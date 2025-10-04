@@ -74,7 +74,7 @@ export async function updateNickname(
 export async function getWallet(userId: string) {
   try {
     const wallet = await db.query.wallets.findFirst({
-      where: eq(wallets.userId, userId),
+      where: eq(wallets.guestId, userId),
       columns: {
         balance: true,
       },
