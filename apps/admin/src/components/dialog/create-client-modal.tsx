@@ -9,7 +9,7 @@ import { createClientAction } from "@/actions/clientActions";
 import { Modal } from "@/components/common/modal";
 import { Client, Manager } from "@/types";
 
-export type CreateClientInputs = Pick<Client, "name" | "email" | "mobilePhone">;
+export type CreateClientInputs = Pick<Client, "name">;
 
 interface CreateClientModalProps {
   isOpen: boolean;
@@ -36,8 +36,6 @@ export function CreateClientModal({
     // FormData 객체로 변환하여 서버 액션에 전달
     const formData = new FormData();
     formData.append("name", data.name);
-    formData.append("email", data.email);
-    formData.append("mobilePhone", data.mobilePhone);
 
     try {
       const result = await createClientAction(null, formData);
@@ -123,28 +121,6 @@ export function CreateClientModal({
               {...register("name")}
               id="name"
               name="name"
-              className="col-span-3"
-            />
-          </fieldset>
-          <fieldset className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="email" className="text-right">
-              이메일
-            </Label>
-            <Input
-              {...register("email")}
-              id="email"
-              name="email"
-              className="col-span-3"
-            />
-          </fieldset>
-          <fieldset className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="mobilePhone" className="text-right">
-              연락처
-            </Label>
-            <Input
-              {...register("mobilePhone")}
-              id="mobilePhone"
-              name="mobilePhone"
               className="col-span-3"
             />
           </fieldset>

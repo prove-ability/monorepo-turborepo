@@ -9,12 +9,6 @@ import { withAuth } from "@/lib/safe-action";
 
 const clientSchema = z.object({
   name: z.string().min(1, { message: "고객사 이름은 필수 항목입니다." }),
-  mobilePhone: z.string().min(1, { message: "연락처는 필수 항목입니다." }),
-  email: z
-    .string()
-    .email({ message: "올바른 이메일 형식을 입력해주세요." })
-    .min(1, { message: "이메일은 필수 항목입니다." })
-    .or(z.literal("")),
 });
 
 export const createClientAction = withAuth(
@@ -33,8 +27,6 @@ export const createClientAction = withAuth(
     try {
       const dataToInsert = {
         name: validatedFields.data.name,
-        mobilePhone: validatedFields.data.mobilePhone,
-        email: validatedFields.data.email,
         createdBy: user.id,
       };
       const [newClient] = await db
@@ -99,8 +91,6 @@ export const getClients = withAuth(async (user) => {
       columns: {
         id: true,
         name: true,
-        mobilePhone: true,
-        email: true,
         createdAt: true,
         createdBy: true,
       },

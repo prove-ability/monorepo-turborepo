@@ -127,6 +127,13 @@
       "when": 1759539552470,
       "tag": "0017_swift_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1759540744441,
+      "tag": "0018_ancient_rockslide",
+      "breakpoints": true
     }
   ]
 }

@@ -126,8 +126,6 @@ export const transactions = pgTable("transactions", {
 export const clients = pgTable("clients", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  mobilePhone: text("mobile_phone").notNull(),
-  email: text("email").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
