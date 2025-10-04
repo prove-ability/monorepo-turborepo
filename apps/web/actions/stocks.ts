@@ -1,6 +1,14 @@
 "use server";
 
-import { db, stocks, classStockPrices, classes, news } from "@repo/db";
+import {
+  db,
+  stocks,
+  classStockPrices,
+  classes,
+  news,
+  holdings,
+  wallets,
+} from "@repo/db";
 import { eq, and, lte, asc, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
 
@@ -137,5 +145,96 @@ export const getStockInfo = withAuth(async (user, stockIds: string[]) => {
   } catch (error) {
     console.error("Failed to fetch stock info:", error);
     return [];
+  }
+});
+
+// 투자 페이지를 위한 주식 목록 조회 (현재가, 보유량 포함)
+export const getStocksForInvest = withAuth(async (user) => {
+  try {
+    // 클래스 정보 및 현재 Day 조회
+    const classInfo = await db.query.classes.findFirst({
+      where: eq(classes.id, user.classId),
+      columns: { currentDay: true },
+    });
+
+    if (!classInfo || classInfo.currentDay === null) {
+      return { stocks: [], balance: 0 };
+    }
+
+    const currentDay = classInfo.currentDay;
+
+    // 모든 주식 조회
+    const allStocks = await db.query.stocks.findMany({
+      orderBy: [asc(stocks.name)],
+    });
+
+    // 현재 Day의 가격 조회
+    const currentPrices = await db.query.classStockPrices.findMany({
+      where: and(
+        eq(classStockPrices.classId, user.classId),
+        eq(classStockPrices.day, currentDay)
+      ),
+    });
+
+    // 전날 가격 조회 (등락률 계산용)
+    const previousPrices =
+      currentDay > 1
+        ? await db.query.classStockPrices.findMany({
+            where: and(
+              eq(classStockPrices.classId, user.classId),
+              eq(classStockPrices.day, currentDay - 1)
+            ),
+          })
+        : [];
+
+    // 사용자의 보유 주식 조회
+    const userHoldings = await db.query.holdings.findMany({
+      where: and(
+        eq(holdings.guestId, user.id),
+        eq(holdings.classId, user.classId)
+      ),
+    });
+
+    // 사용자의 지갑 조회
+    const wallet = await db.query.wallets.findFirst({
+      where: eq(wallets.guestId, user.id),
+    });
+
+    const balance = parseFloat(wallet?.balance || "0");
+
+    // 주식 데이터 조합
+    const stocksWithInfo = allStocks.map((stock) => {
+      const currentPrice = currentPrices.find((p) => p.stockId === stock.id);
+      const previousPrice = previousPrices.find((p) => p.stockId === stock.id);
+      const holding = userHoldings.find((h) => h.stockId === stock.id);
+
+      const currentPriceValue = parseFloat(currentPrice?.price || "0");
+      const previousPriceValue = parseFloat(previousPrice?.price || "0");
+
+      const change =
+        previousPriceValue > 0 ? currentPriceValue - previousPriceValue : 0;
+      const changeRate =
+        previousPriceValue > 0 ? (change / previousPriceValue) * 100 : 0;
+
+      const holdingQuantity = holding?.quantity || 0;
+      const holdingValue = currentPriceValue * holdingQuantity;
+
+      return {
+        id: stock.id,
+        name: stock.name,
+        currentPrice: currentPriceValue,
+        change,
+        changeRate,
+        marketCountryCode: stock.marketCountryCode,
+        holdingQuantity,
+        holdingValue,
+        averagePurchasePrice: parseFloat(holding?.averagePurchasePrice || "0"),
+      };
+    });
+
+    return { stocks: stocksWithInfo, balance };
+  } catch (error) {
+    console.error("Failed to fetch stocks for invest:", error);
+    return { stocks: [], balance: 0 };
   }
 });
