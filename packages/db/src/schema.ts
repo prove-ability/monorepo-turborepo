@@ -12,7 +12,10 @@ import {
 import { relations } from "drizzle-orm";
 
 // Enums
-export const transactionTypeEnum = pgEnum("transaction_type", ["buy", "sell"]);
+export const transactionTypeEnum = pgEnum("transaction_type", [
+  "buy", // 매수
+  "sell", // 매도
+]);
 export const countryCodeEnum = pgEnum("country_code", ["KR", "US", "JP", "CN"]);
 
 export const guests = pgTable("guests", {

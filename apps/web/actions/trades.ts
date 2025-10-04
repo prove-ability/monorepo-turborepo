@@ -115,7 +115,7 @@ export const buyStock = withAuth(
           });
         }
 
-        // 5. 거래 내역 추가
+        // 5. 거래 내역 추가 (매수)
         await tx.insert(transactions).values({
           walletId: userWallet.id,
           stockId: stockId,
@@ -231,7 +231,7 @@ export const sellStock = withAuth(
             .where(eq(holdings.id, existingHolding.id));
         }
 
-        // 5. 거래 내역 추가
+        // 5. 거래 내역 추가 (매도)
         await tx.insert(transactions).values({
           walletId: userWallet.id,
           stockId: stockId,

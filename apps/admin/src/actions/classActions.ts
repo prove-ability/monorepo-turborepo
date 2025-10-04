@@ -9,6 +9,8 @@ import {
   classStockPrices,
   news,
   guests,
+  wallets,
+  transactions,
 } from "@repo/db";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -250,6 +252,103 @@ export const updateClassCurrentDay = withAuth(
       const error =
         e instanceof Error ? e : new Error("An unknown error occurred");
       throw new Error(`현재 Day 업데이스트 실패: ${error.message}`);
+    }
+  }
+);
+
+// Day 증가 + 모든 게스트에게 일당 지급
+export const incrementDayAndPayAllowance = withAuth(
+  async (user, classId: string) => {
+    try {
+      return await dbWithTransaction.transaction(async (tx) => {
+        // 1. 클래스 정보 조회
+        const classInfo = await tx.query.classes.findFirst({
+          where: eq(classes.id, classId),
+          columns: { currentDay: true },
+        });
+
+        if (!classInfo) {
+          throw new Error("클래스 정보를 찾을 수 없습니다.");
+        }
+
+        const newDay = (classInfo.currentDay || 0) + 1;
+
+        // 2. 클래스의 currentDay +1
+        await tx
+          .update(classes)
+          .set({ currentDay: newDay })
+          .where(eq(classes.id, classId));
+
+        // 3. 해당 클래스의 모든 게스트 조회
+        const classGuests = await tx.query.guests.findMany({
+          where: eq(guests.classId, classId),
+        });
+
+        if (classGuests.length === 0) {
+          return {
+            success: true,
+            message: `Day ${newDay}로 증가했습니다. (학생 없음)`,
+            newDay,
+            paidCount: 0,
+          };
+        }
+
+        // 4. 각 게스트의 지갑에 100,000원 추가 및 거래내역 기록
+        const allowanceAmount = "100000";
+        let paidCount = 0;
+
+        for (const guest of classGuests) {
+          // 지갑 조회
+          const wallet = await tx.query.wallets.findFirst({
+            where: eq(wallets.guestId, guest.id),
+          });
+
+          if (!wallet) {
+            console.warn(`지갑을 찾을 수 없습니다: guest ${guest.id}`);
+            continue;
+          }
+
+          // 지갑 잔액 업데이트
+          const currentBalance = parseFloat(wallet.balance || "0");
+          const newBalance = (currentBalance + 100000).toFixed(2);
+
+          await tx
+            .update(wallets)
+            .set({ balance: newBalance })
+            .where(eq(wallets.id, wallet.id));
+
+          // 거래내역 기록 (일당 지급 = 수익)
+          await tx.insert(transactions).values({
+            walletId: wallet.id,
+            stockId: null,
+            type: "profit",
+            subType: "benefit",
+            quantity: null,
+            price: allowanceAmount,
+            day: newDay,
+            classId: classId,
+          });
+
+          paidCount++;
+        }
+
+        return {
+          success: true,
+          message: `Day ${newDay}로 증가하고 ${paidCount}명에게 10만원을 지급했습니다.`,
+          newDay,
+          paidCount,
+        };
+      });
+    } catch (e) {
+      const error =
+        e instanceof Error ? e : new Error("An unknown error occurred");
+      console.error("Day 증가 및 일당 지급 실패:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    } finally {
+      revalidatePath("/game-management");
     }
   }
 );

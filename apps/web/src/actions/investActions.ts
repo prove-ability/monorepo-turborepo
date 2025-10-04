@@ -156,7 +156,7 @@ export async function executeTrade(
 
         const holding = await tx.query.holdings.findFirst({
           where: and(
-            eq(holdings.userId, user.id),
+            eq(holdings.guestId, user.id),
             eq(holdings.stockId, stockId)
           ),
         });
@@ -176,7 +176,7 @@ export async function executeTrade(
             .where(eq(holdings.id, holding.id));
         } else {
           await tx.insert(holdings).values({
-            userId: user.id,
+            guestId: user.id,
             classId: user.classId,
             stockId: stockId,
             quantity: quantity,
@@ -186,7 +186,7 @@ export async function executeTrade(
       } else if (action === "sell") {
         const holding = await tx.query.holdings.findFirst({
           where: and(
-            eq(holdings.userId, user.id),
+            eq(holdings.guestId, user.id),
             eq(holdings.stockId, stockId)
           ),
         });
@@ -214,7 +214,8 @@ export async function executeTrade(
         walletId: user.wallet.id,
         classId: user.classId,
         stockId: stockId,
-        type: action,
+        type: action === "buy" ? "loss" : "profit",
+        subType: action,
         quantity: quantity,
         price: String(price),
         day: user.class.currentDay,
