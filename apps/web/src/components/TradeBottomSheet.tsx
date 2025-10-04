@@ -16,6 +16,7 @@ interface Stock {
 interface TradeBottomSheetProps {
   stock: Stock | null;
   balance: number;
+  currentDay: number;
   onClose: () => void;
   onTradeSuccess: () => void;
 }
@@ -23,6 +24,7 @@ interface TradeBottomSheetProps {
 export default function TradeBottomSheet({
   stock,
   balance,
+  currentDay,
   onClose,
   onTradeSuccess,
 }: TradeBottomSheetProps) {
@@ -60,8 +62,8 @@ export default function TradeBottomSheet({
     startTransition(async () => {
       const result =
         tradeType === "buy"
-          ? await buyStock(stock.id, qty, stock.currentPrice.toString())
-          : await sellStock(stock.id, qty, stock.currentPrice.toString());
+          ? await buyStock(stock.id, qty, stock.currentPrice.toString(), currentDay)
+          : await sellStock(stock.id, qty, stock.currentPrice.toString(), currentDay);
 
       if (result.success) {
         setMessage({ type: "success", text: result.message });
@@ -70,7 +72,16 @@ export default function TradeBottomSheet({
           onClose();
         }, 1500);
       } else {
-        setMessage({ type: "error", text: result.message });
+        // Day 불일치 에러 처리
+        if (result.dayMismatch) {
+          setMessage({ type: "error", text: result.message });
+          // 2초 후 새로고침
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          setMessage({ type: "error", text: result.message });
+        }
       }
     });
   };

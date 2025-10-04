@@ -158,7 +158,7 @@ export const getStocksForInvest = withAuth(async (user) => {
     });
 
     if (!classInfo || classInfo.currentDay === null) {
-      return { stocks: [], balance: 0 };
+      return { stocks: [], balance: 0, currentDay: 1 };
     }
 
     const currentDay = classInfo.currentDay;
@@ -232,9 +232,9 @@ export const getStocksForInvest = withAuth(async (user) => {
       };
     });
 
-    return { stocks: stocksWithInfo, balance };
+    return { stocks: stocksWithInfo, balance, currentDay };
   } catch (error) {
     console.error("Failed to fetch stocks for invest:", error);
-    return { stocks: [], balance: 0 };
+    return { stocks: [], balance: 0, currentDay: 1 };
   }
 });

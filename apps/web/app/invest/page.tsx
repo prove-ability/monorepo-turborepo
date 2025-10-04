@@ -19,6 +19,7 @@ interface Stock {
 export default function InvestPage() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [balance, setBalance] = useState<number>(0);
+  const [currentDay, setCurrentDay] = useState<number>(1);
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "holdings">("all");
@@ -29,6 +30,7 @@ export default function InvestPage() {
       const data = await getStocksForInvest();
       setStocks(data.stocks);
       setBalance(data.balance);
+      setCurrentDay(data.currentDay);
     } catch (error) {
       console.error("Failed to load stocks:", error);
     } finally {
@@ -267,6 +269,7 @@ export default function InvestPage() {
         <TradeBottomSheet
           stock={selectedStock}
           balance={balance}
+          currentDay={currentDay}
           onClose={() => setSelectedStock(null)}
           onTradeSuccess={handleTradeSuccess}
         />

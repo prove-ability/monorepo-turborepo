@@ -18,6 +18,8 @@ export interface TradeResult {
     quantity: number;
     averagePurchasePrice: string;
   };
+  dayMismatch?: boolean;
+  serverCurrentDay?: number;
 }
 
 /**
@@ -29,7 +31,8 @@ export const buyStock = withAuth(
     user,
     stockId: string,
     quantity: number,
-    price: string
+    price: string,
+    clientCurrentDay: number
   ): Promise<TradeResult> => {
     if (quantity <= 0) {
       return { success: false, message: "수량은 1 이상이어야 합니다." };
@@ -57,7 +60,7 @@ export const buyStock = withAuth(
           };
         }
 
-        // 3. 클래스의 현재 Day 조회
+        // 3. 클래스의 현재 Day 조회 및 검증
         const classInfo = await tx.query.classes.findFirst({
           where: eq(classes.id, user.classId),
           columns: { currentDay: true },
@@ -68,6 +71,16 @@ export const buyStock = withAuth(
         }
 
         const currentDay = classInfo.currentDay;
+
+        // Day 불일치 검증
+        if (currentDay !== clientCurrentDay) {
+          return {
+            success: false,
+            message: `게임 Day가 변경되었습니다. (현재: Day ${currentDay})\n페이지를 새로고침해주세요.`,
+            dayMismatch: true,
+            serverCurrentDay: currentDay,
+          };
+        }
 
         // 4. 기존 보유 주식 확인
         const existingHolding = await tx.query.holdings.findFirst({
@@ -166,7 +179,8 @@ export const sellStock = withAuth(
     user,
     stockId: string,
     quantity: number,
-    price: string
+    price: string,
+    clientCurrentDay: number
   ): Promise<TradeResult> => {
     if (quantity <= 0) {
       return { success: false, message: "수량은 1 이상이어야 합니다." };
@@ -207,7 +221,7 @@ export const sellStock = withAuth(
           };
         }
 
-        // 3. 클래스의 현재 Day 조회
+        // 3. 클래스의 현재 Day 조회 및 검증
         const classInfo = await tx.query.classes.findFirst({
           where: eq(classes.id, user.classId),
           columns: { currentDay: true },
@@ -218,6 +232,16 @@ export const sellStock = withAuth(
         }
 
         const currentDay = classInfo.currentDay;
+
+        // Day 불일치 검증
+        if (currentDay !== clientCurrentDay) {
+          return {
+            success: false,
+            message: `게임 Day가 변경되었습니다. (현재: Day ${currentDay})\n페이지를 새로고침해주세요.`,
+            dayMismatch: true,
+            serverCurrentDay: currentDay,
+          };
+        }
 
         // 4. 보유 주식 업데이트 또는 삭제
         const newQuantity = currentQuantity - quantity;
