@@ -201,7 +201,7 @@ export const managersRelations = relations(managers, ({ one }) => ({
 
 export const holdings = pgTable("holdings", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").references((): AnyPgColumn => guests.id),
+  guestId: uuid("guest_id").references((): AnyPgColumn => guests.id),
   classId: uuid("class_id").references((): AnyPgColumn => classes.id),
   stockId: uuid("stock_id").references((): AnyPgColumn => stocks.id),
   quantity: integer("quantity"),
@@ -215,8 +215,8 @@ export const holdings = pgTable("holdings", {
 });
 
 export const holdingsRelations = relations(holdings, ({ one }) => ({
-  user: one(guests, {
-    fields: [holdings.userId],
+  guest: one(guests, {
+    fields: [holdings.guestId],
     references: [guests.id],
   }),
   stock: one(stocks, {
