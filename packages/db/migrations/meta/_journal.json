@@ -134,6 +134,13 @@
       "when": 1759540744441,
       "tag": "0018_ancient_rockslide",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1759577559993,
+      "tag": "0019_material_hiroim",
+      "breakpoints": true
     }
   ]
 }
