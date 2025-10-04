@@ -66,36 +66,6 @@ export const createUserWithStack = withAuth(
         classId: formData.get("classId"),
       });
 
-      // 1. Create user in Stack via REST API
-      if (!process.env.STACK_SECRET_SERVER_KEY) {
-        throw new Error(
-          "STACK_SECRET_SERVER_KEY is not set in environment variables."
-        );
-      }
-
-      const response = await fetch("https://api.stack-auth.com/v1/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.STACK_SECRET_SERVER_KEY}`,
-        },
-        body: JSON.stringify({
-          email: validatedData.email,
-          password: validatedData.password,
-          displayName: validatedData.name,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(
-          `Stack user creation failed: ${response.status} ${errorBody}`
-        );
-      }
-
-      const stackUser = await response.json();
-
-      // 2. Create user in our database
       const loginId = await generateUniqueLoginId(
         validatedData.name,
         validatedData.classId
@@ -111,7 +81,7 @@ export const createUserWithStack = withAuth(
         password: "youthfinlab1234",
       });
 
-      revalidatePath("/classes");
+      revalidatePath("/protected/classes");
       return {
         success: true,
         message: "학생 계정이 성공적으로 생성되었습니다.",
