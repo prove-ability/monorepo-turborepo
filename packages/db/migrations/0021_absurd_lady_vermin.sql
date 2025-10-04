@@ -1,0 +1,1 @@
+ALTER TABLE "wallets" ADD COLUMN "updated_at" timestamp with time zone NOT NULL;

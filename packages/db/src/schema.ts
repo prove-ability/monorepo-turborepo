@@ -112,6 +112,9 @@ export const wallets = pgTable("wallets", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
 export const transactions = pgTable("transactions", {
