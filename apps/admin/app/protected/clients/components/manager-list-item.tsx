@@ -39,7 +39,7 @@ export function ManagerListItem({
   return (
     <li className="flex justify-between items-center text-sm">
       <span>
-        {manager.name} ({manager.mobile_phone})
+        {manager.name} ({manager.mobilePhone})
         <br />
         {manager.email}
       </span>
