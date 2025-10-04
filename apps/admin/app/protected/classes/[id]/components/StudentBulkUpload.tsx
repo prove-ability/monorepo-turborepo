@@ -147,10 +147,10 @@ export function StudentBulkUpload({
       .filter((v) => v.valid && v.normalized)
       .map((v) => ({
         name: v.normalized!.name,
-        mobile_phone: v.normalized!.mobile_phone,
+        mobilePhone: v.normalized!.mobile_phone,
         grade: v.normalized!.grade,
         affiliation: v.normalized!.affiliation,
-        class_id: classId,
+        classId: classId,
       }));
 
     setSubmitting(true);

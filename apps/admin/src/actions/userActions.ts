@@ -9,7 +9,7 @@ import { withAuth } from "@/lib/safe-action";
 // 타입 정의
 interface CreateUserData {
   name: string;
-  mobile_phone: string;
+  mobilePhone: string;
   grade: string;
   affiliation: string;
   classId: string;
@@ -68,7 +68,7 @@ export const createUserWithStack = withAuth(
       await db.insert(guests).values({
         name: validatedData.name,
         classId: validatedData.classId,
-        mobile_phone: validatedData.email, // 임시로 email 사용
+        mobilePhone: validatedData.email, // 임시로 email 사용
         affiliation: "미정", // 기본값
         grade: "미정", // 기본값
       });
@@ -127,7 +127,7 @@ export async function getUsersByClass(classId: string, searchTerm?: string) {
       conditions.push(
         or(
           like(guests.name, searchPattern),
-          like(guests.mobile_phone, searchPattern),
+          like(guests.mobilePhone, searchPattern),
           like(guests.affiliation, searchPattern)
         )!
       );
@@ -151,7 +151,7 @@ export const updateUser = withAuth(
     try {
       const updateData = {
         name: data.name,
-        mobile_phone: data.mobile_phone,
+        mobilePhone: data.mobilePhone,
         grade: data.grade,
         affiliation: data.affiliation,
         classId: data.classId,
@@ -198,10 +198,10 @@ export const bulkCreateUsers = withAuth(
     user,
     usersData: Array<{
       name: string;
-      mobile_phone: string;
+      mobilePhone: string;
       grade: string;
       affiliation: string;
-      class_id: string;
+      classId: string;
       nickname?: string;
     }>
   ) => {
@@ -214,10 +214,10 @@ export const bulkCreateUsers = withAuth(
         try {
           await db.insert(guests).values({
             name: userData.name,
-            mobile_phone: userData.mobile_phone,
+            mobilePhone: userData.mobilePhone,
             grade: userData.grade,
             affiliation: userData.affiliation,
-            classId: userData.class_id,
+            classId: userData.classId,
             nickname: userData.nickname,
           });
           successCount++;
