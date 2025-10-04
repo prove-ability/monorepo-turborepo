@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/session";
 import { logout } from "@/actions/auth";
+import { checkNeedsSetup } from "@/actions/profile";
 import { redirect } from "next/navigation";
 
 export default async function Home() {
@@ -7,6 +8,12 @@ export default async function Home() {
 
   if (!user) {
     redirect("/login");
+  }
+
+  // setup이 필요한지 확인
+  const setupStatus = await checkNeedsSetup();
+  if (setupStatus.needsSetup) {
+    redirect("/setup");
   }
 
   return (

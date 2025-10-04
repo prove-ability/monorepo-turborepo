@@ -1,5 +1,6 @@
 import { getCurrentDayNews } from "@/actions/news";
 import { getSession } from "@/lib/session";
+import { checkNeedsSetup } from "@/actions/profile";
 import { redirect } from "next/navigation";
 import { Newspaper } from "lucide-react";
 
@@ -9,6 +10,12 @@ export default async function NewsPage() {
   // 미들웨어에서 이미 검증했지만 타입 안정성을 위해 체크
   if (!user) {
     redirect("/login");
+  }
+
+  // setup이 필요한지 확인
+  const setupStatus = await checkNeedsSetup();
+  if (setupStatus.needsSetup) {
+    redirect("/setup");
   }
 
   const allNews = await getCurrentDayNews();

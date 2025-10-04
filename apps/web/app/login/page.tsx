@@ -21,8 +21,9 @@ export default function LoginPage() {
         setError(result.error);
         setLoading(false);
       } else if (result?.success) {
-        // 로그인 성공 시 클라이언트에서 리다이렉트
-        router.push("/");
+        // 로그인 성공 시 setup 페이지로 리다이렉트
+        // setup 페이지에서 필요 여부를 확인하고 자동으로 메인으로 이동
+        router.push("/setup");
         router.refresh();
       }
     } catch (err) {
