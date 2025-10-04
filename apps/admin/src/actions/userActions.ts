@@ -56,55 +56,53 @@ const createUserSchema = z.object({
   classId: z.string().uuid(),
 });
 
-export const createUserWithStack = withAuth(
-  async (user, formData: FormData) => {
-    try {
-      const validatedData = createUserSchema.parse({
-        email: formData.get("email"),
-        password: formData.get("password"),
-        name: formData.get("name"),
-        classId: formData.get("classId"),
-      });
+export const createUser = withAuth(async (user, formData: FormData) => {
+  try {
+    const validatedData = createUserSchema.parse({
+      email: formData.get("email"),
+      password: formData.get("password"),
+      name: formData.get("name"),
+      classId: formData.get("classId"),
+    });
 
-      const loginId = await generateUniqueLoginId(
-        validatedData.name,
-        validatedData.classId
-      );
+    const loginId = await generateUniqueLoginId(
+      validatedData.name,
+      validatedData.classId
+    );
 
-      await db.insert(guests).values({
-        name: validatedData.name,
-        classId: validatedData.classId,
-        mobilePhone: validatedData.email, // 임시로 email 사용
-        affiliation: "미정", // 기본값
-        grade: "미정", // 기본값
-        loginId: loginId,
-        password: "youthfinlab1234",
-      });
+    await db.insert(guests).values({
+      name: validatedData.name,
+      classId: validatedData.classId,
+      mobilePhone: validatedData.email, // 임시로 email 사용
+      affiliation: "미정", // 기본값
+      grade: "미정", // 기본값
+      loginId: loginId,
+      password: "youthfinlab1234",
+    });
 
-      revalidatePath("/protected/classes");
-      return {
-        success: true,
-        message: "학생 계정이 성공적으로 생성되었습니다.",
-        error: undefined,
-      };
-    } catch (e) {
-      const error =
-        e instanceof Error ? e : new Error("An unknown error occurred");
-      if (error instanceof z.ZodError) {
-        return {
-          success: false,
-          error: error.flatten().fieldErrors,
-          message: undefined,
-        };
-      }
+    revalidatePath("/protected/classes");
+    return {
+      success: true,
+      message: "학생 계정이 성공적으로 생성되었습니다.",
+      error: undefined,
+    };
+  } catch (e) {
+    const error =
+      e instanceof Error ? e : new Error("An unknown error occurred");
+    if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: { _form: [`사용자 생성 중 오류 발생: ${error.message}`] },
+        error: error.flatten().fieldErrors,
         message: undefined,
       };
     }
+    return {
+      success: false,
+      error: { _form: [`사용자 생성 중 오류 발생: ${error.message}`] },
+      message: undefined,
+    };
   }
-);
+});
 
 // READ: 모든 사용자 조회
 export async function getUsers() {
@@ -242,7 +240,7 @@ export const bulkCreateUsers = withAuth(
         }
       }
 
-      revalidatePath("/classes");
+      revalidatePath("/protected/classes");
       return { successCount, failureCount };
     } catch (e) {
       const error =
