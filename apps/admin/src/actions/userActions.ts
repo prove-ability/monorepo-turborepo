@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { db, guests, wallets } from "@repo/db";
+import { db, guests, wallets, transactions } from "@repo/db";
 import { eq, or, like, and, desc, asc } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
 import { INITIAL_WALLET_BALANCE } from "@/config/gameConfig";
@@ -89,9 +89,27 @@ export const createUser = withAuth(async (user, formData: FormData) => {
     }
 
     // wallet 자동 생성
-    await db.insert(wallets).values({
-      guestId: newGuest.id,
-      balance: INITIAL_WALLET_BALANCE,
+    const [newWallet] = await db
+      .insert(wallets)
+      .values({
+        guestId: newGuest.id,
+        balance: INITIAL_WALLET_BALANCE,
+      })
+      .returning();
+
+    if (!newWallet) {
+      throw new Error("지갑 생성에 실패했습니다.");
+    }
+
+    // 초기 자본 거래 내역 기록
+    await db.insert(transactions).values({
+      walletId: newWallet.id,
+      type: "deposit",
+      subType: "benefit",
+      quantity: 0,
+      price: INITIAL_WALLET_BALANCE,
+      day: 0,
+      classId: validatedData.classId,
     });
 
     revalidatePath("/protected/classes");
@@ -256,9 +274,27 @@ export const bulkCreateUsers = withAuth(
           }
 
           // wallet 자동 생성
-          await db.insert(wallets).values({
-            guestId: newGuest.id,
-            balance: INITIAL_WALLET_BALANCE,
+          const [newWallet] = await db
+            .insert(wallets)
+            .values({
+              guestId: newGuest.id,
+              balance: INITIAL_WALLET_BALANCE,
+            })
+            .returning();
+
+          if (!newWallet) {
+            throw new Error("지갑 생성에 실패했습니다.");
+          }
+
+          // 초기 자본 거래 내역 기록
+          await db.insert(transactions).values({
+            walletId: newWallet.id,
+            type: "deposit",
+            subType: "benefit",
+            quantity: 0,
+            price: INITIAL_WALLET_BALANCE,
+            day: 0,
+            classId: userData.classId,
           });
 
           successCount++;
