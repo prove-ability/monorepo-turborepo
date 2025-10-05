@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { getStocksForInvest } from "@/actions/stocks";
 import { getTransactionHistory, TransactionItem } from "@/actions/transactions";
-import { getAllNews } from "@/actions/news";
 import TradeBottomSheet from "@/components/TradeBottomSheet";
 import NewsBottomSheet from "@/components/NewsBottomSheet";
 
@@ -20,19 +19,6 @@ interface Stock {
   newsCount: number;
 }
 
-interface NewsItemWithStocks {
-  id: string;
-  day: number | null;
-  title: string | null;
-  content: string | null;
-  relatedStockIds: unknown;
-  createdAt: Date;
-  relatedStocks: Array<{
-    id: string;
-    name: string;
-  }>;
-}
-
 export default function InvestPage() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [balance, setBalance] = useState<number>(0);
@@ -40,13 +26,12 @@ export default function InvestPage() {
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "all" | "holdings" | "history" | "news"
+    "all" | "holdings" | "history"
   >("all");
   const [totalProfit, setTotalProfit] = useState<number>(0);
   const [totalProfitRate, setTotalProfitRate] = useState<number>(0);
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [showHistoryGuide, setShowHistoryGuide] = useState(true);
-  const [allNews, setAllNews] = useState<NewsItemWithStocks[]>([]);
   const [newsStock, setNewsStock] = useState<{
     id: string;
     name: string;
@@ -66,12 +51,6 @@ export default function InvestPage() {
       if (activeTab === "history") {
         const txHistory = await getTransactionHistory();
         setTransactions(txHistory);
-      }
-
-      // 뉴스 탭일 때만 뉴스 로드
-      if (activeTab === "news") {
-        const newsData = await getAllNews();
-        setAllNews(newsData);
       }
     } catch (error) {
       console.error("Failed to load stocks:", error);
@@ -188,16 +167,6 @@ export default function InvestPage() {
           }`}
         >
           거래내역
-        </button>
-        <button
-          onClick={() => setActiveTab("news")}
-          className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-            activeTab === "news"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-600"
-          }`}
-        >
-          뉴스
         </button>
       </div>
 
@@ -403,66 +372,6 @@ export default function InvestPage() {
             </div>
           )}
         </>
-      ) : activeTab === "news" ? (
-        allNews.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <p className="text-lg">뉴스가 없습니다</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {(() => {
-              // Day별로 그룹화
-              const newsByDay = allNews.reduce(
-                (acc, newsItem) => {
-                  const day = newsItem.day || 0;
-                  if (!acc[day]) acc[day] = [];
-                  acc[day].push(newsItem);
-                  return acc;
-                },
-                {} as Record<number, typeof allNews>
-              );
-
-              const sortedDays = Object.keys(newsByDay)
-                .map(Number)
-                .sort((a, b) => b - a); // 최신 Day 먼저
-
-              return sortedDays.map((day) => (
-                <div key={day} className="space-y-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex-1 h-px bg-gray-300"></div>
-                    <span className="px-3 py-1 bg-gray-700 text-white text-sm font-bold rounded-full">
-                      Day {day}
-                    </span>
-                    <div className="flex-1 h-px bg-gray-300"></div>
-                  </div>
-                  {newsByDay[day]?.map((newsItem) => (
-                    <div
-                      key={newsItem.id}
-                      className="bg-white rounded-lg p-4 shadow border border-gray-200"
-                    >
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {newsItem.relatedStocks.map((stock) => (
-                          <span
-                            key={stock.id}
-                            className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded"
-                          >
-                            {stock.name}
-                          </span>
-                        ))}
-                      </div>
-                      <h4 className="font-bold text-gray-900 mb-2">
-                        {newsItem.title}
-                      </h4>
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                        {newsItem.content}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ));
-            })()}
-          </div>
-        )
       ) : displayStocks.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg">
