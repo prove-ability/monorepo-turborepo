@@ -37,10 +37,10 @@ export default function Toast({
   };
 
   const colors = {
-    success: "bg-green-50 border-green-200 text-green-800",
-    error: "bg-red-50 border-red-200 text-red-800",
-    warning: "bg-yellow-50 border-yellow-200 text-yellow-800",
-    info: "bg-blue-50 border-blue-200 text-blue-800",
+    success: "bg-green-50 border-green-200 text-green-900",
+    error: "bg-red-50 border-red-200 text-red-900",
+    warning: "bg-yellow-50 border-yellow-200 text-yellow-900",
+    info: "bg-blue-50 border-blue-200 text-blue-900",
   };
 
   return (
@@ -62,7 +62,7 @@ export default function Toast({
             setIsVisible(false);
             setTimeout(onClose, 300);
           }}
-          className="hover:opacity-70 transition-opacity"
+          className="hover:opacity-70 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 rounded"
           aria-label="알림 닫기"
         >
           <X className="h-4 w-4" aria-hidden="true" />

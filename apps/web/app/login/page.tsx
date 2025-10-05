@@ -85,11 +85,15 @@ export default function LoginPage() {
 
             {error && (
               <div className="rounded-md bg-red-50 p-3" role="alert" id="login-error">
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="text-sm text-red-900 font-medium">{error}</p>
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button 
+              type="submit" 
+              className="w-full focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" 
+              disabled={loading}
+            >
               {loading ? "로그인 중..." : "로그인"}
             </Button>
           </div>
