@@ -1,26 +1,66 @@
-import { getSession } from "@/lib/session";
+"use client";
+
+import { useEffect, useState } from "react";
 import { logout } from "@/actions/auth";
-import { checkNeedsSetup } from "@/actions/profile";
-import { getDashboardData } from "@/actions/dashboard";
-import { redirect } from "next/navigation";
+import { getDashboardData, DashboardData } from "@/actions/dashboard";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BenefitNotificationBanner from "@/components/BenefitNotificationBanner";
 import AnimatedBalance from "@/components/AnimatedBalance";
 
-export default async function Home() {
-  const user = await getSession();
+export default function Home() {
+  const router = useRouter();
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!user) {
-    redirect("/login");
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  const loadDashboard = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getDashboardData();
+      setDashboardData(data as DashboardData);
+    } catch (error) {
+      console.error("Failed to load dashboard:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20">
+        <header className="bg-white border-b sticky top-0 z-10">
+          <div className="px-4 py-4 flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">주식 투자 게임</h1>
+            </div>
+          </div>
+        </header>
+        <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
+          <div className="text-center">
+            <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-2 text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  // setup이 필요한지 확인
-  const setupStatus = await checkNeedsSetup();
-  if (setupStatus.needsSetup) {
-    redirect("/setup");
+  if (!dashboardData) {
+    return null;
   }
-
-  const dashboardData = await getDashboardData();
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -32,14 +72,12 @@ export default async function Home() {
               {dashboardData.userName}님 환영합니다
             </p>
           </div>
-          <form action={logout}>
-            <button
-              type="submit"
-              className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
-            >
-              로그아웃
-            </button>
-          </form>
+          <button
+            onClick={handleLogout}
+            className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
+          >
+            로그아웃
+          </button>
         </div>
       </header>
 
