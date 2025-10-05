@@ -191,7 +191,7 @@ export async function getHoldings() {
     const currentDay = userWithClass.class.currentDay;
 
     const userHoldings = await db.query.holdings.findMany({
-      where: eq(holdings.userId, userId),
+      where: eq(holdings.guestId, userId),
       with: {
         stock: {
           with: {

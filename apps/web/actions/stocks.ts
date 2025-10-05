@@ -1,17 +1,9 @@
 "use server";
 
-import {
-  db,
-  stocks,
-  classStockPrices,
-  classes,
-  news,
-  holdings,
-  wallets,
-  transactions,
-} from "@repo/db";
-import { eq, and, lte, asc, inArray } from "drizzle-orm";
+import { db, stocks, classStockPrices, holdings, classes, wallets, transactions, news } from "@repo/db";
+import { eq, and, inArray, lte, asc } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
+import { checkClassStatus } from "@/lib/class-status";
 
 interface StockPriceData {
   day: number;
@@ -151,6 +143,9 @@ export const getStockInfo = withAuth(async (user, stockIds: string[]) => {
 
 // 투자 페이지를 위한 주식 목록 조회 (현재가, 보유량 포함)
 export const getStocksForInvest = withAuth(async (user) => {
+  // 클래스 상태 확인
+  await checkClassStatus();
+
   try {
     // 클래스 정보 및 현재 Day 조회
     const classInfo = await db.query.classes.findFirst({

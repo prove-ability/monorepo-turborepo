@@ -11,6 +11,7 @@ import {
 } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
+import { checkClassStatus } from "@/lib/class-status";
 
 export interface DashboardData {
   // 기본 정보
@@ -54,6 +55,9 @@ export interface DashboardData {
 }
 
 export const getDashboardData = withAuth(async (user) => {
+  // 클래스 상태 확인 (종료된 클래스는 자동 로그아웃)
+  await checkClassStatus();
+
   try {
     // 1. 클래스 정보 조회
     const classInfo = await db.query.classes.findFirst({

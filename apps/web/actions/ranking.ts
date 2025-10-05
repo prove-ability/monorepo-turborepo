@@ -11,6 +11,7 @@ import {
 } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
+import { checkClassStatus } from "@/lib/class-status";
 
 export interface RankingEntry {
   rank: number;
@@ -28,6 +29,9 @@ export interface RankingEntry {
  * 수익률 기준 정렬, 동일 시 닉네임 가나다 순
  */
 export const getClassRanking = withAuth(async (user) => {
+  // 클래스 상태 확인
+  await checkClassStatus();
+
   try {
     // 클래스 정보 조회
     const classInfo = await db.query.classes.findFirst({

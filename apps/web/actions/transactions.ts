@@ -1,8 +1,9 @@
 "use server";
 
 import { db, transactions, wallets, stocks } from "@repo/db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
+import { checkClassStatus } from "@/lib/class-status";
 
 export interface TransactionItem {
   id: string;
@@ -16,6 +17,9 @@ export interface TransactionItem {
 }
 
 export const getTransactionHistory = withAuth(async (user) => {
+  // 클래스 상태 확인
+  await checkClassStatus();
+
   try {
     // 사용자의 지갑 조회
     const wallet = await db.query.wallets.findFirst({

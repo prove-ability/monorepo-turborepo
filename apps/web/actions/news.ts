@@ -1,14 +1,14 @@
 "use server";
 
-import { db, news, stocks, classes } from "@repo/db";
-import { eq, and, asc, inArray, lte } from "drizzle-orm";
+import { db, news, classes, stocks } from "@repo/db";
+import { eq, and, lte, inArray, asc } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
+import { checkClassStatus } from "@/lib/class-status";
 
 interface RelatedStock {
   id: string;
   name: string;
 }
-
 export const getCurrentDayNews = withAuth(async (user) => {
   try {
     // 클래스의 current_day 조회
@@ -127,7 +127,10 @@ export const getNewsByStock = withAuth(async (user, stockId: string) => {
 
 // 클래스의 모든 뉴스 조회 (Day별 그룹화)
 export const getAllNews = withAuth(async (user) => {
-  try {
+  // 클래스 상태 확인
+  await checkClassStatus();
+
+  try{
     // 클래스의 current_day 조회
     const classInfo = await db.query.classes.findFirst({
       where: eq(classes.id, user.classId),
