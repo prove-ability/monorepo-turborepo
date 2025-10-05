@@ -188,6 +188,14 @@ export const getStocksForInvest = withAuth(async (user) => {
           })
         : [];
 
+    // 현재 Day까지의 뉴스만 조회 (주식별 뉴스 개수 계산용)
+    const allNews = await db.query.news.findMany({
+      where: and(
+        eq(news.classId, user.classId),
+        lte(news.day, currentDay)
+      ),
+    });
+
     // 사용자의 보유 주식 조회
     const userHoldings = await db.query.holdings.findMany({
       where: and(
@@ -235,6 +243,14 @@ export const getStocksForInvest = withAuth(async (user) => {
       const holdingQuantity = holding?.quantity || 0;
       const holdingValue = currentPriceValue * holdingQuantity;
 
+      // 해당 주식 관련 뉴스 개수 계산
+      const newsCount = allNews.filter((newsItem) => {
+        if (newsItem.relatedStockIds && Array.isArray(newsItem.relatedStockIds)) {
+          return newsItem.relatedStockIds.includes(stock.id);
+        }
+        return false;
+      }).length;
+
       return {
         id: stock.id,
         name: stock.name,
@@ -245,6 +261,7 @@ export const getStocksForInvest = withAuth(async (user) => {
         holdingQuantity,
         holdingValue,
         averagePurchasePrice: parseFloat(holding?.averagePurchasePrice || "0"),
+        newsCount,
       };
     });
 
