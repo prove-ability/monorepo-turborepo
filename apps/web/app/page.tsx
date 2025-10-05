@@ -7,14 +7,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BenefitNotificationBanner from "@/components/BenefitNotificationBanner";
 import AnimatedBalance from "@/components/AnimatedBalance";
-import DashboardSkeleton from "@/components/DashboardSkeleton";
+import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Home as HomeIcon } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function Home() {
   };
 
   if (isLoading) {
-    return <DashboardSkeleton />;
+    return <PageLoading title="홈" />;
   }
 
   if (!dashboardData) {
