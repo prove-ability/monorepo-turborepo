@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { buyStock, sellStock } from "@/actions/trades";
+import { useToast } from "@/contexts/ToastContext";
 
 interface Stock {
   id: string;
@@ -35,6 +36,7 @@ export default function TradeBottomSheet({
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const { showToast } = useToast();
 
   if (!stock) return null;
 
@@ -62,19 +64,27 @@ export default function TradeBottomSheet({
     startTransition(async () => {
       const result =
         tradeType === "buy"
-          ? await buyStock(stock.id, qty, stock.currentPrice.toString(), currentDay)
-          : await sellStock(stock.id, qty, stock.currentPrice.toString(), currentDay);
+          ? await buyStock(
+              stock.id,
+              qty,
+              stock.currentPrice.toString(),
+              currentDay
+            )
+          : await sellStock(
+              stock.id,
+              qty,
+              stock.currentPrice.toString(),
+              currentDay
+            );
 
       if (result.success) {
-        setMessage({ type: "success", text: result.message });
-        setTimeout(() => {
-          onTradeSuccess();
-          onClose();
-        }, 1500);
+        showToast(result.message, "success");
+        onTradeSuccess();
+        onClose();
       } else {
         // Day 불일치 에러 처리
         if (result.dayMismatch) {
-          setMessage({ type: "error", text: result.message });
+          showToast(result.message + " 페이지를 새로고침합니다.", "warning");
           // 2초 후 새로고침
           setTimeout(() => {
             window.location.reload();
@@ -127,7 +137,10 @@ export default function TradeBottomSheet({
                     ? "▲"
                     : "▼"}{" "}
                 {Math.abs(stock.change).toLocaleString()}원 (
-                {stock.changeRate === 0 ? "0.00" : Math.abs(stock.changeRate).toFixed(2)}%)
+                {stock.changeRate === 0
+                  ? "0.00"
+                  : Math.abs(stock.changeRate).toFixed(2)}
+                %)
               </span>
             </div>
           </div>
