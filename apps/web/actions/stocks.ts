@@ -8,6 +8,7 @@ import {
   news,
   holdings,
   wallets,
+  transactions,
 } from "@repo/db";
 import { eq, and, lte, asc, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
@@ -202,6 +203,21 @@ export const getStocksForInvest = withAuth(async (user) => {
 
     const balance = parseFloat(wallet?.balance || "0");
 
+    // 초기 자본 계산 (모든 지원금 합계)
+    let initialCapital = 0;
+    if (wallet) {
+      const allTransactions = await db.query.transactions.findMany({
+        where: eq(transactions.walletId, wallet.id),
+      });
+
+      for (const tx of allTransactions) {
+        const amount = parseFloat(tx.price || "0");
+        if (tx.type === "deposit" && tx.subType === "benefit") {
+          initialCapital += amount;
+        }
+      }
+    }
+
     // 주식 데이터 조합
     const stocksWithInfo = allStocks.map((stock) => {
       const currentPrice = currentPrices.find((p) => p.stockId === stock.id);
@@ -232,9 +248,36 @@ export const getStocksForInvest = withAuth(async (user) => {
       };
     });
 
-    return { stocks: stocksWithInfo, balance, currentDay };
+    // 전체 자산 계산
+    const totalHoldingValue = stocksWithInfo.reduce(
+      (sum, s) => sum + s.holdingValue,
+      0
+    );
+    const totalAssets = balance + totalHoldingValue;
+
+    // 전체 자산 대비 수익률 계산
+    const profit = totalAssets - initialCapital;
+    const profitRate = initialCapital > 0 ? (profit / initialCapital) * 100 : 0;
+
+    return {
+      stocks: stocksWithInfo,
+      balance,
+      currentDay,
+      initialCapital,
+      totalAssets,
+      profit,
+      profitRate,
+    };
   } catch (error) {
     console.error("Failed to fetch stocks for invest:", error);
-    return { stocks: [], balance: 0, currentDay: 1 };
+    return {
+      stocks: [],
+      balance: 0,
+      currentDay: 1,
+      initialCapital: 0,
+      totalAssets: 0,
+      profit: 0,
+      profitRate: 0,
+    };
   }
 });

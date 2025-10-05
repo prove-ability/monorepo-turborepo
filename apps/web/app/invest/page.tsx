@@ -23,6 +23,8 @@ export default function InvestPage() {
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "holdings">("all");
+  const [totalProfit, setTotalProfit] = useState<number>(0);
+  const [totalProfitRate, setTotalProfitRate] = useState<number>(0);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -31,6 +33,8 @@ export default function InvestPage() {
       setStocks(data.stocks);
       setBalance(data.balance);
       setCurrentDay(data.currentDay);
+      setTotalProfit(data.profit || 0);
+      setTotalProfitRate(data.profitRate || 0);
     } catch (error) {
       console.error("Failed to load stocks:", error);
     } finally {
@@ -51,21 +55,6 @@ export default function InvestPage() {
     (sum, s) => sum + s.holdingValue,
     0
   );
-  const totalProfitLoss = holdingStocks.reduce(
-    (sum, s) =>
-      sum +
-      (s.currentPrice - s.averagePurchasePrice) * s.holdingQuantity,
-    0
-  );
-  
-  // 총 투자 원금 (평균 매입단가 × 보유 수량의 합)
-  const totalInvestment = holdingStocks.reduce(
-    (sum, s) => sum + s.averagePurchasePrice * s.holdingQuantity,
-    0
-  );
-  
-  // 평가손익률
-  const totalProfitLossRate = totalInvestment > 0 ? (totalProfitLoss / totalInvestment) * 100 : 0;
 
   const displayStocks = activeTab === "all" ? stocks : holdingStocks;
 
@@ -90,9 +79,7 @@ export default function InvestPage() {
         <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 text-white shadow-lg">
           <div className="mb-4">
             <p className="text-sm opacity-90 mb-1">잔액</p>
-            <p className="text-3xl font-bold">
-              {balance.toLocaleString()}원
-            </p>
+            <p className="text-3xl font-bold">{balance.toLocaleString()}원</p>
           </div>
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
             <div>
@@ -105,27 +92,27 @@ export default function InvestPage() {
               <p className="text-xs opacity-80 mb-1">평가손익</p>
               <p
                 className={`text-lg font-semibold ${
-                  totalProfitLoss === 0
+                  totalProfit === 0
                     ? "text-gray-300"
-                    : totalProfitLoss > 0
+                    : totalProfit > 0
                       ? "text-yellow-300"
                       : "text-red-300"
                 }`}
               >
-                {totalProfitLoss === 0 ? "" : totalProfitLoss > 0 ? "+" : ""}
-                {totalProfitLoss.toLocaleString()}원
+                {totalProfit === 0 ? "" : totalProfit > 0 ? "+" : ""}
+                {totalProfit.toLocaleString()}원
               </p>
               <p
                 className={`text-xs opacity-90 ${
-                  totalProfitLoss === 0
+                  totalProfit === 0
                     ? "text-gray-300"
-                    : totalProfitLoss > 0
+                    : totalProfit > 0
                       ? "text-yellow-200"
                       : "text-red-200"
                 }`}
               >
-                {totalProfitLossRate === 0 ? "" : totalProfitLossRate > 0 ? "+" : ""}
-                {totalProfitLossRate.toFixed(2)}%
+                {totalProfitRate === 0 ? "" : totalProfitRate > 0 ? "+" : ""}
+                {totalProfitRate.toFixed(2)}%
               </p>
             </div>
           </div>
@@ -173,7 +160,8 @@ export default function InvestPage() {
               stock.holdingQuantity;
             const profitLossRate =
               stock.averagePurchasePrice > 0
-                ? (profitLoss / (stock.averagePurchasePrice * stock.holdingQuantity)) *
+                ? (profitLoss /
+                    (stock.averagePurchasePrice * stock.holdingQuantity)) *
                   100
                 : 0;
 
@@ -209,7 +197,10 @@ export default function InvestPage() {
                           ? "▲"
                           : "▼"}{" "}
                       {Math.abs(stock.change).toLocaleString()}원 (
-                      {stock.changeRate === 0 ? "0.00" : Math.abs(stock.changeRate).toFixed(2)}%)
+                      {stock.changeRate === 0
+                        ? "0.00"
+                        : Math.abs(stock.changeRate).toFixed(2)}
+                      %)
                     </p>
                   </div>
                 </div>
@@ -251,7 +242,11 @@ export default function InvestPage() {
                         >
                           {profitLoss === 0 ? "" : profitLoss > 0 ? "+" : ""}
                           {profitLoss.toLocaleString()}원 (
-                          {profitLossRate === 0 ? "" : profitLossRate > 0 ? "+" : ""}
+                          {profitLossRate === 0
+                            ? ""
+                            : profitLossRate > 0
+                              ? "+"
+                              : ""}
                           {profitLossRate.toFixed(2)}%)
                         </span>
                       </div>
