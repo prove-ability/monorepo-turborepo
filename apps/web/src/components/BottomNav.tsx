@@ -1,14 +1,14 @@
 "use client";
 
-import { Home, Newspaper, ShoppingCart, Gem } from "lucide-react";
+import { Home, Newspaper, TrendingUp, Trophy } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/", icon: Home, label: "홈" },
   { href: "/news", icon: Newspaper, label: "뉴스" },
-  { href: "/invest", icon: ShoppingCart, label: "투자" },
-  { href: "/ranking", icon: Gem, label: "랭킹" },
+  { href: "/invest", icon: TrendingUp, label: "투자" },
+  { href: "/ranking", icon: Trophy, label: "랭킹" },
 ];
 
 export function BottomNav() {
