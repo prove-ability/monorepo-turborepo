@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getStocksForInvest } from "@/actions/stocks";
+import { getTransactionHistory, TransactionItem } from "@/actions/transactions";
 import TradeBottomSheet from "@/components/TradeBottomSheet";
 
 interface Stock {
@@ -22,9 +23,10 @@ export default function InvestPage() {
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"all" | "holdings">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "holdings" | "history">("all");
   const [totalProfit, setTotalProfit] = useState<number>(0);
   const [totalProfitRate, setTotalProfitRate] = useState<number>(0);
+  const [transactions, setTransactions] = useState<TransactionItem[]>([]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -35,6 +37,12 @@ export default function InvestPage() {
       setCurrentDay(data.currentDay);
       setTotalProfit(data.profit || 0);
       setTotalProfitRate(data.profitRate || 0);
+
+      // 거래내역 탭일 때만 거래내역 로드
+      if (activeTab === "history") {
+        const txHistory = await getTransactionHistory();
+        setTransactions(txHistory);
+      }
     } catch (error) {
       console.error("Failed to load stocks:", error);
     } finally {
@@ -44,7 +52,7 @@ export default function InvestPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [activeTab]);
 
   const handleTradeSuccess = () => {
     loadData();
@@ -141,10 +149,99 @@ export default function InvestPage() {
         >
           보유 종목 ({holdingStocks.length})
         </button>
+        <button
+          onClick={() => setActiveTab("history")}
+          className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+            activeTab === "history"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-600"
+          }`}
+        >
+          거래내역
+        </button>
       </div>
 
-      {/* Stock List */}
-      {displayStocks.length === 0 ? (
+      {/* Transaction History */}
+      {activeTab === "history" ? (
+        transactions.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            <p className="text-lg">거래 내역이 없습니다</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {transactions.map((tx) => {
+              const isMoneyIn = tx.type === "deposit"; // 돈이 들어옴 (매도, 지원금)
+              const isBenefit = tx.subType === "benefit";
+              const totalAmount = isBenefit
+                ? parseFloat(tx.price)
+                : parseFloat(tx.price) * tx.quantity;
+              
+              return (
+                <div
+                  key={tx.id}
+                  className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow border-l-4 border-gray-200"
+                  style={{
+                    borderLeftColor: isMoneyIn ? "#10b981" : "#ef4444",
+                  }}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs text-gray-500 font-medium">
+                          Day {tx.day}
+                        </span>
+                        <span className="text-xs text-gray-400">|</span>
+                        <span className="text-xs text-gray-600">
+                          {isBenefit ? "지원금" : tx.subType === "buy" ? "매수" : "매도"}
+                        </span>
+                      </div>
+                      <p className="font-bold text-gray-900 mb-1">
+                        {tx.stockName || "초기 지원금"}
+                      </p>
+                      {!isBenefit && (
+                        <p className="text-sm text-gray-600">
+                          {tx.quantity}주 @ {parseFloat(tx.price).toLocaleString()}원
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center justify-end gap-1 mb-1">
+                        <span
+                          className={`text-2xl font-bold ${
+                            isMoneyIn ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          {isMoneyIn ? "+" : "-"}
+                          {totalAmount.toLocaleString()}
+                        </span>
+                        <span className="text-sm text-gray-500">원</span>
+                      </div>
+                      <div className="flex items-center justify-end gap-1">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            isMoneyIn ? "bg-green-500" : "bg-red-500"
+                          }`}
+                        />
+                        <span className="text-xs text-gray-500">
+                          {isMoneyIn ? "입금" : "출금"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        {new Date(tx.createdAt).toLocaleDateString("ko-KR", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      ) : displayStocks.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg">
             {activeTab === "holdings"
