@@ -11,6 +11,7 @@ import {
   guests,
   wallets,
   transactions,
+  holdings,
 } from "@repo/db";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -118,11 +119,40 @@ export const updateClass = withAuth(
 export const deleteClass = withAuth(async (user, classId: string) => {
   try {
     await dbWithTransaction.transaction(async (tx) => {
+      // 1. 해당 클래스의 모든 게스트 조회
+      const classGuests = await tx.query.guests.findMany({
+        where: eq(guests.classId, classId),
+        with: {
+          wallet: true,
+        },
+      });
+
+      // 2. 각 게스트의 관련 데이터 삭제
+      for (const guest of classGuests) {
+        if (guest.wallet) {
+          // 2-1. 거래 내역 삭제 (walletId 참조)
+          await tx
+            .delete(transactions)
+            .where(eq(transactions.walletId, guest.wallet.id));
+          
+          // 2-2. 지갑 삭제 (guestId 참조)
+          await tx.delete(wallets).where(eq(wallets.guestId, guest.id));
+        }
+        
+        // 2-3. 보유 주식 삭제 (guestId 참조)
+        await tx.delete(holdings).where(eq(holdings.guestId, guest.id));
+      }
+
+      // 3. 클래스 관련 데이터 삭제
       await tx
         .delete(classStockPrices)
         .where(eq(classStockPrices.classId, classId));
       await tx.delete(news).where(eq(news.classId, classId));
+      
+      // 4. 게스트 삭제
       await tx.delete(guests).where(eq(guests.classId, classId));
+      
+      // 5. 클래스 삭제
       await tx.delete(classes).where(eq(classes.id, classId));
     });
 
