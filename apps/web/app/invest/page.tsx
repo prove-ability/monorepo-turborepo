@@ -9,7 +9,10 @@ import StockListSkeleton from "@/components/StockListSkeleton";
 import TransactionListSkeleton from "@/components/TransactionListSkeleton";
 import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
-import { TrendingUp } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { TrendingUp, ShoppingCart, Receipt } from "lucide-react";
+import Link from "next/link";
 
 interface Stock {
   id: string;
@@ -87,6 +90,11 @@ export default function InvestPage() {
     loadData(false);
   };
 
+  // Pull-to-refresh 기능
+  const { isRefreshing: isPulling } = usePullToRefresh(async () => {
+    await loadData(false);
+  });
+
   const holdingStocks = stocks.filter((s) => s.holdingQuantity > 0);
   const totalHoldingValue = holdingStocks.reduce(
     (sum, s) => sum + s.holdingValue,
@@ -101,6 +109,15 @@ export default function InvestPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Pull-to-refresh 인디케이터 */}
+      {isPulling && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4">
+          <div className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-medium">새로고침 중...</span>
+          </div>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto p-4">
         <PageHeader
           title="투자"
@@ -261,9 +278,11 @@ export default function InvestPage() {
             {isRefreshing ? (
               <TransactionListSkeleton />
             ) : transactions.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <p className="text-lg">거래 내역이 없습니다</p>
-              </div>
+              <EmptyState
+                icon={<Receipt className="h-16 w-16" />}
+                title="아직 거래 내역이 없어요"
+                description="첫 거래를 시작해보세요! 투자 종목 탭에서 주식을 선택하면 거래할 수 있습니다."
+              />
             ) : (
               <div className="space-y-4">
                 {(() => {
@@ -456,13 +475,19 @@ export default function InvestPage() {
         ) : isRefreshing ? (
           <StockListSkeleton />
         ) : displayStocks.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <p className="text-lg">
-              {showOnlyHoldings
-                ? "보유 중인 주식이 없습니다"
-                : "거래 가능한 주식이 없습니다"}
-            </p>
-          </div>
+          <EmptyState
+            icon={<ShoppingCart className="h-16 w-16" />}
+            title={
+              showOnlyHoldings
+                ? "보유 중인 주식이 없어요"
+                : "투자 가능한 주식이 없어요"
+            }
+            description={
+              showOnlyHoldings
+                ? "아직 투자한 주식이 없습니다. 주식을 매수하여 포트폴리오를 구성해보세요!"
+                : "관리자가 주식을 등록하면 여기에 표시됩니다."
+            }
+          />
         ) : (
           <div className="space-y-3">
             {displayStocks.map((stock) => {

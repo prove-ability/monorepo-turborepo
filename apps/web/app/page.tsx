@@ -7,8 +7,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BenefitNotificationBanner from "@/components/BenefitNotificationBanner";
 import AnimatedBalance from "@/components/AnimatedBalance";
-import PageLoading from "@/components/PageLoading";
+import DashboardSkeleton from "@/components/DashboardSkeleton";
 import PageHeader from "@/components/PageHeader";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Home as HomeIcon } from "lucide-react";
 
 export default function Home() {
@@ -32,6 +33,11 @@ export default function Home() {
     }
   };
 
+  // Pull-to-refresh 기능
+  const { isRefreshing } = usePullToRefresh(async () => {
+    await loadDashboard();
+  });
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -42,7 +48,7 @@ export default function Home() {
   };
 
   if (isLoading) {
-    return <PageLoading title="주식 투자 게임" />;
+    return <DashboardSkeleton />;
   }
 
   if (!dashboardData) {
@@ -51,6 +57,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Pull-to-refresh 인디케이터 */}
+      {isRefreshing && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4">
+          <div className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-medium">새로고침 중...</span>
+          </div>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         <PageHeader
           title="주식 투자 게임"
