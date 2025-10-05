@@ -8,6 +8,8 @@ import Link from "next/link";
 import BenefitNotificationBanner from "@/components/BenefitNotificationBanner";
 import AnimatedBalance from "@/components/AnimatedBalance";
 import PageLoading from "@/components/PageLoading";
+import PageHeader from "@/components/PageHeader";
+import { Home as HomeIcon } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -49,24 +51,20 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">주식 투자 게임</h1>
-            <p className="text-sm text-gray-600">
-              {dashboardData.userName}님 환영합니다
-            </p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
-          >
-            로그아웃
-          </button>
-        </div>
-      </header>
-
-      <main className="px-4 py-6 max-w-4xl mx-auto space-y-4">
+      <div className="max-w-4xl mx-auto p-4 space-y-4">
+        <PageHeader
+          title="주식 투자 게임"
+          description={`${dashboardData.userName}님, 반갑습니다`}
+          icon={<HomeIcon className="h-7 w-7 text-blue-600" />}
+          action={
+            <button
+              onClick={handleLogout}
+              className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
+            >
+              로그아웃
+            </button>
+          }
+        />
         {/* 지원금 알림 배너 */}
         <BenefitNotificationBanner benefit={dashboardData.latestBenefit} />
 
@@ -277,7 +275,7 @@ export default function Home() {
             </div>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

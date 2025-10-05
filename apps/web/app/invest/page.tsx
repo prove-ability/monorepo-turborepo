@@ -8,6 +8,8 @@ import NewsBottomSheet from "@/components/NewsBottomSheet";
 import StockListSkeleton from "@/components/StockListSkeleton";
 import TransactionListSkeleton from "@/components/TransactionListSkeleton";
 import PageLoading from "@/components/PageLoading";
+import PageHeader from "@/components/PageHeader";
+import { TrendingUp } from "lucide-react";
 
 interface Stock {
   id: string;
@@ -100,11 +102,14 @@ export default function InvestPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-4xl mx-auto p-4">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-4">투자</h1>
+        <PageHeader
+          title="투자"
+          description={`현재 Day ${currentDay} 진행 중`}
+          icon={<TrendingUp className="h-7 w-7 text-blue-600" />}
+        />
 
-          {/* Portfolio Summary */}
+        {/* Portfolio Summary */}
+        <div className="mb-6">
           <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 text-white shadow-lg">
             <div className="mb-4">
               <p className="text-sm opacity-90 mb-1">잔액</p>

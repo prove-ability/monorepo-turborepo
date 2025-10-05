@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { getClassRanking, type RankingEntry } from "@/actions/ranking";
 import PageLoading from "@/components/PageLoading";
+import PageHeader from "@/components/PageHeader";
+import { Trophy } from "lucide-react";
 
 export default function RankingPage() {
   const [rankings, setRankings] = useState<RankingEntry[]>([]);
@@ -51,11 +53,11 @@ export default function RankingPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-4xl mx-auto p-4">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2">랭킹 화면</h1>
-          <p className="text-sm text-gray-600">지금 TOP 10 수익률 랭킹입니다!</p>
-        </div>
+        <PageHeader
+          title="랭킹"
+          description="TOP 10 수익률 순위"
+          icon={<Trophy className="h-7 w-7 text-blue-600" />}
+        />
 
       {/* 내 순위 표시 (상위 10위 밖일 경우) */}
       {myRanking && myRanking.rank > 10 && (
