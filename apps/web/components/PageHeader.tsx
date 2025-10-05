@@ -14,17 +14,17 @@ export default function PageHeader({
   action,
 }: PageHeaderProps) {
   return (
-    <div className="mb-6">
+    <header className="mb-6" role="banner">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {icon}
+          {icon && <div aria-hidden="true">{icon}</div>}
           <h1 className="text-2xl font-bold">{title}</h1>
         </div>
-        {action}
+        {action && <div role="navigation" aria-label="페이지 액션">{action}</div>}
       </div>
       {description && (
-        <p className="text-sm text-gray-600 mt-1">{description}</p>
+        <p className="text-sm text-gray-600 mt-1" role="doc-subtitle">{description}</p>
       )}
-    </div>
+    </header>
   );
 }

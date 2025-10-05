@@ -18,7 +18,12 @@ export default function LoginPage() {
       const result = await login(formData);
 
       if (result?.error) {
-        setError(result.error);
+        // 클래스 종료 메시지 처리
+        if (result.error.includes("종료")) {
+          setError("이 클래스는 이미 종료되었습니다. 관리자에게 문의하세요.");
+        } else {
+          setError(result.error);
+        }
         setLoading(false);
       } else if (result?.success) {
         // 로그인 성공 시 setup 페이지로 리다이렉트
@@ -46,7 +51,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form action={handleSubmit} className="mt-8 space-y-6">
+        <form action={handleSubmit} className="mt-8 space-y-6" aria-label="로그인 폼">
           <div className="space-y-4 rounded-lg bg-white p-8 shadow">
             <div>
               <Label htmlFor="loginId">아이디</Label>
@@ -55,9 +60,11 @@ export default function LoginPage() {
                 name="loginId"
                 type="text"
                 required
+                autoComplete="username"
                 placeholder="아이디를 입력하세요"
                 className="mt-1"
                 disabled={loading}
+                aria-describedby={error ? "login-error" : undefined}
               />
             </div>
 
@@ -68,14 +75,16 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 required
+                autoComplete="current-password"
                 placeholder="비밀번호를 입력하세요"
                 className="mt-1"
                 disabled={loading}
+                aria-describedby={error ? "login-error" : undefined}
               />
             </div>
 
             {error && (
-              <div className="rounded-md bg-red-50 p-3">
+              <div className="rounded-md bg-red-50 p-3" role="alert" id="login-error">
                 <p className="text-sm text-red-800">{error}</p>
               </div>
             )}
