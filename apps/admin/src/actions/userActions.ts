@@ -108,7 +108,7 @@ export const createUser = withAuth(async (user, formData: FormData) => {
       subType: "benefit",
       quantity: 0,
       price: INITIAL_WALLET_BALANCE,
-      day: 0,
+      day: 1,
       classId: validatedData.classId,
     });
 
@@ -293,7 +293,7 @@ export const bulkCreateUsers = withAuth(
             subType: "benefit",
             quantity: 0,
             price: INITIAL_WALLET_BALANCE,
-            day: 0,
+            day: 1,
             classId: userData.classId,
           });
 
