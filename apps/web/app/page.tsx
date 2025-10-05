@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BenefitNotificationBanner from "@/components/BenefitNotificationBanner";
 import AnimatedBalance from "@/components/AnimatedBalance";
+import PageLoading from "@/components/PageLoading";
 
 export default function Home() {
   const router = useRouter();
@@ -39,23 +40,7 @@ export default function Home() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20">
-        <header className="bg-white border-b sticky top-0 z-10">
-          <div className="px-4 py-4 flex justify-between items-center">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">주식 투자 게임</h1>
-            </div>
-          </div>
-        </header>
-        <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
-          <div className="text-center">
-            <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-2 text-gray-600">로딩 중...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <PageLoading title="주식 투자 게임" />;
   }
 
   if (!dashboardData) {
