@@ -265,143 +265,187 @@ export default function InvestPage() {
               <p className="text-lg">거래 내역이 없습니다</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {transactions.map((tx) => {
-                const isMoneyIn = tx.type === "deposit"; // 돈이 들어옴 (매도, 지원금)
-                const isBenefit = tx.subType === "benefit";
-                const totalAmount = isBenefit
-                  ? parseFloat(tx.price)
-                  : parseFloat(tx.price) * tx.quantity;
+            <div className="space-y-4">
+              {(() => {
+                // Day별로 그룹화
+                const txByDay: Record<number, typeof transactions> =
+                  transactions.reduce(
+                    (acc: Record<number, typeof transactions>, tx) => {
+                      if (!acc[tx.day]) {
+                        acc[tx.day] = [];
+                      }
+                      acc[tx.day]!.push(tx);
+                      return acc;
+                    },
+                    {}
+                  );
 
-                // 현재 Day의 지원금인지 확인
-                const isNew = isBenefit && tx.day === currentDay;
+                // 각 Day 내에서 지원금을 맨 아래, 나머지는 시간순으로 정렬
+                Object.keys(txByDay).forEach((day) => {
+                  const dayNum = Number(day);
+                  if (txByDay[dayNum]) {
+                    txByDay[dayNum].sort((a, b) => {
+                      // 지원금을 맨 아래로
+                      if (a.subType === "benefit" && b.subType !== "benefit")
+                        return 1;
+                      if (a.subType !== "benefit" && b.subType === "benefit")
+                        return -1;
+                      // 같은 타입이면 최신순
+                      return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                      );
+                    });
+                  }
+                });
 
-                return (
-                  <div
-                    key={tx.id}
-                    className={`rounded-lg p-4 shadow hover:shadow-md transition-shadow border-l-4 ${
-                      isBenefit
-                        ? "bg-gray-50 border-gray-300"
-                        : "bg-white border-gray-200"
-                    }`}
-                    style={{
-                      borderLeftColor: isBenefit
-                        ? "#9ca3af"
-                        : isMoneyIn
-                          ? "#10b981"
-                          : "#ef4444",
-                    }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          {isNew && (
-                            <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded animate-pulse">
-                              NEW
-                            </span>
-                          )}
-                          <span
-                            className={`text-xs font-medium ${
-                              isBenefit ? "text-gray-500" : "text-gray-600"
-                            }`}
-                          >
-                            Day {tx.day}
-                          </span>
-                          <span
-                            className={`text-xs ${
-                              isBenefit ? "text-gray-400" : "text-gray-400"
-                            }`}
-                          >
-                            |
-                          </span>
-                          <span
-                            className={`text-xs ${
-                              isBenefit ? "text-gray-500" : "text-gray-600"
-                            }`}
-                          >
-                            {isBenefit
-                              ? "지원금"
-                              : tx.subType === "buy"
-                                ? "매수"
-                                : "매도"}
-                          </span>
-                          {isBenefit && (
-                            <span className="ml-auto px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] rounded font-medium">
-                              수익률 계산 제외
-                            </span>
-                          )}
-                        </div>
-                        <p
-                          className={`font-bold mb-1 ${
-                            isBenefit ? "text-gray-600" : "text-gray-900"
-                          }`}
-                        >
-                          {tx.stockName || "지원금"}
-                        </p>
-                        {!isBenefit && (
-                          <p className="text-sm text-gray-600">
-                            {tx.quantity}주 @{" "}
-                            {parseFloat(tx.price).toLocaleString()}원
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="flex items-center justify-end gap-1 mb-1">
-                          <span
-                            className={`text-2xl font-bold ${
-                              isBenefit
-                                ? "text-gray-500"
-                                : isMoneyIn
-                                  ? "text-green-600"
-                                  : "text-red-600"
-                            }`}
-                          >
-                            {isMoneyIn ? "+" : "-"}
-                            {totalAmount.toLocaleString()}
-                          </span>
-                          <span
-                            className={`text-sm ${
-                              isBenefit ? "text-gray-400" : "text-gray-500"
-                            }`}
-                          >
-                            원
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-end gap-1">
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              isBenefit
-                                ? "bg-gray-400"
-                                : isMoneyIn
-                                  ? "bg-green-500"
-                                  : "bg-red-500"
-                            }`}
-                          />
-                          <span
-                            className={`text-xs ${
-                              isBenefit ? "text-gray-500" : "text-gray-500"
-                            }`}
-                          >
-                            {isMoneyIn ? "입금" : "출금"}
-                          </span>
-                        </div>
-                        <p
-                          className={`text-xs mt-2 ${
-                            isBenefit ? "text-gray-400" : "text-gray-400"
-                          }`}
-                        >
-                          {new Date(tx.createdAt).toLocaleDateString("ko-KR", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
+                const sortedDays = Object.keys(txByDay)
+                  .map(Number)
+                  .sort((a, b) => b - a); // 최신 Day 먼저
+
+                return sortedDays.map((day) => (
+                  <div key={day} className="space-y-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex-1 h-px bg-gray-300"></div>
+                      <span className="px-3 py-1 bg-gray-700 text-white text-sm font-bold rounded-full">
+                        Day {day}
+                      </span>
+                      <div className="flex-1 h-px bg-gray-300"></div>
                     </div>
+                    {txByDay[day]?.map((tx) => {
+                      const isMoneyIn = tx.type === "deposit";
+                      const isBenefit = tx.subType === "benefit";
+                      const totalAmount = isBenefit
+                        ? parseFloat(tx.price)
+                        : parseFloat(tx.price) * tx.quantity;
+
+                      // 현재 Day의 지원금인지 확인
+                      const isNew = isBenefit && tx.day === currentDay;
+
+                      return (
+                        <div
+                          key={tx.id}
+                          className={`rounded-lg p-4 shadow hover:shadow-md transition-shadow border-l-4 ${
+                            isBenefit
+                              ? "bg-gray-50 border-gray-300"
+                              : "bg-white border-gray-200"
+                          }`}
+                          style={{
+                            borderLeftColor: isBenefit
+                              ? "#9ca3af"
+                              : isMoneyIn
+                                ? "#10b981"
+                                : "#ef4444",
+                          }}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                {isNew && (
+                                  <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded animate-pulse">
+                                    NEW
+                                  </span>
+                                )}
+                                <span
+                                  className={`text-xs ${
+                                    isBenefit
+                                      ? "text-gray-500"
+                                      : "text-gray-600"
+                                  }`}
+                                >
+                                  {isBenefit
+                                    ? "지원금"
+                                    : tx.subType === "buy"
+                                      ? "매수"
+                                      : "매도"}
+                                </span>
+                                {isBenefit && (
+                                  <span className="ml-auto px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] rounded font-medium">
+                                    수익률 계산 제외
+                                  </span>
+                                )}
+                              </div>
+                              <p
+                                className={`font-bold mb-1 ${
+                                  isBenefit ? "text-gray-600" : "text-gray-900"
+                                }`}
+                              >
+                                {tx.stockName || "지원금"}
+                              </p>
+                              {!isBenefit && (
+                                <p className="text-sm text-gray-600">
+                                  {tx.quantity}주 @{" "}
+                                  {parseFloat(tx.price).toLocaleString()}원
+                                </p>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center justify-end gap-1 mb-1">
+                                <span
+                                  className={`text-2xl font-bold ${
+                                    isBenefit
+                                      ? "text-gray-500"
+                                      : isMoneyIn
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                  }`}
+                                >
+                                  {isMoneyIn ? "+" : "-"}
+                                  {totalAmount.toLocaleString()}
+                                </span>
+                                <span
+                                  className={`text-sm ${
+                                    isBenefit
+                                      ? "text-gray-400"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  원
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-end gap-1">
+                                <div
+                                  className={`w-2 h-2 rounded-full ${
+                                    isBenefit
+                                      ? "bg-gray-400"
+                                      : isMoneyIn
+                                        ? "bg-green-500"
+                                        : "bg-red-500"
+                                  }`}
+                                />
+                                <span
+                                  className={`text-xs ${
+                                    isBenefit
+                                      ? "text-gray-500"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  {isMoneyIn ? "입금" : "출금"}
+                                </span>
+                              </div>
+                              <p
+                                className={`text-xs mt-2 ${
+                                  isBenefit ? "text-gray-400" : "text-gray-400"
+                                }`}
+                              >
+                                {new Date(tx.createdAt).toLocaleDateString(
+                                  "ko-KR",
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                ));
+              })()}
             </div>
           )}
         </>
