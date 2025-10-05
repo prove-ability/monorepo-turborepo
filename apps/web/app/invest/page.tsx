@@ -27,6 +27,7 @@ export default function InvestPage() {
   const [totalProfit, setTotalProfit] = useState<number>(0);
   const [totalProfitRate, setTotalProfitRate] = useState<number>(0);
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
+  const [showHistoryGuide, setShowHistoryGuide] = useState(true);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -163,12 +164,66 @@ export default function InvestPage() {
 
       {/* Transaction History */}
       {activeTab === "history" ? (
-        transactions.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <p className="text-lg">거래 내역이 없습니다</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
+        <>
+          {/* 안내 메시지 */}
+          {showHistoryGuide && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-100 rounded-full p-2 mt-0.5">
+                    <svg
+                      className="w-5 h-5 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-blue-900 mb-1">
+                      수익률 계산 안내
+                    </h4>
+                    <p className="text-sm text-blue-800">
+                      수익률은 <strong>매수/매도 거래</strong>만 반영됩니다.
+                      <br />
+                      <span className="text-blue-600">지원금</span>은 초기 자본이므로 수익률 계산에서 제외됩니다.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowHistoryGuide(false)}
+                  className="text-blue-400 hover:text-blue-600 transition-colors ml-2"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {transactions.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p className="text-lg">거래 내역이 없습니다</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
             {transactions.map((tx) => {
               const isMoneyIn = tx.type === "deposit"; // 돈이 들어옴 (매도, 지원금)
               const isBenefit = tx.subType === "benefit";
@@ -179,23 +234,54 @@ export default function InvestPage() {
               return (
                 <div
                   key={tx.id}
-                  className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow border-l-4 border-gray-200"
+                  className={`rounded-lg p-4 shadow hover:shadow-md transition-shadow border-l-4 ${
+                    isBenefit
+                      ? "bg-gray-50 border-gray-300"
+                      : "bg-white border-gray-200"
+                  }`}
                   style={{
-                    borderLeftColor: isMoneyIn ? "#10b981" : "#ef4444",
+                    borderLeftColor: isBenefit
+                      ? "#9ca3af"
+                      : isMoneyIn
+                        ? "#10b981"
+                        : "#ef4444",
                   }}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs text-gray-500 font-medium">
+                        <span
+                          className={`text-xs font-medium ${
+                            isBenefit ? "text-gray-500" : "text-gray-600"
+                          }`}
+                        >
                           Day {tx.day}
                         </span>
-                        <span className="text-xs text-gray-400">|</span>
-                        <span className="text-xs text-gray-600">
+                        <span
+                          className={`text-xs ${
+                            isBenefit ? "text-gray-400" : "text-gray-400"
+                          }`}
+                        >
+                          |
+                        </span>
+                        <span
+                          className={`text-xs ${
+                            isBenefit ? "text-gray-500" : "text-gray-600"
+                          }`}
+                        >
                           {isBenefit ? "지원금" : tx.subType === "buy" ? "매수" : "매도"}
                         </span>
+                        {isBenefit && (
+                          <span className="ml-auto px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] rounded font-medium">
+                            수익률 계산 제외
+                          </span>
+                        )}
                       </div>
-                      <p className="font-bold text-gray-900 mb-1">
+                      <p
+                        className={`font-bold mb-1 ${
+                          isBenefit ? "text-gray-600" : "text-gray-900"
+                        }`}
+                      >
                         {tx.stockName || "초기 지원금"}
                       </p>
                       {!isBenefit && (
@@ -208,25 +294,47 @@ export default function InvestPage() {
                       <div className="flex items-center justify-end gap-1 mb-1">
                         <span
                           className={`text-2xl font-bold ${
-                            isMoneyIn ? "text-green-600" : "text-red-600"
+                            isBenefit
+                              ? "text-gray-500"
+                              : isMoneyIn
+                                ? "text-green-600"
+                                : "text-red-600"
                           }`}
                         >
                           {isMoneyIn ? "+" : "-"}
                           {totalAmount.toLocaleString()}
                         </span>
-                        <span className="text-sm text-gray-500">원</span>
+                        <span
+                          className={`text-sm ${
+                            isBenefit ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
+                          원
+                        </span>
                       </div>
                       <div className="flex items-center justify-end gap-1">
                         <div
                           className={`w-2 h-2 rounded-full ${
-                            isMoneyIn ? "bg-green-500" : "bg-red-500"
+                            isBenefit
+                              ? "bg-gray-400"
+                              : isMoneyIn
+                                ? "bg-green-500"
+                                : "bg-red-500"
                           }`}
                         />
-                        <span className="text-xs text-gray-500">
+                        <span
+                          className={`text-xs ${
+                            isBenefit ? "text-gray-500" : "text-gray-500"
+                          }`}
+                        >
                           {isMoneyIn ? "입금" : "출금"}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-2">
+                      <p
+                        className={`text-xs mt-2 ${
+                          isBenefit ? "text-gray-400" : "text-gray-400"
+                        }`}
+                      >
                         {new Date(tx.createdAt).toLocaleDateString("ko-KR", {
                           month: "short",
                           day: "numeric",
@@ -240,7 +348,8 @@ export default function InvestPage() {
               );
             })}
           </div>
-        )
+          )}
+        </>
       ) : displayStocks.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg">
