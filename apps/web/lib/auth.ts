@@ -29,6 +29,7 @@ export async function verifyCredentials(
 
     // 클래스가 종료된 경우 로그인 불가
     if (user.class?.status === "ended") {
+      console.log("Login blocked: Class has ended");
       return null;
     }
 
