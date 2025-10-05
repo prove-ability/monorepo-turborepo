@@ -28,10 +28,6 @@ const classSchema = z.object({
   name: z.string().min(1, "수업명은 필수입니다."),
   managerId: z.string().min(1, "매니저 선택은 필수입니다."),
   clientId: z.string().min(1, "클라이언트 선택은 필수입니다."),
-  totalDays: z.coerce
-    .number()
-    .min(0, "총 수업일은 0 이상이어야 합니다.")
-    .optional(),
   currentDay: z.coerce
     .number()
     .min(1, "현재 Day는 1 이상이어야 합니다.")
@@ -54,7 +50,6 @@ export const createClass = withAuth(async (user, formData: FormData) => {
         name: validation.data.name,
         managerId: validation.data.managerId,
         clientId: validation.data.clientId,
-        totalDays: validation.data.totalDays,
         currentDay: validation.data.currentDay,
         createdBy: user.id,
       })
