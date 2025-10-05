@@ -25,9 +25,8 @@ export default function InvestPage() {
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<
-    "all" | "holdings" | "history"
-  >("all");
+  const [activeTab, setActiveTab] = useState<"stocks" | "history">("stocks");
+  const [showOnlyHoldings, setShowOnlyHoldings] = useState(false);
   const [totalProfit, setTotalProfit] = useState<number>(0);
   const [totalProfitRate, setTotalProfitRate] = useState<number>(0);
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
@@ -73,7 +72,7 @@ export default function InvestPage() {
     0
   );
 
-  const displayStocks = activeTab === "all" ? stocks : holdingStocks;
+  const displayStocks = showOnlyHoldings ? holdingStocks : stocks;
 
   if (isLoading) {
     return (
@@ -139,24 +138,14 @@ export default function InvestPage() {
       {/* Tabs */}
       <div className="flex gap-2 mb-4">
         <button
-          onClick={() => setActiveTab("all")}
+          onClick={() => setActiveTab("stocks")}
           className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-            activeTab === "all"
+            activeTab === "stocks"
               ? "bg-blue-600 text-white"
               : "bg-gray-100 text-gray-600"
           }`}
         >
-          전체 종목
-        </button>
-        <button
-          onClick={() => setActiveTab("holdings")}
-          className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-            activeTab === "holdings"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-600"
-          }`}
-        >
-          보유 종목 ({holdingStocks.length})
+          투자 종목
         </button>
         <button
           onClick={() => setActiveTab("history")}
@@ -169,6 +158,30 @@ export default function InvestPage() {
           거래내역
         </button>
       </div>
+
+      {/* Filter Toggle - 투자 종목 탭에서만 표시 */}
+      {activeTab === "stocks" && (
+        <div className="mb-4 flex items-center justify-between bg-gray-50 rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showOnlyHoldings}
+                onChange={(e) => setShowOnlyHoldings(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                보유 종목만 보기
+              </span>
+            </label>
+            {showOnlyHoldings && (
+              <span className="text-xs text-gray-500">
+                ({holdingStocks.length}개)
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Transaction History */}
       {activeTab === "history" ? (
@@ -375,7 +388,7 @@ export default function InvestPage() {
       ) : displayStocks.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg">
-            {activeTab === "holdings"
+            {showOnlyHoldings
               ? "보유 중인 주식이 없습니다"
               : "거래 가능한 주식이 없습니다"}
           </p>
