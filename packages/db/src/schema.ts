@@ -53,7 +53,6 @@ export const classes = pgTable("classes", {
     .notNull(),
   name: text("name"),
   currentDay: integer("current_day"),
-  status: text("status"),
   createdBy: uuid("created_by").notNull(),
   clientId: uuid("client_id")
     .references((): AnyPgColumn => clients.id)
