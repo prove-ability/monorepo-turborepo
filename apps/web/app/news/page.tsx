@@ -1,28 +1,66 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { getAllNews } from "@/actions/news";
-import { getSession } from "@/lib/session";
-import { checkNeedsSetup } from "@/actions/profile";
-import { redirect } from "next/navigation";
 import { Newspaper } from "lucide-react";
 
-export default async function NewsPage() {
-  const user = await getSession();
+interface NewsItem {
+  id: string;
+  day: number | null;
+  title: string | null;
+  content: string | null;
+  relatedStockIds: unknown;
+  createdAt: Date;
+  relatedStocks: Array<{
+    id: string;
+    name: string;
+  }>;
+}
 
-  // 미들웨어에서 이미 검증했지만 타입 안정성을 위해 체크
-  if (!user) {
-    redirect("/login");
+export default function NewsPage() {
+  const [allNews, setAllNews] = useState<NewsItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadNews();
+  }, []);
+
+  const loadNews = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getAllNews();
+      setAllNews(data);
+    } catch (error) {
+      console.error("Failed to load news:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20">
+        <header className="bg-white border-b sticky top-0 z-10">
+          <div className="px-4 py-4">
+            <div className="flex items-center gap-2">
+              <Newspaper className="h-6 w-6 text-blue-600" />
+              <h1 className="text-xl font-bold text-gray-900">뉴스</h1>
+            </div>
+          </div>
+        </header>
+        <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
+          <div className="text-center">
+            <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-2 text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
-
-  // setup이 필요한지 확인
-  const setupStatus = await checkNeedsSetup();
-  if (setupStatus.needsSetup) {
-    redirect("/setup");
-  }
-
-  const allNews = await getAllNews();
 
   // Day별로 그룹화
   const newsByDay = allNews.reduce(
-    (acc: Record<number, typeof allNews>, newsItem) => {
+    (acc: Record<number, NewsItem[]>, newsItem) => {
       const day = newsItem.day || 0;
       if (!acc[day]) acc[day] = [];
       acc[day].push(newsItem);
