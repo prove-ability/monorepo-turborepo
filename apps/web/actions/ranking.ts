@@ -11,7 +11,6 @@ import {
 } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
-import { INITIAL_WALLET_BALANCE } from "../../admin/src/config/gameConfig";
 
 export interface RankingEntry {
   rank: number;
@@ -73,7 +72,7 @@ export const getClassRanking = withAuth(async (user) => {
         let holdingsValue = 0;
         for (const holding of guestHoldings) {
           if (!holding.stockId) continue;
-          
+
           const currentPrice = await db.query.classStockPrices.findFirst({
             where: and(
               eq(classStockPrices.classId, user.classId),
@@ -89,8 +88,8 @@ export const getClassRanking = withAuth(async (user) => {
         }
 
         // 4. 거래 내역 조회하여 초기 자본 계산
-        // 주의: 게스트 생성 시 200만원이 지갑에 직접 들어가며 transactions에 기록되지 않음
-        let benefitFromDays = 0; // Day 증가 시 받은 지원금
+        // 초기 자본 = 모든 지원금(benefit) 합계
+        let initialCapital = 0;
 
         if (wallet) {
           const allTransactions = await db.query.transactions.findMany({
@@ -99,23 +98,20 @@ export const getClassRanking = withAuth(async (user) => {
 
           for (const tx of allTransactions) {
             const amount = parseFloat(tx.price || "0");
-            
+
             if (tx.type === "deposit" && tx.subType === "benefit") {
-              // Day 증가 시 받은 지원금
-              benefitFromDays += amount;
+              // 게스트 생성 시 초기 자본 + Day 증가 시 받은 지원금
+              initialCapital += amount;
             }
           }
         }
 
-        // 총 초기 자본 = 게스트 생성 시 200만원 + Day 증가 시 받은 지원금
-        const initialCapital = parseFloat(INITIAL_WALLET_BALANCE) + benefitFromDays;
-
         // 5. 총 자산 및 수익 계산
         const totalAssets = balance + holdingsValue;
-        
+
         // 순수익 = 현재 총 자산 - 초기 자본
         const profit = totalAssets - initialCapital;
-        
+
         // 수익률 = (순수익 / 초기 자본) × 100
         const profitRate =
           initialCapital > 0 ? (profit / initialCapital) * 100 : 0;
