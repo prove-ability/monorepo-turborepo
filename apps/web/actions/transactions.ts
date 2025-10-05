@@ -26,10 +26,10 @@ export const getTransactionHistory = withAuth(async (user) => {
       return [];
     }
 
-    // 거래 내역 조회 (최신순)
+    // 거래 내역 조회 (최신 Day부터, Day 내에서는 최신 시간순)
     const transactionList = await db.query.transactions.findMany({
       where: eq(transactions.walletId, wallet.id),
-      orderBy: [desc(transactions.createdAt)],
+      orderBy: [desc(transactions.day), desc(transactions.createdAt)],
     });
 
     // 각 거래의 주식 정보 조회
