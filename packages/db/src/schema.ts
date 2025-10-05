@@ -22,6 +22,11 @@ export const transactionSubTypeEnum = pgEnum("transaction_sub_type", [
   "benefit", // 지원금
 ]);
 export const countryCodeEnum = pgEnum("country_code", ["KR", "US", "JP", "CN"]);
+export const classStatusEnum = pgEnum("class_status", [
+  "setting", // 설정중
+  "active", // 진행중
+  "ended", // 종료
+]);
 
 export const guests = pgTable("guests", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -53,6 +58,7 @@ export const classes = pgTable("classes", {
     .notNull(),
   name: text("name"),
   currentDay: integer("current_day"),
+  status: classStatusEnum("status").default("setting").notNull(),
   createdBy: uuid("created_by").notNull(),
   clientId: uuid("client_id")
     .references((): AnyPgColumn => clients.id)

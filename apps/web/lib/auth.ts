@@ -1,4 +1,4 @@
-import { db, guests } from "@repo/db";
+import { db, guests, classes } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 
 export interface User {
@@ -18,9 +18,17 @@ export async function verifyCredentials(
         eq(guests.loginId, loginId),
         eq(guests.password, password)
       ),
+      with: {
+        class: true,
+      },
     });
 
     if (!user) {
+      return null;
+    }
+
+    // 클래스가 종료된 경우 로그인 불가
+    if (user.class?.status === "ended") {
       return null;
     }
 
