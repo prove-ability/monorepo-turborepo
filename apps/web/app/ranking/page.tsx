@@ -49,12 +49,13 @@ export default function RankingPage() {
   const myRanking = rankings.find((r) => r.isCurrentUser);
 
   return (
-    <div className="max-w-4xl mx-auto p-4 pb-20">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">랭킹 화면</h1>
-        <p className="text-sm text-gray-600">지금 TOP 10 수익률 랭킹입니다!</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="max-w-4xl mx-auto p-4">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-2">랭킹 화면</h1>
+          <p className="text-sm text-gray-600">지금 TOP 10 수익률 랭킹입니다!</p>
+        </div>
 
       {/* 내 순위 표시 (상위 10위 밖일 경우) */}
       {myRanking && myRanking.rank > 10 && (
@@ -176,6 +177,7 @@ export default function RankingPage() {
           - 랭킹 화면은 참가자들의 성과를 닉네임 기준으로 보여주며,{" "}
           <strong>상위 10명만</strong> 공개됩니다.
         </p>
+      </div>
       </div>
     </div>
   );
