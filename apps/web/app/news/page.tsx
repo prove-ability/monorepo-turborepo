@@ -47,7 +47,7 @@ export default function NewsPage() {
   });
 
   if (isLoading) {
-    return <PageLoading title="뉴스" />;
+    return <PageLoading />;
   }
 
   // Day별로 그룹화

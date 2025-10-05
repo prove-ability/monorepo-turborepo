@@ -1,8 +1,4 @@
-interface PageLoadingProps {
-  title?: string;
-}
-
-export default function PageLoading({ title = "로딩 중" }: PageLoadingProps) {
+export default function PageLoading() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">

@@ -104,7 +104,7 @@ export default function InvestPage() {
   const displayStocks = showOnlyHoldings ? holdingStocks : stocks;
 
   if (isInitialLoading) {
-    return <PageLoading title="투자" />;
+    return <PageLoading />;
   }
 
   return (

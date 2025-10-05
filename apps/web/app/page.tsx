@@ -50,7 +50,7 @@ export default function Home() {
   };
 
   if (isLoading) {
-    return <PageLoading title="홈" />;
+    return <PageLoading />;
   }
 
   if (!dashboardData) {
