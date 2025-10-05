@@ -5,6 +5,8 @@ import { getStocksForInvest } from "@/actions/stocks";
 import { getTransactionHistory, TransactionItem } from "@/actions/transactions";
 import TradeBottomSheet from "@/components/TradeBottomSheet";
 import NewsBottomSheet from "@/components/NewsBottomSheet";
+import StockListSkeleton from "@/components/StockListSkeleton";
+import TransactionListSkeleton from "@/components/TransactionListSkeleton";
 
 interface Stock {
   id: string;
@@ -24,7 +26,8 @@ export default function InvestPage() {
   const [balance, setBalance] = useState<number>(0);
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"stocks" | "history">("stocks");
   const [showOnlyHoldings, setShowOnlyHoldings] = useState(false);
   const [totalProfit, setTotalProfit] = useState<number>(0);
@@ -36,8 +39,13 @@ export default function InvestPage() {
     name: string;
   } | null>(null);
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = async (isInitial = false) => {
+    if (isInitial) {
+      setIsInitialLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+    
     try {
       const data = await getStocksForInvest();
       setStocks(data.stocks);
@@ -54,16 +62,26 @@ export default function InvestPage() {
     } catch (error) {
       console.error("Failed to load stocks:", error);
     } finally {
-      setIsLoading(false);
+      if (isInitial) {
+        setIsInitialLoading(false);
+      } else {
+        setIsRefreshing(false);
+      }
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialLoading) {
+      loadData(false);
+    }
   }, [activeTab]);
 
   const handleTradeSuccess = () => {
-    loadData();
+    loadData(false);
   };
 
   const holdingStocks = stocks.filter((s) => s.holdingQuantity > 0);
@@ -74,7 +92,7 @@ export default function InvestPage() {
 
   const displayStocks = showOnlyHoldings ? holdingStocks : stocks;
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -240,7 +258,9 @@ export default function InvestPage() {
             </div>
           )}
 
-          {transactions.length === 0 ? (
+          {isRefreshing ? (
+            <TransactionListSkeleton />
+          ) : transactions.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <p className="text-lg">거래 내역이 없습니다</p>
             </div>
@@ -385,6 +405,8 @@ export default function InvestPage() {
             </div>
           )}
         </>
+      ) : isRefreshing ? (
+        <StockListSkeleton />
       ) : displayStocks.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg">
