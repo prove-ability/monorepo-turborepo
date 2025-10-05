@@ -4,6 +4,8 @@ import { checkNeedsSetup } from "@/actions/profile";
 import { getDashboardData } from "@/actions/dashboard";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import BenefitNotificationBanner from "@/components/BenefitNotificationBanner";
+import AnimatedBalance from "@/components/AnimatedBalance";
 
 export default async function Home() {
   const user = await getSession();
@@ -42,6 +44,9 @@ export default async function Home() {
       </header>
 
       <main className="px-4 py-6 max-w-4xl mx-auto space-y-4">
+        {/* 지원금 알림 배너 */}
+        <BenefitNotificationBanner benefit={dashboardData.latestBenefit} />
+
         {/* 진행 상황 */}
         <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-5 shadow-sm border border-indigo-100">
           <div className="flex items-center justify-between mb-3">
@@ -97,9 +102,12 @@ export default async function Home() {
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
             <div>
               <p className="text-xs opacity-80 mb-1">잔액</p>
-              <p className="text-lg font-semibold">
-                {dashboardData.balance.toLocaleString()}원
-              </p>
+              <div className="text-lg font-semibold">
+                <AnimatedBalance
+                  balance={dashboardData.balance}
+                  benefit={dashboardData.latestBenefit}
+                />
+              </div>
             </div>
             <div>
               <p className="text-xs opacity-80 mb-1">보유 주식</p>

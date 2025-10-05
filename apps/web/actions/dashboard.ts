@@ -44,6 +44,13 @@ export interface DashboardData {
   // 랭킹 정보
   myRank: number | null;
   totalParticipants: number;
+
+  // 최근 지원금 정보
+  latestBenefit: {
+    amount: number;
+    day: number;
+    createdAt: Date;
+  } | null;
 }
 
 export const getDashboardData = withAuth(async (user) => {
@@ -214,6 +221,28 @@ export const getDashboardData = withAuth(async (user) => {
     const myRank =
       sortedRates.findIndex((g) => g.guestId === user.id) + 1 || null;
 
+    // 8. 최근 지원금 조회 (현재 Day의 지원금)
+    let latestBenefit = null;
+    if (wallet) {
+      const benefitTransaction = await db.query.transactions.findFirst({
+        where: and(
+          eq(transactions.walletId, wallet.id),
+          eq(transactions.type, "deposit"),
+          eq(transactions.subType, "benefit"),
+          eq(transactions.day, currentDay)
+        ),
+        orderBy: (transactions, { desc }) => [desc(transactions.createdAt)],
+      });
+
+      if (benefitTransaction) {
+        latestBenefit = {
+          amount: parseFloat(benefitTransaction.price || "0"),
+          day: benefitTransaction.day,
+          createdAt: benefitTransaction.createdAt,
+        };
+      }
+    }
+
     return {
       userName: user.name,
       className: classInfo.name,
@@ -228,6 +257,7 @@ export const getDashboardData = withAuth(async (user) => {
       holdingStocks,
       myRank,
       totalParticipants,
+      latestBenefit,
     };
   } catch (error) {
     console.error("Failed to fetch dashboard data:", error);
