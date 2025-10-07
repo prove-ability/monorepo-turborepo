@@ -5,6 +5,7 @@ import { getStocksForInvest } from "@/actions/stocks";
 import { getTransactionHistory, TransactionItem } from "@/actions/transactions";
 import TradeBottomSheet from "@/components/TradeBottomSheet";
 import NewsBottomSheet from "@/components/NewsBottomSheet";
+import StockDetailSheet from "@/components/StockDetailSheet";
 import StockListSkeleton from "@/components/StockListSkeleton";
 import TransactionListSkeleton from "@/components/TransactionListSkeleton";
 import PageLoading from "@/components/PageLoading";
@@ -41,6 +42,10 @@ export default function InvestPage() {
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [showHistoryGuide, setShowHistoryGuide] = useState(true);
   const [newsStock, setNewsStock] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [detailStock, setDetailStock] = useState<{
     id: string;
     name: string;
   } | null>(null);
@@ -504,7 +509,7 @@ export default function InvestPage() {
               return (
                 <div
                   key={stock.id}
-                  onClick={() => setSelectedStock(stock)}
+                  onClick={() => setDetailStock({ id: stock.id, name: stock.name })}
                   className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -629,6 +634,16 @@ export default function InvestPage() {
             stockName={newsStock.name}
             isOpen={!!newsStock}
             onClose={() => setNewsStock(null)}
+          />
+        )}
+
+        {/* Stock Detail Sheet */}
+        {detailStock && (
+          <StockDetailSheet
+            stockId={detailStock.id}
+            stockName={detailStock.name}
+            isOpen={!!detailStock}
+            onClose={() => setDetailStock(null)}
           />
         )}
       </div>
