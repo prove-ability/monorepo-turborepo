@@ -66,7 +66,12 @@ export function useTour() {
       doneBtnText: "완료",
       onNextClick: () => {
         currentStep++;
-        driverObj.moveNext();
+        if (currentStep >= totalSteps) {
+          localStorage.setItem("tour_completed", "true");
+          driverObj.destroy();
+        } else {
+          driverObj.moveNext();
+        }
       },
       onPrevClick: () => {
         currentStep--;
@@ -74,11 +79,6 @@ export function useTour() {
       },
       onCloseClick: () => {
         driverObj.destroy();
-      },
-      onDestroyStarted: () => {
-        if (currentStep >= totalSteps - 1) {
-          localStorage.setItem("tour_completed", "true");
-        }
       }
     });
 
