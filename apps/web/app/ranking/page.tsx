@@ -71,7 +71,7 @@ export default function RankingPage() {
       <div className="max-w-4xl mx-auto p-4">
         <PageHeader
           title="랭킹"
-          description="TOP 10 수익률 순위"
+          description="오늘의 투자순위, 투자왕은 누구일까요?"
           icon={<Trophy className="h-7 w-7 text-blue-600" />}
         />
 

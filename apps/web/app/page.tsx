@@ -74,7 +74,7 @@ export default function Home() {
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         <PageHeader
           title="투자 게임"
-          description={`${dashboardData.userName}님, 오늘의 모의투자가 시작됩니다!`}
+          description={`${dashboardData.userName}님, 주식시장 속에서 오늘도 한 걸음! 🚀`}
           icon={<HomeIcon className="h-7 w-7 text-blue-600" />}
         />
         {/* 지원금 알림 배너 */}
@@ -82,21 +82,20 @@ export default function Home() {
 
         {/* 진행 상황 */}
         <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-5 shadow-sm border border-indigo-100">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-xs text-gray-600 mb-1">현재 라운드</p>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1">
               <h2 className="text-xl font-bold text-gray-900">
                 {dashboardData.className}
               </h2>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-blue-600">
+            <div className="flex items-baseline gap-1">
+              <span className="text-sm font-medium text-gray-600">Day</span>
+              <span className="text-3xl font-bold text-blue-600">
                 {dashboardData.currentDay}
-                <span className="text-sm text-gray-400">
-                  /{dashboardData.totalDays}
-                </span>
-                <span className="text-base text-gray-400">일</span>
-              </p>
+              </span>
+              <span className="text-lg font-medium text-gray-400">
+                / {dashboardData.totalDays}
+              </span>
             </div>
           </div>
 
