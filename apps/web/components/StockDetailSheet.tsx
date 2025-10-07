@@ -69,10 +69,10 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[101]"
+            className="fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[101] flex flex-col"
             style={{ 
               bottom: 0,
-              top: "10vh",
+              maxHeight: "66.67vh",
               maxWidth: "640px",
               margin: "0 auto"
             }}
@@ -112,7 +112,7 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
             </div>
 
             {/* Content */}
-            <div className="overflow-y-auto px-6 py-4 h-full pb-24">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               {loading && (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -210,7 +210,7 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
 
                   {/* Related News */}
                   {data.relatedNews.length > 0 && (
-                    <div>
+                    <div className="pb-6">
                       <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                         <Newspaper className="w-4 h-4" />
                         관련 뉴스
@@ -255,7 +255,7 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                   )}
 
                   {data.relatedNews.length === 0 && (
-                    <div className="text-center py-8 text-gray-500 text-sm">
+                    <div className="text-center py-8 pb-6 text-gray-500 text-sm">
                       아직 관련 뉴스가 없습니다
                     </div>
                   )}
