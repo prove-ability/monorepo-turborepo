@@ -34,19 +34,19 @@ export function useTour() {
           }
         },
         {
-          element: "#nav-invest",
+          element: "#nav-news",
           popover: {
-            title: "📈 투자 탭",
-            description: "여기서 주식을 사고 팔 수 있어요. 원하는 주식을 클릭하면 거래 화면이 열립니다.",
+            title: "📰 뉴스 탭",
+            description: "매일 새로운 뉴스가 발표돼요. 뉴스를 먼저 확인하고 투자 전략을 세우세요!",
             side: "top",
             align: "center"
           }
         },
         {
-          element: "#nav-news",
+          element: "#nav-invest",
           popover: {
-            title: "📰 뉴스 탭",
-            description: "매일 새로운 뉴스가 발표돼요. 뉴스는 주식 가격에 영향을 주니 잘 읽어보세요!",
+            title: "📈 투자 탭",
+            description: "뉴스를 읽고 나서 여기서 주식을 사고 팔 수 있어요. 원하는 주식을 클릭하면 거래 화면이 열립니다.",
             side: "top",
             align: "center"
           }
