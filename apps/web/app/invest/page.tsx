@@ -13,7 +13,6 @@ import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { TrendingUp, ShoppingCart, Receipt } from "lucide-react";
-import Link from "next/link";
 
 interface Stock {
   id: string;
@@ -83,12 +82,14 @@ export default function InvestPage() {
 
   useEffect(() => {
     loadData(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!isInitialLoading) {
       loadData(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const handleTradeSuccess = () => {
@@ -509,7 +510,9 @@ export default function InvestPage() {
               return (
                 <div
                   key={stock.id}
-                  onClick={() => setDetailStock({ id: stock.id, name: stock.name })}
+                  onClick={() =>
+                    setDetailStock({ id: stock.id, name: stock.name })
+                  }
                   className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
                 >
                   <div className="flex justify-between items-start mb-2">
