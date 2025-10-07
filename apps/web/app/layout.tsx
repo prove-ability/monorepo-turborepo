@@ -18,7 +18,6 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "크라우드 랭크 - 주식 투자 게임",
   description: "학생용 주식 투자 시뮬레이션 게임",
-  manifest: "/manifest.json",
   viewport: {
     width: "device-width",
     initialScale: 1,
