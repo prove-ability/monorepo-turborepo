@@ -84,45 +84,39 @@ export default function Home() {
         <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-5 shadow-sm border border-indigo-100">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-xs text-gray-600 mb-1">진행 중인 게임</p>
+              <p className="text-xs text-gray-600 mb-1">현재 라운드</p>
               <h2 className="text-xl font-bold text-gray-900">
                 {dashboardData.className}
               </h2>
             </div>
             <div className="text-right">
-              <p className="text-xs text-gray-600 mb-1">진행도</p>
               <p className="text-2xl font-bold text-blue-600">
                 {dashboardData.currentDay}
-                <span className="text-lg text-gray-400">
+                <span className="text-sm text-gray-400">
                   /{dashboardData.totalDays}
                 </span>
+                <span className="text-base text-gray-400">일</span>
               </p>
             </div>
           </div>
 
           <div className="relative">
-            <div className="w-full bg-white rounded-full h-3 shadow-inner overflow-hidden">
-              <div
-                className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out flex items-center justify-end pr-2"
-                style={{
-                  width: `${dashboardData.totalDays > 0 ? Math.min((dashboardData.currentDay / dashboardData.totalDays) * 100, 100) : 0}%`,
-                }}
-              >
-                {dashboardData.totalDays > 0 &&
-                  dashboardData.currentDay > 0 && (
-                    <span className="text-[10px] font-bold text-white drop-shadow">
-                      {Math.round(
-                        (dashboardData.currentDay / dashboardData.totalDays) *
-                          100
-                      )}
-                      %
-                    </span>
+            <progress
+              value={dashboardData.currentDay}
+              max={dashboardData.totalDays}
+              className="w-full h-3 rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-white [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:shadow-inner [&::-webkit-progress-value]:bg-gradient-to-r [&::-webkit-progress-value]:from-blue-500 [&::-webkit-progress-value]:to-blue-600 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:transition-all [&::-webkit-progress-value]:duration-500 [&::-moz-progress-bar]:bg-gradient-to-r [&::-moz-progress-bar]:from-blue-500 [&::-moz-progress-bar]:to-blue-600 [&::-moz-progress-bar]:rounded-full"
+              aria-label={`진행도 ${dashboardData.currentDay}/${dashboardData.totalDays}`}
+            />
+            {dashboardData.totalDays > 0 && dashboardData.currentDay > 0 && (
+              <div className="absolute inset-0 flex items-center justify-end pr-2 pointer-events-none">
+                <span className="text-[10px] font-bold text-gray-600 drop-shadow">
+                  {Math.round(
+                    (dashboardData.currentDay / dashboardData.totalDays) * 100
                   )}
+                  %
+                </span>
               </div>
-            </div>
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              Day {dashboardData.currentDay} 진행 중
-            </p>
+            )}
           </div>
         </div>
 
