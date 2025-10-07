@@ -15,9 +15,11 @@ import { Home as HomeIcon } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
-  
+
   useTour(!isLoading && !!dashboardData);
 
   useEffect(() => {
@@ -71,8 +73,8 @@ export default function Home() {
       )}
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         <PageHeader
-          title="주식 투자 게임"
-          description={`${dashboardData.userName}님, 반갑습니다`}
+          title="투자 게임"
+          description={`${dashboardData.userName}님, 오늘의 모의투자가 시작됩니다!`}
           icon={<HomeIcon className="h-7 w-7 text-blue-600" />}
         />
         {/* 지원금 알림 배너 */}
@@ -125,7 +127,10 @@ export default function Home() {
         </div>
 
         {/* 자산 현황 */}
-        <div id="wallet-balance" className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg p-5 text-white shadow-lg">
+        <div
+          id="wallet-balance"
+          className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg p-5 text-white shadow-lg"
+        >
           <h3 className="text-sm font-medium opacity-90 mb-1">총 자산</h3>
           <p className="text-3xl font-bold mb-4">
             {dashboardData.totalAssets.toLocaleString()}원
