@@ -1,0 +1,168 @@
+# PWA 설정 가이드
+
+## ✅ 완료된 작업
+
+1. ✅ `manifest.json` 생성
+2. ✅ Service Worker (`sw.js`) 생성
+3. ✅ Layout에 PWA 메타데이터 추가
+4. ✅ PWAInstaller 컴포넌트 추가
+
+---
+
+## 🎨 아이콘 생성 필요
+
+다음 아이콘 파일들을 `/public` 폴더에 추가해야 합니다:
+
+### **필요한 파일:**
+```
+/public/icon-192.png   (192x192px)
+/public/icon-512.png   (512x512px)
+```
+
+### **아이콘 생성 방법:**
+
+#### **옵션 1: 온라인 도구 사용 (추천)**
+1. [Favicon Generator](https://realfavicongenerator.net/) 방문
+2. 로고 이미지 업로드
+3. PWA 아이콘 옵션 선택
+4. 생성된 파일 다운로드
+
+#### **옵션 2: Figma/디자인 툴**
+1. 512x512px 캔버스 생성
+2. 로고 디자인 (중앙에 배치, 여백 20% 권장)
+3. PNG로 export (512x512)
+4. 리사이즈하여 192x192 버전도 생성
+
+#### **옵션 3: CLI 도구**
+```bash
+npm install -g sharp-cli
+
+# 원본 이미지를 리사이즈
+sharp -i logo.png -o icon-192.png resize 192 192
+sharp -i logo.png -o icon-512.png resize 512 512
+```
+
+---
+
+## 📱 플랫폼별 테스트 방법
+
+### **Android (Chrome)**
+```
+1. Chrome에서 웹사이트 접속
+2. 자동으로 "앱 설치" 배너 표시
+3. 또는: 메뉴 → "홈 화면에 추가"
+4. 설치 후 앱 서랍에서 확인
+```
+
+### **iOS (Safari)**
+```
+1. Safari에서 웹사이트 접속
+2. 공유 버튼 탭
+3. "홈 화면에 추가" 선택
+4. 이름 확인 후 추가
+5. 홈 화면에서 아이콘 확인
+```
+
+### **macOS (Safari)**
+```
+1. Safari에서 웹사이트 접속
+2. 파일 → "Dock에 추가"
+3. 또는 주소창 옆 "설치" 아이콘 클릭
+```
+
+### **Windows (Edge/Chrome)**
+```
+1. Edge 또는 Chrome에서 접속
+2. 주소창 우측 "+" 아이콘 클릭
+3. "설치" 선택
+4. 시작 메뉴에서 확인
+```
+
+---
+
+## 🔍 PWA 체크리스트
+
+### **필수 요구사항:**
+- [x] HTTPS 사용 (localhost는 예외)
+- [x] manifest.json 존재
+- [x] Service Worker 등록
+- [x] 아이콘 (192x192, 512x512)
+- [ ] 아이콘 파일 생성 ⚠️
+
+### **권장 사항:**
+- [x] Offline 대응
+- [x] 모바일 최적화
+- [x] 빠른 로딩
+- [ ] 푸시 알림 (선택)
+- [ ] 백그라운드 동기화 (선택)
+
+---
+
+## 🚀 배포 후 확인사항
+
+### **1. Lighthouse 테스트**
+```
+Chrome DevTools → Lighthouse → PWA 체크
+목표: 100점
+```
+
+### **2. 설치 가능 여부 확인**
+```
+Chrome DevTools → Application → Manifest
+- 오류 없이 로드되는지 확인
+- Service Worker 등록 확인
+```
+
+### **3. 오프라인 테스트**
+```
+1. 앱 설치
+2. Network 탭에서 Offline 체크
+3. 페이지 새로고침
+4. 여전히 작동하는지 확인
+```
+
+---
+
+## 📊 플랫폼별 기능 지원
+
+| 기능 | Android | iOS | macOS | Windows |
+|------|---------|-----|-------|---------|
+| 홈 화면 추가 | ✅ | ✅ | ✅ | ✅ |
+| 오프라인 | ✅ | ✅ | ✅ | ✅ |
+| 푸시 알림 | ✅ | ⚠️ | ⚠️ | ✅ |
+| 백그라운드 동기화 | ✅ | ❌ | ❌ | ✅ |
+| 자동 설치 프롬프트 | ✅ | ❌ | ✅ | ✅ |
+
+---
+
+## 🐛 문제 해결
+
+### **"설치" 버튼이 안 보여요**
+```
+1. HTTPS 확인 (localhost는 가능)
+2. manifest.json 문법 확인
+3. Service Worker 등록 확인
+4. 아이콘 파일 존재 확인
+```
+
+### **iOS에서 앱이 이상해요**
+```
+1. statusBarStyle: "black-translucent" 확인
+2. viewport-fit="cover" 확인
+3. Safe Area 고려한 디자인
+```
+
+### **오프라인이 안 돼요**
+```
+1. Service Worker 등록 확인
+2. Cache API 작동 확인
+3. Network First 전략 확인
+```
+
+---
+
+## 📚 추가 자료
+
+- [web.dev - PWA](https://web.dev/progressive-web-apps/)
+- [MDN - PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
+- [Can I Use - PWA](https://caniuse.com/?search=pwa)

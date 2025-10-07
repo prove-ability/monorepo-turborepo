@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import AppLayout from "@/components/AppLayout";
+import PWAInstaller from "@/components/PWAInstaller";
 import { ToastProvider } from "@/contexts/ToastContext";
 import "./globals.css";
 import "driver.js/dist/driver.css";
@@ -15,8 +16,9 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "주식 투자 게임",
+  title: "크라우드 랭크 - 주식 투자 게임",
   description: "학생용 주식 투자 시뮬레이션 게임",
+  manifest: "/manifest.json",
   viewport: {
     width: "device-width",
     initialScale: 1,
@@ -27,8 +29,17 @@ export const metadata: Metadata = {
   themeColor: "#3B82F6",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
-    title: "주식 투자 게임"
+    statusBarStyle: "black-translucent",
+    title: "크라우드랭크"
+  },
+  icons: {
+    icon: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ]
   }
 };
 
@@ -44,6 +55,7 @@ export default function RootLayout({
       >
         <ToastProvider>
           <AppLayout>{children}</AppLayout>
+          <PWAInstaller />
         </ToastProvider>
       </body>
     </html>
