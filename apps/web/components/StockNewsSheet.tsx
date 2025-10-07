@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, TrendingUp, TrendingDown, Newspaper } from "lucide-react";
+import { TrendingUp, TrendingDown, Newspaper } from "lucide-react";
+import BottomSheet from "./BottomSheet";
 import {
   Line,
   Area,
@@ -17,23 +16,22 @@ import {
 } from "recharts";
 import { getStockHistory, StockHistoryData } from "@/actions/stockHistory";
 
-interface StockDetailSheetProps {
+interface StockNewsSheetProps {
   isOpen: boolean;
   onClose: () => void;
   stockId: string;
   stockName: string;
 }
 
-export default function StockDetailSheet({
+export default function StockNewsSheet({
   isOpen,
   onClose,
   stockId,
   stockName,
-}: StockDetailSheetProps) {
+}: StockNewsSheetProps) {
   const [data, setData] = useState<StockHistoryData | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedNews, setSelectedNews] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
 
   const handleNewsClick = (newsId: string) => {
@@ -49,32 +47,11 @@ export default function StockDetailSheet({
   };
 
   useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  useEffect(() => {
     if (isOpen && stockId) {
       loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, stockId]);
-
-  // 배경 스크롤 막기
-  useEffect(() => {
-    if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = "100%";
-
-      return () => {
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-        window.scrollTo(0, scrollY);
-      };
-    }
-  }, [isOpen]);
 
   const loadData = async () => {
     console.log("🔍 Loading stock history for:", stockId, stockName);
@@ -91,79 +68,47 @@ export default function StockDetailSheet({
     }
   };
 
-  if (!mounted) return null;
+  const headerContent = data ? (
+    <div>
+      <h2 className="text-xl font-bold text-gray-900">{stockName}</h2>
+      <div className="flex items-center gap-2 mt-1">
+        <span className="text-2xl font-bold text-gray-900">
+          {data.currentPrice.toLocaleString()}원
+        </span>
+        {data.priceHistory.length > 1 &&
+          data.priceHistory[data.priceHistory.length - 1] && (
+            <span
+              className={`text-sm font-semibold flex items-center gap-1 ${
+                data.priceHistory[data.priceHistory.length - 1]!.change >= 0
+                  ? "text-red-600"
+                  : "text-blue-600"
+              }`}
+            >
+              {data.priceHistory[data.priceHistory.length - 1]!.change >= 0 ? (
+                <TrendingUp className="w-4 h-4" />
+              ) : (
+                <TrendingDown className="w-4 h-4" />
+              )}
+              {data.priceHistory[
+                data.priceHistory.length - 1
+              ]!.changePercent.toFixed(2)}
+              %
+            </span>
+          )}
+      </div>
+    </div>
+  ) : (
+    <h2 className="text-xl font-bold text-gray-900">{stockName}</h2>
+  );
 
-  return createPortal(
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-[100]"
-          />
-
-          {/* Bottom Sheet */}
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[101] flex flex-col"
-            style={{
-              bottom: 0,
-              maxHeight: "66.67vh",
-              maxWidth: "640px",
-              margin: "0 auto",
-            }}
-          >
-            {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">{stockName}</h2>
-                {data && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-2xl font-bold text-gray-900">
-                      {data.currentPrice.toLocaleString()}원
-                    </span>
-                    {data.priceHistory.length > 1 &&
-                      data.priceHistory[data.priceHistory.length - 1] && (
-                        <span
-                          className={`text-sm font-semibold flex items-center gap-1 ${
-                            data.priceHistory[data.priceHistory.length - 1]!
-                              .change >= 0
-                              ? "text-red-600"
-                              : "text-blue-600"
-                          }`}
-                        >
-                          {data.priceHistory[data.priceHistory.length - 1]!
-                            .change >= 0 ? (
-                            <TrendingUp className="w-4 h-4" />
-                          ) : (
-                            <TrendingDown className="w-4 h-4" />
-                          )}
-                          {data.priceHistory[
-                            data.priceHistory.length - 1
-                          ]!.changePercent.toFixed(2)}
-                          %
-                        </span>
-                      )}
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+  return (
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      headerContent={headerContent}
+      maxHeight="66.67vh"
+    >
+      <div className="px-2">
               {loading && (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -330,10 +275,8 @@ export default function StockDetailSheet({
                       </h3>
                       <div className="space-y-3">
                         {data.relatedNews.map((newsItem) => (
-                          <motion.div
+                          <div
                             key={newsItem.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
                             className={`bg-white border rounded-xl p-4 transition-all cursor-pointer ${
                               selectedNews === newsItem.id
                                 ? "border-yellow-400 bg-yellow-50"
@@ -351,21 +294,14 @@ export default function StockDetailSheet({
                                 <h4 className="font-semibold text-gray-900 text-sm">
                                   {newsItem.title}
                                 </h4>
-                                <AnimatePresence>
-                                  {selectedNews === newsItem.id && (
-                                    <motion.p
-                                      initial={{ height: 0, opacity: 0 }}
-                                      animate={{ height: "auto", opacity: 1 }}
-                                      exit={{ height: 0, opacity: 0 }}
-                                      className="text-sm text-gray-600 mt-2 overflow-hidden"
-                                    >
-                                      {newsItem.content}
-                                    </motion.p>
-                                  )}
-                                </AnimatePresence>
+                                {selectedNews === newsItem.id && (
+                                  <p className="text-sm text-gray-600 mt-2">
+                                    {newsItem.content}
+                                  </p>
+                                )}
                               </div>
                             </div>
-                          </motion.div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -378,11 +314,7 @@ export default function StockDetailSheet({
                   )}
                 </div>
               )}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>,
-    document.body
+      </div>
+    </BottomSheet>
   );
 }

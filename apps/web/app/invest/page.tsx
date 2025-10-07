@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { getStocksForInvest } from "@/actions/stocks";
 import { getTransactionHistory, TransactionItem } from "@/actions/transactions";
 import TradeBottomSheet from "@/components/TradeBottomSheet";
-import NewsBottomSheet from "@/components/NewsBottomSheet";
-import StockDetailSheet from "@/components/StockDetailSheet";
+import StockNewsSheet from "@/components/StockNewsSheet";
 import StockListSkeleton from "@/components/StockListSkeleton";
 import TransactionListSkeleton from "@/components/TransactionListSkeleton";
 import PageLoading from "@/components/PageLoading";
@@ -41,10 +40,6 @@ export default function InvestPage() {
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [showHistoryGuide, setShowHistoryGuide] = useState(true);
   const [newsStock, setNewsStock] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-  const [detailStock, setDetailStock] = useState<{
     id: string;
     name: string;
   } | null>(null);
@@ -510,9 +505,7 @@ export default function InvestPage() {
               return (
                 <div
                   key={stock.id}
-                  onClick={() =>
-                    setDetailStock({ id: stock.id, name: stock.name })
-                  }
+                  onClick={() => setSelectedStock(stock)}
                   className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -523,7 +516,10 @@ export default function InvestPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setNewsStock({ id: stock.id, name: stock.name });
+                              setNewsStock({
+                                id: stock.id,
+                                name: stock.name,
+                              });
                             }}
                             className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold hover:bg-blue-100 transition-colors"
                           >
@@ -618,35 +614,21 @@ export default function InvestPage() {
         )}
 
         {/* Trade Bottom Sheet */}
-        {selectedStock && (
-          <div className="fixed inset-0 z-10 bg-black bg-opacity-50">
-            <TradeBottomSheet
-              stock={selectedStock}
-              balance={balance}
-              currentDay={currentDay}
-              onClose={() => setSelectedStock(null)}
-              onTradeSuccess={handleTradeSuccess}
-            />
-          </div>
-        )}
+        <TradeBottomSheet
+          stock={selectedStock}
+          balance={balance}
+          currentDay={currentDay}
+          onClose={() => setSelectedStock(null)}
+          onTradeSuccess={handleTradeSuccess}
+        />
 
-        {/* News Bottom Sheet */}
+        {/* Stock News Sheet */}
         {newsStock && (
-          <NewsBottomSheet
+          <StockNewsSheet
             stockId={newsStock.id}
             stockName={newsStock.name}
             isOpen={!!newsStock}
             onClose={() => setNewsStock(null)}
-          />
-        )}
-
-        {/* Stock Detail Sheet */}
-        {detailStock && (
-          <StockDetailSheet
-            stockId={detailStock.id}
-            stockName={detailStock.name}
-            isOpen={!!detailStock}
-            onClose={() => setDetailStock(null)}
           />
         )}
       </div>

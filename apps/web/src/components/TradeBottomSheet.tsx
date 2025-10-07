@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { buyStock, sellStock } from "@/actions/trades";
 import { useToast } from "@/contexts/ToastContext";
+import BottomSheet from "@/components/BottomSheet";
 
 interface Stock {
   id: string;
@@ -97,25 +98,14 @@ export default function TradeBottomSheet({
   };
 
   return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-
-      {/* Bottom Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 max-h-[80vh] overflow-y-auto">
-        <div className="p-4">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">{stock.name}</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Current Price */}
+    <BottomSheet
+      isOpen={!!stock}
+      onClose={onClose}
+      title={stock.name}
+      maxHeight="66.67vh"
+    >
+      <div className="px-0">
+        {/* Current Price */}
           <div className="mb-4 p-4 bg-gray-50 rounded-lg">
             <div className="text-sm text-gray-600 mb-1">현재가</div>
             <div className="flex items-baseline gap-2">
@@ -260,8 +250,7 @@ export default function TradeBottomSheet({
           >
             {isPending ? "처리 중..." : tradeType === "buy" ? "매수" : "매도"}
           </button>
-        </div>
       </div>
-    </>
+    </BottomSheet>
   );
 }
