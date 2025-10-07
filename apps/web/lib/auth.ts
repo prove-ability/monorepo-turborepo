@@ -8,10 +8,14 @@ export interface User {
   classId: string;
 }
 
+export type VerifyResult = 
+  | { success: true; user: User }
+  | { success: false; reason: "invalid_credentials" | "class_ended" };
+
 export async function verifyCredentials(
   loginId: string,
   password: string
-): Promise<User | null> {
+): Promise<VerifyResult> {
   try {
     const user = await db.query.guests.findFirst({
       where: and(
@@ -24,23 +28,26 @@ export async function verifyCredentials(
     });
 
     if (!user) {
-      return null;
+      return { success: false, reason: "invalid_credentials" };
     }
 
     // 클래스가 종료된 경우 로그인 불가
     if (user.class?.status === "ended") {
       console.log("Login blocked: Class has ended");
-      return null;
+      return { success: false, reason: "class_ended" };
     }
 
     return {
-      id: user.id,
-      name: user.name,
-      loginId: user.loginId,
-      classId: user.classId,
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        loginId: user.loginId,
+        classId: user.classId,
+      },
     };
   } catch (error) {
     console.error("Login error:", error);
-    return null;
+    return { success: false, reason: "invalid_credentials" };
   }
 }

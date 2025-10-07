@@ -18,12 +18,7 @@ export default function LoginPage() {
       const result = await login(formData);
 
       if (result?.error) {
-        // 클래스 종료 메시지 처리
-        if (result.error.includes("종료")) {
-          setError("이 클래스는 이미 종료되었습니다. 관리자에게 문의하세요.");
-        } else {
-          setError(result.error);
-        }
+        setError(result.error);
         setLoading(false);
       } else if (result?.success) {
         // 로그인 성공 시 setup 페이지로 리다이렉트
