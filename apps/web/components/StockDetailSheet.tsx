@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, TrendingUp, TrendingDown, Newspaper } from "lucide-react";
 import { LineChart, Line, Area, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from "recharts";
@@ -17,6 +18,12 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
   const [data, setData] = useState<StockHistoryData | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedNews, setSelectedNews] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   useEffect(() => {
     if (isOpen && stockId) {
@@ -48,9 +55,9 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
     setLoading(false);
   };
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -265,6 +272,7 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
