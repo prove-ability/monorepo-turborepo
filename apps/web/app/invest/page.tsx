@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { getStocksForInvest } from "@/actions/stocks";
 import { getTransactionHistory, TransactionItem } from "@/actions/transactions";
 import TradeBottomSheet from "@/components/TradeBottomSheet";
@@ -35,6 +36,9 @@ const COUNTRY_NAMES: Record<string, string> = {
 };
 
 export default function InvestPage() {
+  const searchParams = useSearchParams();
+  const filterParam = searchParams.get("filter");
+  
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [balance, setBalance] = useState<number>(0);
   const [currentDay, setCurrentDay] = useState<number>(1);
@@ -42,7 +46,9 @@ export default function InvestPage() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"stocks" | "history">("stocks");
-  const [showOnlyHoldings, setShowOnlyHoldings] = useState(false);
+  const [showOnlyHoldings, setShowOnlyHoldings] = useState(
+    filterParam === "holdings"
+  );
   const [totalProfit, setTotalProfit] = useState<number>(0);
   const [totalProfitRate, setTotalProfitRate] = useState<number>(0);
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);

@@ -213,7 +213,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-700">보유 주식</h3>
             <Link
-              href="/invest"
+              href="/invest?filter=holdings"
               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
               상세보기 →
