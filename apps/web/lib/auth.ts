@@ -8,7 +8,7 @@ export interface User {
   classId: string;
 }
 
-export type VerifyResult = 
+export type VerifyResult =
   | { success: true; user: User }
   | { success: false; reason: "invalid_credentials" | "class_not_active" };
 
@@ -18,10 +18,7 @@ export async function verifyCredentials(
 ): Promise<VerifyResult> {
   try {
     const user = await db.query.guests.findFirst({
-      where: and(
-        eq(guests.loginId, loginId),
-        eq(guests.password, password)
-      ),
+      where: and(eq(guests.loginId, loginId), eq(guests.password, password)),
       with: {
         class: true,
       },
