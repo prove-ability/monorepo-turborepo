@@ -276,6 +276,70 @@ export const updateClassCurrentDay = withAuth(
   }
 );
 
+// 클래스 상태 변경 (설정 -> 진행, 진행 -> 종료)
+export const updateClassStatus = withAuth(
+  async (user, classId: string, newStatus: "active" | "ended") => {
+    try {
+      // 현재 상태 확인
+      const currentClass = await db.query.classes.findFirst({
+        where: eq(classes.id, classId),
+      });
+
+      if (!currentClass) {
+        return { success: false, error: "클래스를 찾을 수 없습니다." };
+      }
+
+      if (currentClass.createdBy !== user.id) {
+        return { success: false, error: "권한이 없습니다." };
+      }
+
+      // 상태 변경 유효성 검사
+      if (currentClass.status === "setting" && newStatus !== "active") {
+        return { 
+          success: false, 
+          error: "설정 중인 클래스는 진행 상태로만 변경할 수 있습니다." 
+        };
+      }
+
+      if (currentClass.status === "active" && newStatus !== "ended") {
+        return { 
+          success: false, 
+          error: "진행 중인 클래스는 종료 상태로만 변경할 수 있습니다." 
+        };
+      }
+
+      if (currentClass.status === "ended") {
+        return { 
+          success: false, 
+          error: "이미 종료된 클래스는 상태를 변경할 수 없습니다." 
+        };
+      }
+
+      // 상태 업데이트
+      await db
+        .update(classes)
+        .set({ status: newStatus })
+        .where(eq(classes.id, classId));
+
+      revalidatePath("/admin/classes");
+      
+      const statusText = newStatus === "active" ? "진행 중" : "종료";
+      return { 
+        success: true, 
+        message: `클래스 상태가 '${statusText}'로 변경되었습니다.` 
+      };
+    } catch (e) {
+      const error =
+        e instanceof Error ? e : new Error("An unknown error occurred");
+      console.error("클래스 상태 변경 실패:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+);
+
 // Day 증가 + 모든 게스트에게 지원금 지급
 export const incrementDayAndPayAllowance = withAuth(
   async (user, classId: string) => {
