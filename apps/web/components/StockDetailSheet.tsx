@@ -233,12 +233,15 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                               key={news.id}
                               x={news.day}
                               y={pricePoint.price}
-                              r={isSelected ? 12 : 8}
+                              r={10}
                               fill={isSelected ? "#F59E0B" : "#FBBF24"}
                               stroke="#FFFFFF"
-                              strokeWidth={isSelected ? 3 : 2}
+                              strokeWidth={2}
                               onClick={() => handleNewsClick(news.id)}
-                              style={{ cursor: "pointer" }}
+                              style={{ 
+                                cursor: "pointer",
+                                animation: isSelected ? "heartbeat 1s ease-in-out infinite" : "none"
+                              }}
                             />
                           );
                         })}

@@ -30,3 +30,19 @@ a, button, input, select, textarea {
   background-color: rgba(59, 130, 246, 0.3);
   color: inherit;
 }
+
+/* 심장 박동 애니메이션 */
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
