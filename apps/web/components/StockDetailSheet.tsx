@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, TrendingUp, TrendingDown, Newspaper } from "lucide-react";
@@ -19,6 +19,19 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
   const [loading, setLoading] = useState(false);
   const [selectedNews, setSelectedNews] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  const handleNewsClick = (newsId: string) => {
+    setSelectedNews(selectedNews === newsId ? null : newsId);
+    
+    // 차트로 스크롤
+    if (chartRef.current) {
+      chartRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+      });
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -145,7 +158,7 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
               {!loading && data && (
                 <div className="space-y-6">
                   {/* Chart */}
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4">
+                  <div ref={chartRef} className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4">
                     <h3 className="text-sm font-semibold text-gray-700 mb-4">가격 추이</h3>
                     <ResponsiveContainer width="100%" height={200}>
                       <ComposedChart data={data.priceHistory}>
@@ -211,16 +224,17 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                         {data.relatedNews.map((news) => {
                           const pricePoint = data.priceHistory.find(p => p.day === news.day);
                           if (!pricePoint) return null;
+                          const isSelected = selectedNews === news.id;
                           return (
                             <ReferenceDot
                               key={news.id}
                               x={news.day}
                               y={pricePoint.price}
-                              r={8}
-                              fill="#F59E0B"
+                              r={isSelected ? 12 : 8}
+                              fill={isSelected ? "#F59E0B" : "#FBBF24"}
                               stroke="#FFFFFF"
-                              strokeWidth={2}
-                              onClick={() => setSelectedNews(selectedNews === news.id ? null : news.id)}
+                              strokeWidth={isSelected ? 3 : 2}
+                              onClick={() => handleNewsClick(news.id)}
                               style={{ cursor: "pointer" }}
                             />
                           );
@@ -247,7 +261,7 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                                 ? "border-yellow-400 bg-yellow-50" 
                                 : "border-gray-200 hover:border-gray-300"
                             }`}
-                            onClick={() => setSelectedNews(selectedNews === newsItem.id ? null : newsItem.id)}
+                            onClick={() => handleNewsClick(newsItem.id)}
                           >
                             <div className="flex items-start gap-3">
                               <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
