@@ -24,14 +24,16 @@ export function BottomNav() {
       <div className="grid grid-cols-4 h-full relative" role="tablist">
         {navItems.map((item, index) => {
           const isActive = pathname === item.href;
+          const MotionLink = motion(Link);
           return (
-            <Link
+            <MotionLink
               key={item.label}
               href={item.href}
               role="tab"
               aria-selected={isActive}
               aria-label={`${item.label} 페이지`}
               className="flex flex-col items-center justify-center w-full h-16 relative focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+              whileTap={{ scale: 0.95 }}
             >
               {isActive && (
                 <motion.div
@@ -40,17 +42,13 @@ export function BottomNav() {
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
-              <motion.div
-                className={`flex flex-col items-center justify-center relative z-10 ${
-                  isActive ? "text-blue-600" : "text-gray-500"
-                }`}
-                whileTap={{ scale: 0.9 }}
-                animate={{ scale: isActive ? 1 : 1 }}
-              >
+              <div className={`flex flex-col items-center justify-center relative z-10 ${
+                isActive ? "text-blue-600" : "text-gray-500"
+              }`}>
                 <item.icon className="w-6 h-6 mb-1" strokeWidth={isActive ? 2 : 1} aria-hidden="true" />
                 <span className="text-xs font-medium">{item.label}</span>
-              </motion.div>
-            </Link>
+              </div>
+            </MotionLink>
           );
         })}
       </div>
