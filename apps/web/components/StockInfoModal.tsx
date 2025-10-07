@@ -20,6 +20,14 @@ interface StockInfoModalProps {
   onClose: () => void;
 }
 
+// 국가 코드 매핑
+const COUNTRY_NAMES: Record<string, string> = {
+  KR: "대한민국",
+  US: "미국",
+  JP: "일본",
+  CN: "중국",
+};
+
 export default function StockInfoModal({
   stockId,
   stockName,
@@ -111,7 +119,7 @@ export default function StockInfoModal({
               <div className="flex justify-between items-center px-5 py-4">
                 <span className="text-sm text-gray-600">시장</span>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                  {stockInfo.marketCountryCode}
+                  {COUNTRY_NAMES[stockInfo.marketCountryCode] || stockInfo.marketCountryCode}
                 </span>
               </div>
             </div>

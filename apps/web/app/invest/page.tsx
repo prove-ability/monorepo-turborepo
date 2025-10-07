@@ -26,6 +26,14 @@ interface Stock {
   newsCount: number;
 }
 
+// 국가 코드 매핑
+const COUNTRY_NAMES: Record<string, string> = {
+  KR: "대한민국",
+  US: "미국",
+  JP: "일본",
+  CN: "중국",
+};
+
 export default function InvestPage() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [balance, setBalance] = useState<number>(0);
@@ -529,7 +537,7 @@ export default function InvestPage() {
                         )}
                       </div>
                       <p className="text-xs text-gray-500">
-                        {stock.marketCountryCode}
+                        {COUNTRY_NAMES[stock.marketCountryCode] || stock.marketCountryCode}
                       </p>
                     </div>
                     <div className="text-right">
