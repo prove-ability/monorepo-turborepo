@@ -163,7 +163,12 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                         />
                         <YAxis 
                           tick={{ fontSize: 12 }}
-                          tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+                          tickFormatter={(value) => {
+                            if (value >= 10000) {
+                              return `${(value / 10000).toFixed(0)}만원`;
+                            }
+                            return `${value.toLocaleString()}원`;
+                          }}
                         />
                         <Tooltip 
                           content={({ active, payload }) => {
