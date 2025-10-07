@@ -239,7 +239,9 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                                   fill="#F59E0B"
                                   stroke="none"
                                   style={{ 
-                                    animation: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite"
+                                    animation: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
+                                    transformBox: "fill-box",
+                                    transformOrigin: "center"
                                   }}
                                 />
                               )}
