@@ -130,7 +130,7 @@ export default function InvestPage() {
       <div className="max-w-4xl mx-auto p-4">
         <PageHeader
           title="투자"
-          description={`현재 Day ${currentDay} 진행 중`}
+          description={`Day ${currentDay} 진행 중! 뉴스를 보고 투자해보세요`}
           icon={<TrendingUp className="h-7 w-7 text-blue-600" />}
         />
 
@@ -537,7 +537,8 @@ export default function InvestPage() {
                         )}
                       </div>
                       <p className="text-xs text-gray-500">
-                        {COUNTRY_NAMES[stock.marketCountryCode] || stock.marketCountryCode}
+                        {COUNTRY_NAMES[stock.marketCountryCode] ||
+                          stock.marketCountryCode}
                       </p>
                     </div>
                     <div className="text-right">
@@ -572,7 +573,7 @@ export default function InvestPage() {
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <div className="flex justify-between text-sm">
                         <div>
-                          <span className="text-gray-600">보유: </span>
+                          <span className="text-gray-600">보유 수량: </span>
                           <span className="font-semibold">
                             {stock.holdingQuantity}주
                           </span>
@@ -586,7 +587,7 @@ export default function InvestPage() {
                       </div>
                       <div className="flex justify-between text-sm mt-1">
                         <div>
-                          <span className="text-gray-600">평균단가: </span>
+                          <span className="text-gray-600">평균 단가: </span>
                           <span className="font-semibold">
                             {stock.averagePurchasePrice.toLocaleString()}원
                           </span>
