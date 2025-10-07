@@ -158,8 +158,9 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                         <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                         <XAxis 
                           dataKey="day" 
-                          label={{ value: "Day", position: "insideBottom", offset: -5 }}
+                          label={{ value: "Day", position: "insideBottom", offset: 0 }}
                           tick={{ fontSize: 12 }}
+                          height={50}
                         />
                         <YAxis 
                           tick={{ fontSize: 12 }}
