@@ -47,7 +47,8 @@ export default function BenefitNotificationBanner({
     setIsVisible(false);
   };
 
-  if (!benefit || !isVisible) return null;
+  // Day 1이거나 benefit이 없거나 보이지 않으면 표시하지 않음
+  if (!benefit || !isVisible || benefit.day === 1) return null;
 
   return (
     <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-4 shadow-md animate-slide-down">
