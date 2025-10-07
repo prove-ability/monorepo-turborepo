@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { stackServerApp } from "@/stack/server";
 import type { User } from "@stackframe/stack";
 

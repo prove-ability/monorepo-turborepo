@@ -48,7 +48,7 @@ interface CreateUserData {
   nickname?: string;
 }
 
-interface UpdateUserData extends Partial<CreateUserData> {}
+type UpdateUserData = Partial<CreateUserData>;
 
 const createUserSchema = z.object({
   email: z.string().email(),

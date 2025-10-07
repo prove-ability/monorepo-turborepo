@@ -4,6 +4,7 @@ import * as RechartsPrimitive from "recharts";
 import { cn } from "@repo/utils";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const THEMES = { light: "" } as const;
 
 export type ChartConfig = {

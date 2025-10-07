@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Calendar } from "lucide-react";
 import { createGameDay, type GameData } from "@/actions/gameActions";
 import { Stock, News } from "@/types";
-import { getNews, updateNews, deleteNews } from "@/actions/newsActions";
+import { getNews, deleteNews } from "@/actions/newsActions";
 
 interface GameDayManagementProps {
   selectedClass: string;
@@ -50,6 +50,7 @@ export default function GameDayManagement({
   useEffect(() => {
     resetForm();
     loadExistingNews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClass, selectedDay]);
 
   const loadExistingNews = async () => {
@@ -130,31 +131,6 @@ export default function GameDayManagement({
 
   const resetForm = () => {
     setNewsItems([{ title: "", content: "", relatedStockIds: [] }]);
-  };
-
-  const handleUpdateNews = async (
-    newsId: string,
-    updatedData: Partial<News>
-  ) => {
-    setEditingNewsId(newsId);
-    try {
-      await updateNews({
-        id: newsId,
-        day: selectedDay,
-        title: updatedData.title || "",
-        content: updatedData.content || "",
-        relatedStockIds: updatedData.relatedStockIds || [],
-        classId: selectedClass,
-      });
-      await loadExistingNews();
-      onRefresh();
-      alert("뉴스가 성공적으로 수정되었습니다!");
-    } catch (error) {
-      console.error("뉴스 수정 실패:", error);
-      alert("뉴스 수정에 실패했습니다.");
-    } finally {
-      setEditingNewsId(null);
-    }
   };
 
   const handleDeleteNews = async (newsId: string) => {

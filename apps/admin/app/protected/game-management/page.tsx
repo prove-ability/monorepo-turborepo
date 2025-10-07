@@ -53,6 +53,7 @@ export default function GameManagementPage() {
       loadGameProgress();
       loadPrices();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClass, selectedDay]);
 
   const loadInitialData = async () => {
@@ -109,6 +110,7 @@ export default function GameManagementPage() {
       const first = classesOfClient[0];
       if (first) setSelectedClass(first.id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClientId, classes]);
 
   const loadGameProgress = async () => {

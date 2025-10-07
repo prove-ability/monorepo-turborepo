@@ -38,7 +38,7 @@ export function CreateClientModal({
     formData.append("name", data.name);
 
     try {
-      const result = await createClientAction(null, formData);
+      const result = await createClientAction(formData);
 
       if (result.success) {
         // 성공 메시지 표시

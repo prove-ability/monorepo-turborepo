@@ -76,29 +76,6 @@ export const createNews = withAuth(
   }
 );
 
-// 뉴스 수정
-export const updateNews = withAuth(
-  async (user, newsData: UpdateNewsData): Promise<News> => {
-    try {
-      const { id, ...updateData } = newsData;
-      const [data] = await db
-        .update(news)
-        .set({ ...updateData, updatedAt: new Date() })
-        .where(eq(news.id, id))
-        .returning();
-      if (!data) {
-        throw new Error("뉴스 수정 후 데이터 반환에 실패했습니다.");
-      }
-      revalidatePath("/game-management");
-      return data;
-    } catch (error) {
-      throw new Error(
-        `뉴스 수정 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`
-      );
-    }
-  }
-);
-
 // 뉴스 삭제
 export const deleteNews = withAuth(
   async (user, newsId: string): Promise<void> => {

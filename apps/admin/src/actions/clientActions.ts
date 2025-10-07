@@ -11,44 +11,56 @@ const clientSchema = z.object({
   name: z.string().min(1, { message: "고객사 이름은 필수 항목입니다." }),
 });
 
-export const createClientAction = withAuth(
-  async (user, prevState: any, formData: FormData) => {
-    const rawData = Object.fromEntries(formData.entries());
-    const validatedFields = clientSchema.safeParse(rawData);
+type FormState = {
+  errors?: { [key: string]: string[] };
+  message?: string;
+  success: boolean;
+  data?: unknown;
+};
 
-    if (!validatedFields.success) {
-      return {
-        errors: validatedFields.error.flatten().fieldErrors,
-        message: `입력 값에 오류가 있습니다.`,
-        success: false,
-      };
-    }
+export const createClientAction = withAuth(async (user, formData: FormData) => {
+  const rawData = Object.fromEntries(formData.entries());
+  const validatedFields = clientSchema.safeParse(rawData);
 
-    try {
-      const dataToInsert = {
-        name: validatedFields.data.name,
-        createdBy: user.id,
-      };
-      const [newClient] = await db
-        .insert(clients)
-        .values(dataToInsert)
-        .returning();
-      revalidatePath("/admin/clients");
-      return {
-        message: "고객사가 성공적으로 생성되었습니다.",
-        success: true,
-        data: newClient,
-      };
-    } catch (error: any) {
-      let errorMessage = "데이터베이스 오류";
-      if (error.code === "23505") errorMessage = "이미 존재하는 고객사입니다.";
-      return { message: errorMessage, success: false };
-    }
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: `입력 값에 오류가 있습니다.`,
+      success: false,
+    };
   }
-);
+
+  try {
+    const dataToInsert = {
+      name: validatedFields.data.name,
+      createdBy: user.id,
+    };
+    const [newClient] = await db
+      .insert(clients)
+      .values(dataToInsert)
+      .returning();
+    revalidatePath("/admin/clients");
+    return {
+      message: "고객사가 성공적으로 생성되었습니다.",
+      success: true,
+      data: newClient,
+    };
+  } catch (error: unknown) {
+    let errorMessage = "데이터베이스 오류";
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "23505"
+    ) {
+      errorMessage = "이미 존재하는 고객사입니다.";
+    }
+    return { message: errorMessage, success: false };
+  }
+});
 
 export const updateClientAction = withAuth(
-  async (_user, id: string, prevState: any, formData: FormData) => {
+  async (_user, id: string, prevState: FormState, formData: FormData) => {
     const rawData = Object.fromEntries(formData.entries());
     const validatedFields = clientSchema.safeParse(rawData);
 
@@ -68,6 +80,7 @@ export const updateClientAction = withAuth(
       revalidatePath("/admin/clients");
       return { message: "고객사가 성공적으로 수정되었습니다.", success: true };
     } catch (error) {
+      console.error("데이터베이스 오류:", error);
       return { message: "데이터베이스 오류", success: false };
     }
   }

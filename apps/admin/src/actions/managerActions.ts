@@ -42,10 +42,13 @@ export const createManager = withAuth(
 
       revalidatePath("/admin/clients");
       return { success: true, message: "매니저가 추가되었습니다.", data };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || "매니저 추가 중 오류가 발생했습니다.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "매니저 추가 중 오류가 발생했습니다.",
       };
     }
   }
@@ -66,13 +69,20 @@ export const updateManager = withAuth(
     }
 
     try {
-      const [data] = await db.update(managers).set(validation.data).where(eq(managers.id, managerId)).returning();
+      const [data] = await db
+        .update(managers)
+        .set(validation.data)
+        .where(eq(managers.id, managerId))
+        .returning();
       revalidatePath("/admin/clients");
       return { success: true, message: "매니저 정보가 수정되었습니다.", data };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: error.message || "매니저 정보 수정 중 오류가 발생했습니다.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "매니저 정보 수정 중 오류가 발생했습니다.",
       };
     }
   }
@@ -83,10 +93,13 @@ export const deleteManager = withAuth(async (user, managerId: string) => {
     await db.delete(managers).where(eq(managers.id, managerId));
     revalidatePath("/admin/clients");
     return { success: true, message: "매니저가 삭제되었습니다." };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      message: error.message || "매니저 삭제 중 오류가 발생했습니다.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "매니저 삭제 중 오류가 발생했습니다.",
     };
   }
 });
