@@ -7,6 +7,7 @@ import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import StockInfoModal from "@/components/StockInfoModal";
 
 interface NewsItem {
   id: string;
@@ -24,6 +25,10 @@ interface NewsItem {
 export default function NewsPage() {
   const [allNews, setAllNews] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedStock, setSelectedStock] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   useEffect(() => {
     loadNews();
@@ -106,12 +111,15 @@ export default function NewsPage() {
                   >
                     <div className="flex flex-wrap gap-2 mb-3">
                       {newsItem.relatedStocks.map((stock) => (
-                        <span
+                        <button
                           key={stock.id}
-                          className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded"
+                          onClick={() =>
+                            setSelectedStock({ id: stock.id, name: stock.name })
+                          }
+                          className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded hover:bg-blue-100 transition-colors cursor-pointer"
                         >
                           {stock.name}
-                        </span>
+                        </button>
                       ))}
                     </div>
                     <h4 className="font-bold text-gray-900 mb-2">
@@ -127,6 +135,16 @@ export default function NewsPage() {
           </div>
         )}
       </div>
+
+      {/* Stock Info Modal */}
+      {selectedStock && (
+        <StockInfoModal
+          stockId={selectedStock.id}
+          stockName={selectedStock.name}
+          isOpen={!!selectedStock}
+          onClose={() => setSelectedStock(null)}
+        />
+      )}
     </div>
   );
 }

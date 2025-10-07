@@ -293,3 +293,72 @@ export const getStocksForInvest = withAuth(async (user) => {
     };
   }
 });
+
+// 단일 주식 정보 조회
+export const getStockById = withAuth(async (user, stockId: string) => {
+  try {
+    // 클래스 정보 조회
+    const classInfo = await db.query.classes.findFirst({
+      where: eq(classes.id, user.classId),
+      columns: { currentDay: true },
+    });
+
+    if (!classInfo || classInfo.currentDay === null) {
+      return null;
+    }
+
+    const currentDay = classInfo.currentDay;
+
+    // 주식 정보 조회
+    const stock = await db.query.stocks.findFirst({
+      where: eq(stocks.id, stockId),
+    });
+
+    if (!stock) {
+      return null;
+    }
+
+    // 현재 Day의 가격 조회
+    const currentPrice = await db.query.classStockPrices.findFirst({
+      where: and(
+        eq(classStockPrices.classId, user.classId),
+        eq(classStockPrices.stockId, stockId),
+        eq(classStockPrices.day, currentDay)
+      ),
+    });
+
+    // 전날 가격 조회 (등락률 계산용)
+    const previousPrice =
+      currentDay > 1
+        ? await db.query.classStockPrices.findFirst({
+            where: and(
+              eq(classStockPrices.classId, user.classId),
+              eq(classStockPrices.stockId, stockId),
+              eq(classStockPrices.day, currentDay - 1)
+            ),
+          })
+        : null;
+
+    const currentPriceValue = parseFloat(currentPrice?.price || "0");
+    const previousPriceValue = parseFloat(previousPrice?.price || "0");
+
+    const change =
+      previousPriceValue > 0 ? currentPriceValue - previousPriceValue : 0;
+    const changeRate =
+      previousPriceValue > 0 ? (change / previousPriceValue) * 100 : 0;
+
+    return {
+      id: stock.id,
+      name: stock.name,
+      currentPrice: currentPriceValue,
+      change,
+      changeRate,
+      marketCountryCode: stock.marketCountryCode,
+      industrySector: stock.industrySector,
+      remarks: stock.remarks,
+    };
+  } catch (error) {
+    console.error("Error fetching stock info:", error);
+    return null;
+  }
+});
