@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getAllNews } from "@/actions/news";
 import { Newspaper } from "lucide-react";
 import PageLoading from "@/components/PageLoading";
@@ -8,47 +9,31 @@ import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import StockInfoModal from "@/components/StockInfoModal";
+import { News, Stock } from "@/types";
 
-interface NewsItem {
-  id: string;
-  day: number | null;
-  title: string | null;
-  content: string | null;
-  relatedStockIds: unknown;
-  createdAt: Date;
-  relatedStocks: Array<{
-    id: string;
-    name: string;
-  }>;
+interface NewsItem extends News {
+  relatedStocks: Pick<Stock, "id" | "name">[];
 }
 
 export default function NewsPage() {
-  const [allNews, setAllNews] = useState<NewsItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedStock, setSelectedStock] = useState<{
     id: string;
     name: string;
   } | null>(null);
 
-  useEffect(() => {
-    loadNews();
-  }, []);
-
-  const loadNews = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getAllNews();
-      setAllNews(data);
-    } catch (error) {
-      console.error("Failed to load news:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // React Query로 뉴스 데이터 가져오기
+  const {
+    data: allNews = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["news"],
+    queryFn: getAllNews,
+  });
 
   // Pull-to-refresh 기능
   const { isRefreshing } = usePullToRefresh(async () => {
-    await loadNews();
+    await refetch();
   });
 
   if (isLoading) {
@@ -72,15 +57,7 @@ export default function NewsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Pull-to-refresh 인디케이터 */}
-      {isRefreshing && (
-        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4">
-          <div className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm font-medium">새로고침 중...</span>
-          </div>
-        </div>
-      )}
+      {isRefreshing && <PageLoading />}
       <div className="max-w-4xl mx-auto p-4">
         <PageHeader
           title="뉴스"

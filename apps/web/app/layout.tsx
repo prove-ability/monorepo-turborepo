@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import AppLayout from "@/components/AppLayout";
 import PWAInstaller from "@/components/PWAInstaller";
 import { ToastProvider } from "@/contexts/ToastContext";
+import QueryProvider from "@/contexts/QueryProvider";
 import "./globals.css";
 import "driver.js/dist/driver.css";
 
@@ -68,10 +69,12 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className="bg-gray-200">
-        <ToastProvider>
-          <AppLayout>{children}</AppLayout>
-          <PWAInstaller />
-        </ToastProvider>
+        <QueryProvider>
+          <ToastProvider>
+            <AppLayout>{children}</AppLayout>
+            <PWAInstaller />
+          </ToastProvider>
+        </QueryProvider>
       </body>
     </html>
   );

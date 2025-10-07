@@ -1,6 +1,4 @@
-export interface Stock {
-  current_price: number | null;
-}
+import { Stock } from "./stocks";
 
 export interface Holding {
   quantity: number;
