@@ -229,20 +229,32 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                           if (!pricePoint) return null;
                           const isSelected = selectedNews === news.id;
                           return (
-                            <ReferenceDot
-                              key={news.id}
-                              x={news.day}
-                              y={pricePoint.price}
-                              r={10}
-                              fill={isSelected ? "#F59E0B" : "#FBBF24"}
-                              stroke="#FFFFFF"
-                              strokeWidth={2}
-                              onClick={() => handleNewsClick(news.id)}
-                              style={{ 
-                                cursor: "pointer",
-                                animation: isSelected ? "heartbeat 1s ease-in-out infinite" : "none"
-                              }}
-                            />
+                            <g key={news.id}>
+                              {/* Ping 효과 (선택 시) */}
+                              {isSelected && (
+                                <ReferenceDot
+                                  x={news.day}
+                                  y={pricePoint.price}
+                                  r={10}
+                                  fill="#F59E0B"
+                                  stroke="none"
+                                  style={{ 
+                                    animation: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite"
+                                  }}
+                                />
+                              )}
+                              {/* 실제 마커 */}
+                              <ReferenceDot
+                                x={news.day}
+                                y={pricePoint.price}
+                                r={8}
+                                fill={isSelected ? "#F59E0B" : "#FBBF24"}
+                                stroke="#FFFFFF"
+                                strokeWidth={2}
+                                onClick={() => handleNewsClick(news.id)}
+                                style={{ cursor: "pointer" }}
+                              />
+                            </g>
                           );
                         })}
                       </ComposedChart>

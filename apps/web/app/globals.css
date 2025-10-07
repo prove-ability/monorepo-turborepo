@@ -31,18 +31,10 @@ a, button, input, select, textarea {
   color: inherit;
 }
 
-/* 심장 박동 애니메이션 */
-@keyframes heartbeat {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  25% {
-    transform: scale(1.2);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1);
-    opacity: 1;
+/* Ping 애니메이션 (Tailwind 스타일) */
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
   }
 }
