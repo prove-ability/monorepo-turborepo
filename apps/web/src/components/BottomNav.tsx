@@ -6,10 +6,10 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 
 const navItems = [
-  { href: "/", icon: Home, label: "홈" },
-  { href: "/news", icon: Newspaper, label: "뉴스" },
-  { href: "/invest", icon: TrendingUp, label: "투자" },
-  { href: "/ranking", icon: Trophy, label: "랭킹" },
+  { href: "/", icon: Home, label: "홈", id: "nav-home" },
+  { href: "/news", icon: Newspaper, label: "뉴스", id: "nav-news" },
+  { href: "/invest", icon: TrendingUp, label: "투자", id: "nav-invest" },
+  { href: "/ranking", icon: Trophy, label: "랭킹", id: "nav-ranking" },
 ];
 
 export function BottomNav() {
@@ -28,6 +28,7 @@ export function BottomNav() {
           return (
             <MotionLink
               key={item.label}
+              id={item.id}
               href={item.href}
               role="tab"
               aria-selected={isActive}

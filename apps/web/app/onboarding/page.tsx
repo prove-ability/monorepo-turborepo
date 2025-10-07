@@ -14,37 +14,19 @@ const slides = [
       "매일 지원금을 받아 투자할 수 있어요",
       "실제 주식처럼 사고팔 수 있어요",
       "친구들과 수익률을 경쟁해보세요"
-    ]
+    ],
+    preview: "💰 지갑에서 잔액 확인 → 📈 투자 탭에서 거래 → 📰 뉴스로 시장 파악 → 🏆 랭킹에서 경쟁"
   },
   {
     icon: <TrendingUp className="w-16 h-16 text-green-600" />,
-    title: "주식 거래하기",
-    description: "투자 탭에서 원하는 주식을 사고팔 수 있습니다.",
+    title: "이제 시작해볼까요?",
+    description: "실제 화면을 보면서 하나씩 배워봐요!",
     details: [
-      "주식 목록에서 원하는 종목 선택",
-      "수량을 입력하고 매수/매도 버튼 클릭",
-      "내 보유 주식은 '보유 주식만' 필터로 확인"
-    ]
-  },
-  {
-    icon: <Newspaper className="w-16 h-16 text-orange-600" />,
-    title: "뉴스로 시장 읽기",
-    description: "매일 발표되는 뉴스를 확인하고 투자 전략을 세우세요.",
-    details: [
-      "뉴스는 주식 가격에 영향을 줘요",
-      "관련 주식을 클릭하면 거래 화면으로 이동",
-      "뉴스를 잘 읽고 투자하면 수익률이 올라가요"
-    ]
-  },
-  {
-    icon: <Trophy className="w-16 h-16 text-yellow-600" />,
-    title: "랭킹에서 경쟁하기",
-    description: "수익률을 기준으로 친구들과 경쟁해보세요!",
-    details: [
-      "상위 10명의 랭킹이 공개돼요",
-      "내 순위와 수익률을 확인할 수 있어요",
-      "최고 수익률을 목표로 도전해보세요"
-    ]
+      "각 기능을 직접 사용하면서 배울 수 있어요",
+      "언제든 건너뛸 수 있어요",
+      "준비되면 시작하기를 눌러주세요"
+    ],
+    preview: "✨ 다음 화면에서 상세한 가이드를 시작합니다"
   }
 ];
 
@@ -133,7 +115,7 @@ export default function OnboardingPage() {
               </p>
 
               {/* 상세 정보 */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
                 <ul className="space-y-4 text-left">
                   {slide.details.map((detail, index) => (
                     <motion.li
@@ -150,6 +132,18 @@ export default function OnboardingPage() {
                     </motion.li>
                   ))}
                 </ul>
+                
+                {/* 프리뷰 */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="pt-4 border-t border-gray-100"
+                >
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {slide.preview}
+                  </p>
+                </motion.div>
               </div>
             </motion.div>
           </AnimatePresence>
