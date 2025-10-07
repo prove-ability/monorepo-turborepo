@@ -74,14 +74,6 @@ export default function Home() {
           title="주식 투자 게임"
           description={`${dashboardData.userName}님, 반갑습니다`}
           icon={<HomeIcon className="h-7 w-7 text-blue-600" />}
-          action={
-            <button
-              onClick={handleLogout}
-              className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500"
-            >
-              로그아웃
-            </button>
-          }
         />
         {/* 지원금 알림 배너 */}
         <BenefitNotificationBanner benefit={dashboardData.latestBenefit} />

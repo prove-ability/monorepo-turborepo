@@ -7,13 +7,16 @@ interface PageHeaderProps {
   title: string;
   description?: string;
   icon?: ReactNode;
-  action?: ReactNode;
 }
 
-export default function PageHeader({ title, description, icon, action }: PageHeaderProps) {
+export default function PageHeader({
+  title,
+  description,
+  icon,
+}: PageHeaderProps) {
   return (
-    <motion.header 
-      className="mb-6" 
+    <motion.header
+      className="mb-6"
       role="banner"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -22,7 +25,7 @@ export default function PageHeader({ title, description, icon, action }: PageHea
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {icon && (
-            <motion.div 
+            <motion.div
               aria-hidden="true"
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
@@ -33,11 +36,10 @@ export default function PageHeader({ title, description, icon, action }: PageHea
           )}
           <h1 className="text-2xl font-bold">{title}</h1>
         </div>
-        {action && <div role="navigation" aria-label="페이지 액션">{action}</div>}
       </div>
       {description && (
-        <motion.p 
-          className="text-sm text-gray-600 mt-1" 
+        <motion.p
+          className="text-sm text-gray-600 mt-1"
           role="doc-subtitle"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
