@@ -28,18 +28,28 @@ export interface StockHistoryData {
 
 export async function getStockHistory(stockId: string): Promise<StockHistoryData | null> {
   try {
+    console.log("📊 getStockHistory called for stockId:", stockId);
+    
     const session = await getSession();
-    if (!session) return null;
+    if (!session) {
+      console.log("❌ No session found");
+      return null;
+    }
 
     const userClass = await db.query.guests.findFirst({
       where: (guests, { eq }) => eq(guests.id, session.id),
       with: { class: true }
     });
 
-    if (!userClass?.class) return null;
+    if (!userClass?.class) {
+      console.log("❌ No class found for user");
+      return null;
+    }
 
     const classId = userClass.classId;
     const currentDay = userClass.class.currentDay ?? 1;
+    
+    console.log("📌 Query params:", { classId, stockId, currentDay });
 
     const priceData = await db.query.classStockPrices.findMany({
       where: and(
@@ -51,7 +61,12 @@ export async function getStockHistory(stockId: string): Promise<StockHistoryData
       orderBy: (prices, { asc }) => [asc(prices.day)]
     });
 
-    if (priceData.length === 0) return null;
+    console.log("📈 Price data found:", priceData.length, "records");
+
+    if (priceData.length === 0) {
+      console.log("❌ No price data found for this stock");
+      return null;
+    }
 
     const priceHistory: StockPricePoint[] = priceData.map((item, index) => {
       const price = parseFloat(item.price ?? "0");
@@ -92,15 +107,23 @@ export async function getStockHistory(stockId: string): Promise<StockHistoryData
     
     if (!lastPrice || !firstData?.stock) return null;
 
-    return {
+    const result = {
       stockId,
       stockName: (firstData.stock as any).name,
       currentPrice: parseFloat(lastPrice.price ?? "0"),
       priceHistory,
       relatedNews
     };
+    
+    console.log("✅ Stock history loaded successfully:", {
+      stockName: result.stockName,
+      pricePoints: result.priceHistory.length,
+      newsCount: result.relatedNews.length
+    });
+    
+    return result;
   } catch (error) {
-    console.error("Failed to get stock history:", error);
+    console.error("❌ Failed to get stock history:", error);
     return null;
   }
 }

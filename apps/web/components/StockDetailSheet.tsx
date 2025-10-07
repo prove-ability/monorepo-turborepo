@@ -49,10 +49,18 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
   }, [isOpen]);
 
   const loadData = async () => {
+    console.log("🔍 Loading stock history for:", stockId, stockName);
     setLoading(true);
-    const result = await getStockHistory(stockId);
-    setData(result);
-    setLoading(false);
+    try {
+      const result = await getStockHistory(stockId);
+      console.log("📦 Stock history result:", result ? "Success" : "Failed");
+      setData(result);
+    } catch (error) {
+      console.error("💥 Error loading stock history:", error);
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!mounted) return null;
