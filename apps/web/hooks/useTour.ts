@@ -17,6 +17,9 @@ export function useTour() {
   }, []);
 
   const startTour = () => {
+    let currentStep = 0;
+    const totalSteps = 4;
+
     const driverObj = driver({
       showProgress: true,
       showButtons: ["next", "previous", "close"],
@@ -61,8 +64,21 @@ export function useTour() {
       nextBtnText: "다음",
       prevBtnText: "이전",
       doneBtnText: "완료",
-      onDestroyed: () => {
-        localStorage.setItem("tour_completed", "true");
+      onNextClick: () => {
+        currentStep++;
+        driverObj.moveNext();
+      },
+      onPrevClick: () => {
+        currentStep--;
+        driverObj.movePrevious();
+      },
+      onCloseClick: () => {
+        driverObj.destroy();
+      },
+      onDestroyStarted: () => {
+        if (currentStep >= totalSteps - 1) {
+          localStorage.setItem("tour_completed", "true");
+        }
       }
     });
 
