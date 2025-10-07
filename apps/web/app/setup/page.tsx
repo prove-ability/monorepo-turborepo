@@ -63,12 +63,7 @@ export default function SetupPage() {
     } else {
       setStep("complete");
       setTimeout(() => {
-        const onboardingCompleted = localStorage.getItem("onboarding_completed");
-        if (onboardingCompleted) {
-          router.push("/");
-        } else {
-          router.push("/onboarding");
-        }
+        router.push("/onboarding");
       }, 1500);
     }
   }
@@ -94,12 +89,7 @@ export default function SetupPage() {
 
     setStep("complete");
     setTimeout(() => {
-      const onboardingCompleted = localStorage.getItem("onboarding_completed");
-      if (onboardingCompleted) {
-        router.push("/");
-      } else {
-        router.push("/onboarding");
-      }
+      router.push("/onboarding");
     }, 1500);
   }
 
