@@ -172,17 +172,17 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 내 랭킹 */}
+        {/* 내 순위 */}
         {dashboardData.myRank && (
           <Link href="/ranking">
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer mb-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-1">
                     내 순위
                   </h3>
                   <p className="text-2xl font-bold text-blue-600">
-                    {dashboardData.myRank}위
+                    {dashboardData.myRank}등
                     <span className="text-sm font-normal text-gray-500 ml-2">
                       / {dashboardData.totalParticipants}명
                     </span>
@@ -242,8 +242,7 @@ export default function Home() {
                       {stock.stockName}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {stock.quantity}주 · 평균{" "}
-                      {stock.averagePrice.toLocaleString()}원
+                      {stock.quantity}주
                     </p>
                   </div>
                   <div className="text-right">
@@ -256,9 +255,7 @@ export default function Home() {
                       }`}
                     >
                       {stock.profitLoss >= 0 ? "+" : ""}
-                      {stock.profitLoss.toLocaleString()}원 (
-                      {stock.profitLoss >= 0 ? "+" : ""}
-                      {stock.profitLossRate.toFixed(2)}%)
+                      {stock.profitLoss.toLocaleString()}원
                     </p>
                   </div>
                 </div>
