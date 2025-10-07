@@ -61,7 +61,7 @@ export default function NewsPage() {
       <div className="max-w-4xl mx-auto p-4">
         <PageHeader
           title="뉴스"
-          description={`총 ${allNews.length}개의 기사`}
+          description="시장 뉴스를 읽고, 나만의 투자 결정을 내려보세요"
           icon={<Newspaper className="h-7 w-7 text-blue-600" />}
         />
         {allNews.length === 0 ? (
