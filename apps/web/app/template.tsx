@@ -14,9 +14,9 @@ export default function Template({ children }: { children: React.ReactNode }) {
       exit={{ opacity: 0, x: -20 }}
       transition={{
         type: "spring",
-        stiffness: 300,
-        damping: 30,
-        mass: 0.8
+        stiffness: 400,
+        damping: 25,
+        mass: 0.5
       }}
       style={{ willChange: "opacity, transform" }}
     >
