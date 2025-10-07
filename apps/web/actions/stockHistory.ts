@@ -57,7 +57,6 @@ export async function getStockHistory(stockId: string): Promise<StockHistoryData
         eq(classStockPrices.stockId, stockId),
         lte(classStockPrices.day, currentDay)
       ),
-      with: { stock: true },
       orderBy: (prices, { asc }) => [asc(prices.day)]
     });
 
@@ -67,6 +66,18 @@ export async function getStockHistory(stockId: string): Promise<StockHistoryData
       console.log("❌ No price data found for this stock");
       return null;
     }
+
+    // Stock 정보 별도 조회
+    const stockInfo = await db.query.stocks.findFirst({
+      where: (stocks, { eq }) => eq(stocks.id, stockId)
+    });
+
+    if (!stockInfo) {
+      console.log("❌ Stock info not found");
+      return null;
+    }
+
+    console.log("📊 Stock info:", stockInfo.name);
 
     const priceHistory: StockPricePoint[] = priceData.map((item, index) => {
       const price = parseFloat(item.price ?? "0");
@@ -103,13 +114,12 @@ export async function getStockHistory(stockId: string): Promise<StockHistoryData
       }));
 
     const lastPrice = priceData[priceData.length - 1];
-    const firstData = priceData[0];
     
-    if (!lastPrice || !firstData?.stock) return null;
+    if (!lastPrice) return null;
 
     const result = {
       stockId,
-      stockName: (firstData.stock as any).name,
+      stockName: stockInfo.name,
       currentPrice: parseFloat(lastPrice.price ?? "0"),
       priceHistory,
       relatedNews
