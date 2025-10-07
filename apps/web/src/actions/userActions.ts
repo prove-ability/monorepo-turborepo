@@ -1,6 +1,6 @@
 "use server";
 
-import { stackServerApp } from "@/stack/server";
+import { getSession } from "@/lib/session";
 import {
   db,
   guests,
@@ -21,7 +21,7 @@ export async function updateNickname(
   nickname: string
 ): Promise<UpdateNicknameResult> {
   try {
-    const user = await stackServerApp.getUser();
+    const user = await getSession();
     if (!user) {
       return { success: false, message: "로그인이 필요합니다." };
     }
@@ -159,7 +159,7 @@ export async function getRankingByClass(classId: string) {
 }
 
 export async function getHoldings() {
-  const user = await stackServerApp.getUser();
+  const user = await getSession();
   if (!user) {
     console.error("사용자 인증 실패");
     return [];
