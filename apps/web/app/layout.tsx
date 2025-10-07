@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     userScalable: false,
     viewportFit: "cover"
   },
-  themeColor: "#3B82F6",
+  themeColor: "#07726a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -54,6 +54,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} bg-gray-200`}
       >
