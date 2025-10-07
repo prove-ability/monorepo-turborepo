@@ -10,7 +10,7 @@ export interface User {
 
 export type VerifyResult = 
   | { success: true; user: User }
-  | { success: false; reason: "invalid_credentials" | "class_ended" };
+  | { success: false; reason: "invalid_credentials" | "class_not_active" };
 
 export async function verifyCredentials(
   loginId: string,
@@ -31,10 +31,10 @@ export async function verifyCredentials(
       return { success: false, reason: "invalid_credentials" };
     }
 
-    // 클래스가 종료된 경우 로그인 불가
-    if (user.class?.status === "ended") {
-      console.log("Login blocked: Class has ended");
-      return { success: false, reason: "class_ended" };
+    // 클래스가 진행 중(active)이 아닌 경우 로그인 불가
+    if (user.class?.status !== "active") {
+      console.log("Login blocked: Class is not active", user.class?.status);
+      return { success: false, reason: "class_not_active" };
     }
 
     return {

@@ -15,8 +15,8 @@ export async function login(formData: FormData) {
   const result = await verifyCredentials(loginId, password);
 
   if (!result.success) {
-    if (result.reason === "class_ended") {
-      return { error: "이 클래스는 이미 종료되었습니다. 관리자에게 문의하세요." };
+    if (result.reason === "class_not_active") {
+      return { error: "이 클래스는 현재 진행 중이 아닙니다. 관리자에게 문의하세요." };
     }
     return { error: "아이디 또는 비밀번호가 올바르지 않습니다." };
   }
