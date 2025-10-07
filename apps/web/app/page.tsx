@@ -119,18 +119,43 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 자산 현황 */}
+        {/* 내 자산 */}
         <div
           id="wallet-balance"
           className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg p-5 text-white shadow-lg"
         >
-          <h3 className="text-sm font-medium opacity-90 mb-1">총 자산</h3>
-          <p className="text-3xl font-bold mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium opacity-90">💰 내 자산</h3>
+            {dashboardData.profit !== 0 && (
+              <span
+                className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                  dashboardData.profit >= 0
+                    ? "bg-red-500/20 text-red-100"
+                    : "bg-blue-300/20 text-blue-100"
+                }`}
+              >
+                {dashboardData.profit >= 0 ? "📈 수익 중" : "📉 손실 중"}
+              </span>
+            )}
+          </div>
+          <p className="text-3xl font-bold mb-1">
             {dashboardData.totalAssets.toLocaleString()}원
           </p>
+          {dashboardData.profit !== 0 && (
+            <p
+              className={`text-sm font-medium mb-3 ${
+                dashboardData.profit >= 0 ? "text-red-100" : "text-blue-100"
+              }`}
+            >
+              {dashboardData.profit >= 0 ? "+" : ""}
+              {dashboardData.profit.toLocaleString()}원 (
+              {dashboardData.profit >= 0 ? "+" : ""}
+              {dashboardData.profitRate.toFixed(2)}%)
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
             <div>
-              <p className="text-xs opacity-80 mb-1">잔액</p>
+              <p className="text-xs opacity-80 mb-1">💵 보유 현금</p>
               <div className="text-lg font-semibold">
                 <AnimatedBalance
                   balance={dashboardData.balance}
@@ -139,42 +164,9 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <p className="text-xs opacity-80 mb-1">보유 주식</p>
+              <p className="text-xs opacity-80 mb-1">📊 주식 가치</p>
               <p className="text-lg font-semibold">
                 {dashboardData.totalHoldingValue.toLocaleString()}원
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* 수익 현황 */}
-        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">
-            수익 현황
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-gray-500 mb-1">수익금</p>
-              <p
-                className={`text-2xl font-bold ${
-                  dashboardData.profit >= 0 ? "text-red-600" : "text-blue-600"
-                }`}
-              >
-                {dashboardData.profit >= 0 ? "+" : ""}
-                {dashboardData.profit.toLocaleString()}원
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">수익률</p>
-              <p
-                className={`text-2xl font-bold ${
-                  dashboardData.profitRate >= 0
-                    ? "text-red-600"
-                    : "text-blue-600"
-                }`}
-              >
-                {dashboardData.profitRate >= 0 ? "+" : ""}
-                {dashboardData.profitRate.toFixed(2)}%
               </p>
             </div>
           </div>
