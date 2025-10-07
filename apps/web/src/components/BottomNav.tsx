@@ -31,7 +31,7 @@ export function BottomNav() {
               role="tab"
               aria-selected={isActive}
               aria-label={`${item.label} 페이지`}
-              className="flex flex-col items-center justify-center w-full h-16 relative"
+              className="flex flex-col items-center justify-center w-full h-16 relative focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             >
               {isActive && (
                 <motion.div
@@ -41,7 +41,7 @@ export function BottomNav() {
                 />
               )}
               <motion.div
-                className={`flex flex-col items-center justify-center relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-md ${
+                className={`flex flex-col items-center justify-center relative z-10 ${
                   isActive ? "text-blue-600" : "text-gray-500"
                 }`}
                 whileTap={{ scale: 0.9 }}
