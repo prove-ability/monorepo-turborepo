@@ -15,13 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@stackframe/stack";
 import { Plus, Calendar } from "lucide-react";
 import { createGameDay, type GameData } from "@/actions/gameActions";
-import { type Stock } from "@/actions/stockActions";
-import {
-  getNews,
-  updateNews,
-  deleteNews,
-  type News,
-} from "@/actions/newsActions";
+import { Stock, News } from "@/types";
+import { getNews, updateNews, deleteNews } from "@/actions/newsActions";
 
 interface GameDayManagementProps {
   selectedClass: string;

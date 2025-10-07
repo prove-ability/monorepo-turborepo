@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { getStocks, type Stock } from "@/actions/stockActions";
 import StockManagement from "@/components/game/StockManagement";
+import { Stock } from "@/types";
+import { getStocks } from "@/actions/stockActions";
 
 export default function StockManagementPage() {
   const [stocks, setStocks] = useState<Stock[]>([]);

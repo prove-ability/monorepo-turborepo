@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { type Stock } from "@/actions/stockActions";
+import { Stock } from "@/types";
 
 export interface StockPriceInputData {
   stock_id: string;
@@ -109,9 +109,9 @@ export default function StockPriceInput({
                       />
                       <span className="text-sm text-muted-foreground">원</span>
                     </div>
-                    {stock.industry_sector && (
+                    {stock.industrySector && (
                       <p className="text-xs text-muted-foreground">
-                        {stock.industry_sector}
+                        {stock.industrySector}
                       </p>
                     )}
                   </div>
