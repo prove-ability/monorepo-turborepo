@@ -45,11 +45,9 @@ export default function StockInfoModal({
   }, [isOpen, stockId]);
 
   const loadStockInfo = async () => {
-    console.log("🔍 Loading stock info for:", stockId, stockName);
     setLoading(true);
     try {
       const data = await getStockById(stockId);
-      console.log("📦 Stock info result:", data);
       setStockInfo(data);
     } catch (error) {
       console.error("💥 Failed to load stock info:", error);
@@ -119,7 +117,8 @@ export default function StockInfoModal({
               <div className="flex justify-between items-center px-5 py-4">
                 <span className="text-sm text-gray-600">시장</span>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                  {COUNTRY_NAMES[stockInfo.marketCountryCode] || stockInfo.marketCountryCode}
+                  {COUNTRY_NAMES[stockInfo.marketCountryCode] ||
+                    stockInfo.marketCountryCode}
                 </span>
               </div>
             </div>
