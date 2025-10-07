@@ -3,6 +3,7 @@
 import { Home, Newspaper, TrendingUp, Trophy } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 
 const navItems = [
   { href: "/", icon: Home, label: "홈" },
@@ -16,12 +17,12 @@ export function BottomNav() {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 w-full max-w-xl mx-auto bg-white border-t-2 border-gray-100 z-40"
+      className="fixed bottom-0 left-0 right-0 w-full max-w-xl mx-auto bg-white border-t-2 border-gray-100 z-40 backdrop-blur-lg bg-white/90"
       role="navigation"
       aria-label="주요 네비게이션"
     >
-      <div className="grid grid-cols-4 h-full" role="tablist">
-        {navItems.map((item) => {
+      <div className="grid grid-cols-4 h-full relative" role="tablist">
+        {navItems.map((item, index) => {
           const isActive = pathname === item.href;
           return (
             <Link
@@ -30,12 +31,25 @@ export function BottomNav() {
               role="tab"
               aria-selected={isActive}
               aria-label={`${item.label} 페이지`}
-              className={`flex flex-col items-center justify-center w-full h-16 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset ${
-                isActive ? "text-blue-600 fill-current" : "text-gray-500 hover:text-gray-700"
-              }`}
+              className="flex flex-col items-center justify-center w-full h-16 relative"
             >
-              <item.icon className="w-6 h-6 mb-1" strokeWidth={1} aria-hidden="true" />
-              <span className="text-xs font-medium">{item.label}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-blue-50/50"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+              <motion.div
+                className={`flex flex-col items-center justify-center relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-md ${
+                  isActive ? "text-blue-600" : "text-gray-500"
+                }`}
+                whileTap={{ scale: 0.9 }}
+                animate={{ scale: isActive ? 1 : 1 }}
+              >
+                <item.icon className="w-6 h-6 mb-1" strokeWidth={isActive ? 2 : 1} aria-hidden="true" />
+                <span className="text-xs font-medium">{item.label}</span>
+              </motion.div>
             </Link>
           );
         })}

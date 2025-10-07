@@ -1,1 +1,32 @@
 @import "tailwindcss";
+
+/* PWA 앱처럼 부드러운 스크롤 */
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* 모바일 최적화 */
+body {
+  overscroll-behavior-y: contain;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 터치 액션 최적화 */
+a, button, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* 스크롤바 숨김 (네이티브 앱처럼) */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* 선택 영역 스타일 */
+::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: inherit;
+}
