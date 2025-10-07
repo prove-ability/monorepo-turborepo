@@ -4,8 +4,10 @@ import { useEffect } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
-export function useTour() {
+export function useTour(isReady: boolean = false) {
   useEffect(() => {
+    if (!isReady) return;
+
     const tourCompleted = localStorage.getItem("tour_completed");
     const onboardingCompleted = localStorage.getItem("onboarding_completed");
 
@@ -14,7 +16,7 @@ export function useTour() {
         startTour();
       }, 1000);
     }
-  }, []);
+  }, [isReady]);
 
   const startTour = () => {
     let currentStep = 0;

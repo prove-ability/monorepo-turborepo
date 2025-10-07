@@ -17,7 +17,8 @@ export default function Home() {
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  useTour();
+  
+  useTour(!isLoading && !!dashboardData);
 
   useEffect(() => {
     loadDashboard();
