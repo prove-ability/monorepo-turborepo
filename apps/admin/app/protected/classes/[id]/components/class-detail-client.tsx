@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@repo/ui";
-import { ArrowLeft, Search, Users, Calendar, Building2 } from "lucide-react";
+import { ArrowLeft, Search, Users, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getUsersByClass } from "@/actions/userActions";
 import { StudentBulkUpload } from "./StudentBulkUpload";

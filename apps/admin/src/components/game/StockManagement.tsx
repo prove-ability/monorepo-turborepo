@@ -33,10 +33,10 @@ import {
   createStock,
   updateStock,
   deleteStock,
-  type Stock,
   type CreateStockData,
   type UpdateStockData,
 } from "@/actions/stockActions";
+import { Stock } from "@/types";
 
 interface StockManagementProps {
   stocks: Stock[];

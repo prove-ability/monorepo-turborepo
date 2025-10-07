@@ -12,7 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useUser } from "@stackframe/stack";
 import { Plus, Calendar } from "lucide-react";
 import { createGameDay, type GameData } from "@/actions/gameActions";
 import { Stock, News } from "@/types";
@@ -37,7 +36,6 @@ export default function GameDayManagement({
   stocks,
   onRefresh,
 }: GameDayManagementProps) {
-  const user = useUser();
   const [newsLoading, setNewsLoading] = useState(false);
   const [deletingNewsId, setDeletingNewsId] = useState<string | null>(null);
   const [editingNewsId, setEditingNewsId] = useState<string | null>(null);

@@ -7,6 +7,6 @@ export default function Home() {
   const router = useRouter();
   useEffect(() => {
     router.push("/protected/dashboard");
-  }, []);
+  }, [router]);
   return <div></div>;
 }
