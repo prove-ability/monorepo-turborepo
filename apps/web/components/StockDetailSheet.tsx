@@ -4,7 +4,17 @@ import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, TrendingUp, TrendingDown, Newspaper } from "lucide-react";
-import { LineChart, Line, Area, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot } from "recharts";
+import {
+  Line,
+  Area,
+  ComposedChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceDot,
+} from "recharts";
 import { getStockHistory, StockHistoryData } from "@/actions/stockHistory";
 
 interface StockDetailSheetProps {
@@ -14,7 +24,12 @@ interface StockDetailSheetProps {
   stockName: string;
 }
 
-export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }: StockDetailSheetProps) {
+export default function StockDetailSheet({
+  isOpen,
+  onClose,
+  stockId,
+  stockName,
+}: StockDetailSheetProps) {
   const [data, setData] = useState<StockHistoryData | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedNews, setSelectedNews] = useState<string | null>(null);
@@ -23,12 +38,12 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
 
   const handleNewsClick = (newsId: string) => {
     setSelectedNews(selectedNews === newsId ? null : newsId);
-    
+
     // 차트로 스크롤
     if (chartRef.current) {
-      chartRef.current.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'nearest' 
+      chartRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
       });
     }
   };
@@ -48,14 +63,14 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
   useEffect(() => {
     if (isOpen) {
       const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
+      document.body.style.position = "fixed";
       document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      
+      document.body.style.width = "100%";
+
       return () => {
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
         window.scrollTo(0, scrollY);
       };
     }
@@ -98,11 +113,11 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[101] flex flex-col"
-            style={{ 
+            style={{
               bottom: 0,
               maxHeight: "66.67vh",
               maxWidth: "640px",
-              margin: "0 auto"
+              margin: "0 auto",
             }}
           >
             {/* Header */}
@@ -114,20 +129,28 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                     <span className="text-2xl font-bold text-gray-900">
                       {data.currentPrice.toLocaleString()}원
                     </span>
-                    {data.priceHistory.length > 1 && data.priceHistory[data.priceHistory.length - 1] && (
-                      <span className={`text-sm font-semibold flex items-center gap-1 ${
-                        data.priceHistory[data.priceHistory.length - 1]!.change >= 0 
-                          ? "text-red-600" 
-                          : "text-blue-600"
-                      }`}>
-                        {data.priceHistory[data.priceHistory.length - 1]!.change >= 0 ? (
-                          <TrendingUp className="w-4 h-4" />
-                        ) : (
-                          <TrendingDown className="w-4 h-4" />
-                        )}
-                        {data.priceHistory[data.priceHistory.length - 1]!.changePercent.toFixed(2)}%
-                      </span>
-                    )}
+                    {data.priceHistory.length > 1 &&
+                      data.priceHistory[data.priceHistory.length - 1] && (
+                        <span
+                          className={`text-sm font-semibold flex items-center gap-1 ${
+                            data.priceHistory[data.priceHistory.length - 1]!
+                              .change >= 0
+                              ? "text-red-600"
+                              : "text-blue-600"
+                          }`}
+                        >
+                          {data.priceHistory[data.priceHistory.length - 1]!
+                            .change >= 0 ? (
+                            <TrendingUp className="w-4 h-4" />
+                          ) : (
+                            <TrendingDown className="w-4 h-4" />
+                          )}
+                          {data.priceHistory[
+                            data.priceHistory.length - 1
+                          ]!.changePercent.toFixed(2)}
+                          %
+                        </span>
+                      )}
                   </div>
                 )}
               </div>
@@ -144,13 +167,17 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
               {loading && (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                  <p className="mt-4 text-gray-600 text-sm">가격 정보를 불러오는 중...</p>
+                  <p className="mt-4 text-gray-600 text-sm">
+                    가격 정보를 불러오는 중...
+                  </p>
                 </div>
               )}
 
               {!loading && !data && (
                 <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                  <p className="text-lg font-semibold">데이터를 불러올 수 없습니다</p>
+                  <p className="text-lg font-semibold">
+                    데이터를 불러올 수 없습니다
+                  </p>
                   <p className="text-sm mt-2">잠시 후 다시 시도해주세요</p>
                 </div>
               )}
@@ -158,27 +185,50 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
               {!loading && data && (
                 <div className="space-y-6">
                   {/* Chart */}
-                  <div ref={chartRef} className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-4">가격 추이</h3>
+                  <div
+                    ref={chartRef}
+                    className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4"
+                  >
+                    <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                      가격 추이
+                    </h3>
                     <ResponsiveContainer width="100%" height={220}>
-                      <ComposedChart 
+                      <ComposedChart
                         data={data.priceHistory}
                         margin={{ top: 15, right: 15, left: 0, bottom: 10 }}
                       >
                         <defs>
-                          <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                          <linearGradient
+                            id="colorPrice"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#3B82F6"
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#3B82F6"
+                              stopOpacity={0}
+                            />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                        <XAxis 
-                          dataKey="day" 
-                          label={{ value: "Day", position: "insideBottom", offset: 0 }}
+                        <XAxis
+                          dataKey="day"
+                          label={{
+                            value: "Day",
+                            position: "insideBottom",
+                            offset: 0,
+                          }}
                           tick={{ fontSize: 12 }}
                           height={50}
                         />
-                        <YAxis 
+                        <YAxis
                           tick={{ fontSize: 12 }}
                           tickFormatter={(value) => {
                             if (value >= 10000) {
@@ -187,20 +237,25 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                             return `${value.toLocaleString()}원`;
                           }}
                         />
-                        <Tooltip 
+                        <Tooltip
                           content={({ active, payload }) => {
                             if (active && payload && payload.length) {
                               const data = payload[0].payload;
                               return (
                                 <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-                                  <p className="text-sm font-semibold">Day {data.day}</p>
+                                  <p className="text-sm font-semibold">
+                                    Day {data.day}
+                                  </p>
                                   <p className="text-lg font-bold text-blue-600">
                                     {data.price.toLocaleString()}원
                                   </p>
                                   {data.change !== 0 && (
-                                    <p className={`text-sm ${data.change >= 0 ? "text-red-600" : "text-blue-600"}`}>
-                                      {data.change >= 0 ? "+" : ""}{data.change.toLocaleString()}원 
-                                      ({data.changePercent.toFixed(2)}%)
+                                    <p
+                                      className={`text-sm ${data.change >= 0 ? "text-red-600" : "text-blue-600"}`}
+                                    >
+                                      {data.change >= 0 ? "+" : ""}
+                                      {data.change.toLocaleString()}원 (
+                                      {data.changePercent.toFixed(2)}%)
                                     </p>
                                   )}
                                 </div>
@@ -209,23 +264,25 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                             return null;
                           }}
                         />
-                        <Area 
-                          type="monotone" 
-                          dataKey="price" 
-                          fill="url(#colorPrice)" 
+                        <Area
+                          type="monotone"
+                          dataKey="price"
+                          fill="url(#colorPrice)"
                           stroke="none"
                         />
-                        <Line 
-                          type="monotone" 
-                          dataKey="price" 
-                          stroke="#3B82F6" 
+                        <Line
+                          type="monotone"
+                          dataKey="price"
+                          stroke="#3B82F6"
                           strokeWidth={2}
                           dot={{ fill: "#3B82F6", r: 4 }}
                           activeDot={{ r: 6 }}
                         />
                         {/* 뉴스 마커 */}
                         {data.relatedNews.map((news) => {
-                          const pricePoint = data.priceHistory.find(p => p.day === news.day);
+                          const pricePoint = data.priceHistory.find(
+                            (p) => p.day === news.day
+                          );
                           if (!pricePoint) return null;
                           const isSelected = selectedNews === news.id;
                           return (
@@ -238,10 +295,11 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                                   r={10}
                                   fill="#F59E0B"
                                   stroke="none"
-                                  style={{ 
-                                    animation: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
+                                  style={{
+                                    animation:
+                                      "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
                                     transformBox: "fill-box",
-                                    transformOrigin: "center"
+                                    transformOrigin: "center",
                                   }}
                                 />
                               )}
@@ -277,18 +335,22 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className={`bg-white border rounded-xl p-4 transition-all cursor-pointer ${
-                              selectedNews === newsItem.id 
-                                ? "border-yellow-400 bg-yellow-50" 
+                              selectedNews === newsItem.id
+                                ? "border-yellow-400 bg-yellow-50"
                                 : "border-gray-200 hover:border-gray-300"
                             }`}
                             onClick={() => handleNewsClick(newsItem.id)}
                           >
                             <div className="flex items-start gap-3">
                               <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
-                                <span className="text-xs font-bold text-yellow-700">D{newsItem.day}</span>
+                                <span className="text-xs font-bold text-yellow-700">
+                                  D{newsItem.day}
+                                </span>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-gray-900 text-sm">{newsItem.title}</h4>
+                                <h4 className="font-semibold text-gray-900 text-sm">
+                                  {newsItem.title}
+                                </h4>
                                 <AnimatePresence>
                                   {selectedNews === newsItem.id && (
                                     <motion.p
