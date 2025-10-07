@@ -6,12 +6,18 @@ import "driver.js/dist/driver.css";
 
 export function useTour(isReady: boolean = false) {
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady) {
+      console.log("Tour not ready yet");
+      return;
+    }
 
     const tourCompleted = localStorage.getItem("tour_completed");
     const onboardingCompleted = localStorage.getItem("onboarding_completed");
 
+    console.log("Tour check:", { tourCompleted, onboardingCompleted, isReady });
+
     if (!tourCompleted && onboardingCompleted) {
+      console.log("Starting tour in 1 second...");
       setTimeout(() => {
         startTour();
       }, 1000);

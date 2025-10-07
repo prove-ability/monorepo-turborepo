@@ -54,11 +54,13 @@ export default function OnboardingPage() {
 
   const handleComplete = () => {
     localStorage.setItem("onboarding_completed", "true");
+    console.log("Onboarding completed, localStorage set:", localStorage.getItem("onboarding_completed"));
     router.push("/");
   };
 
   const handleSkip = () => {
     localStorage.setItem("onboarding_completed", "true");
+    console.log("Onboarding skipped, localStorage set:", localStorage.getItem("onboarding_completed"));
     router.push("/");
   };
 
