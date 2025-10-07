@@ -8,7 +8,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // BottomNav를 숨길 페이지들
   const hideBottomNav =
-    ["/login", "/setup", "/invest/trade"].some((path) =>
+    ["/login", "/setup", "/onboarding", "/invest/trade"].some((path) =>
       pathname.startsWith(path)
     ) || pathname.startsWith("/handler");
 
