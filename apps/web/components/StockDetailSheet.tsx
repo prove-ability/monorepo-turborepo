@@ -24,6 +24,23 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
     }
   }, [isOpen, stockId]);
 
+  // 배경 스크롤 막기
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      
+      return () => {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
+
   const loadData = async () => {
     setLoading(true);
     const result = await getStockHistory(stockId);
@@ -43,7 +60,7 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-50"
+            className="fixed inset-0 bg-black/50 z-[100]"
           />
 
           {/* Bottom Sheet */}
@@ -52,7 +69,13 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-white rounded-t-3xl z-50 max-h-[90vh] overflow-hidden"
+            className="fixed left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-[101]"
+            style={{ 
+              bottom: 0,
+              top: "10vh",
+              maxWidth: "640px",
+              margin: "0 auto"
+            }}
           >
             {/* Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -89,10 +112,18 @@ export default function StockDetailSheet({ isOpen, onClose, stockId, stockName }
             </div>
 
             {/* Content */}
-            <div className="overflow-y-auto px-6 py-4 pb-8" style={{ maxHeight: "calc(90vh - 100px)" }}>
+            <div className="overflow-y-auto px-6 py-4 h-full pb-24">
               {loading && (
-                <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <p className="mt-4 text-gray-600 text-sm">가격 정보를 불러오는 중...</p>
+                </div>
+              )}
+
+              {!loading && !data && (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                  <p className="text-lg font-semibold">데이터를 불러올 수 없습니다</p>
+                  <p className="text-sm mt-2">잠시 후 다시 시도해주세요</p>
                 </div>
               )}
 
