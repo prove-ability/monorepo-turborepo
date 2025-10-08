@@ -56,7 +56,7 @@ export const classes = pgTable("classes", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .$onUpdate(() => new Date())
     .notNull(),
-  name: text("name"),
+  name: text("name").notNull(),
   currentDay: integer("current_day"),
   status: classStatusEnum("status").default("setting").notNull(),
   createdBy: uuid("created_by").notNull(),

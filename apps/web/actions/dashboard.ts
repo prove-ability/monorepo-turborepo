@@ -24,7 +24,7 @@ export interface DashboardData {
   balance: number;
   totalHoldingValue: number;
   totalAssets: number;
-  
+
   // 수익 현황
   initialCapital: number;
   profit: number;
@@ -76,7 +76,7 @@ export const getDashboardData = withAuth(async (user) => {
       orderBy: (classStockPrices, { desc }) => [desc(classStockPrices.day)],
       limit: 1,
     });
-    
+
     const totalDays = maxDayResult[0]?.day || 0;
 
     // 2. 지갑 조회
@@ -190,7 +190,8 @@ export const getDashboardData = withAuth(async (user) => {
             ),
           });
           if (price) {
-            guestHoldingValue += parseFloat(price.price || "0") * (h.quantity || 0);
+            guestHoldingValue +=
+              parseFloat(price.price || "0") * (h.quantity || 0);
           }
         }
 
@@ -209,7 +210,9 @@ export const getDashboardData = withAuth(async (user) => {
         const guestTotalAssets = guestBalance + guestHoldingValue;
         const guestProfit = guestTotalAssets - guestInitialCapital;
         const guestProfitRate =
-          guestInitialCapital > 0 ? (guestProfit / guestInitialCapital) * 100 : 0;
+          guestInitialCapital > 0
+            ? (guestProfit / guestInitialCapital) * 100
+            : 0;
 
         return {
           guestId: guest.id,
