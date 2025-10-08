@@ -1,20 +1,13 @@
-const CACHE_NAME = 'crowed-rank-v1';
-const urlsToCache = [
-  '/',
-  '/login',
-  '/invest',
-  '/news',
-  '/rank',
-];
+const CACHE_NAME = 'crowed-rank-v2';
 
-// 설치 이벤트
+// 설치 이벤트 - 빈 캐시로 시작 (런타임 캐싱만 사용)
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Cache opened');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(() => {
+      console.log('Cache opened');
+      // 설치 시에는 캐싱하지 않음 (Next.js는 동적 chunks를 사용)
+      return Promise.resolve();
+    })
   );
   self.skipWaiting();
 });
