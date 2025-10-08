@@ -1,6 +1,6 @@
 "use server";
 
-import { stackServerApp } from "@/stack/server";
+import { getSession } from "@/lib/session";
 import {
   db,
   classStockPrices,
@@ -9,7 +9,7 @@ import {
   guests,
   wallets,
 } from "@repo/db";
-import { eq, and, inArray, sql } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function getStocks(classId: string, day: number) {
@@ -118,7 +118,7 @@ interface TradeParams {
 export async function executeTrade(
   params: TradeParams
 ): Promise<{ success?: boolean; error?: string }> {
-  const user = await stackServerApp.getUser();
+  const user = await getSession();
   if (!user) {
     return { error: "사용자를 찾을 수 없습니다." };
   }
