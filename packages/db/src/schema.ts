@@ -238,4 +238,28 @@ export const holdingsRelations = relations(holdings, ({ one }) => ({
   }),
 }));
 
-// You can define more relations for other tables here following the same pattern
+export const surveys = pgTable("surveys", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  guestId: uuid("guest_id")
+    .references((): AnyPgColumn => guests.id, { onDelete: "cascade" })
+    .notNull(),
+  classId: uuid("class_id")
+    .references((): AnyPgColumn => classes.id, { onDelete: "cascade" })
+    .notNull(),
+  rating: integer("rating").notNull(),
+  feedback: text("feedback"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const surveysRelations = relations(surveys, ({ one }) => ({
+  guest: one(guests, {
+    fields: [surveys.guestId],
+    references: [guests.id],
+  }),
+  class: one(classes, {
+    fields: [surveys.classId],
+    references: [classes.id],
+  }),
+}));
