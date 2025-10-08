@@ -4,51 +4,37 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, X } from "lucide-react";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export default function PWAInstaller() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
-    // Service Worker 등록 및 업데이트
+    // Service Worker 비활성화 (호스팅 환경 호환성 문제)
+    // 필요시 나중에 다시 활성화 가능
+    
+    // 기존 Service Worker가 있다면 제거
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((registration) => {
-            console.log('✅ Service Worker registered:', registration);
-            
-            // 업데이트 체크 (1분마다)
-            setInterval(() => {
-              registration.update();
-            }, 60000);
-            
-            // 새 Service Worker 발견 시 즉시 활성화
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('🔄 New Service Worker available, reloading...');
-                    // 새로고침하여 새 버전 적용
-                    window.location.reload();
-                  }
-                });
-              }
-            });
-          })
-          .catch((error) => {
-            console.log('❌ Service Worker registration failed:', error);
-          });
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister();
+          console.log('🗑️ Service Worker unregistered');
+        });
       });
     }
 
     // PWA 설치 이벤트 리스너
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       
       // 이미 설치되었는지 확인
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
-                          (window.navigator as any).standalone === true;
+                          (window.navigator as { standalone?: boolean }).standalone === true;
       
       if (!isInstalled) {
         // 3초 후에 설치 프롬프트 표시
