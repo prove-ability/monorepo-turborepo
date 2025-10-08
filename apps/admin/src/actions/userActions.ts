@@ -51,36 +51,41 @@ interface CreateUserData {
 type UpdateUserData = Partial<CreateUserData>;
 
 const createUserSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  name: z.string().min(1),
-  classId: z.string().uuid(),
+  name: z.string().min(1, "이름은 필수입니다"),
+  phone: z.string().min(10, "전화번호는 10자 이상이어야 합니다"),
+  grade: z.string().min(1, "학년은 필수입니다"),
+  school_name: z.string().min(1, "학교명은 필수입니다"),
+  class_id: z.string().uuid("올바른 클래스 ID가 아닙니다"),
 });
 
 export const createUser = withAuth(async (user, formData: FormData) => {
   try {
     const validatedData = createUserSchema.parse({
-      email: formData.get("email"),
-      password: formData.get("password"),
       name: formData.get("name"),
-      classId: formData.get("classId"),
+      phone: formData.get("phone"),
+      grade: formData.get("grade"),
+      school_name: formData.get("school_name"),
+      class_id: formData.get("class_id"),
     });
 
     const loginId = await generateUniqueLoginId(
       validatedData.name,
-      validatedData.classId
+      validatedData.class_id
     );
+
+    // 전화번호 정리 (하이픈 제거)
+    const cleanPhone = validatedData.phone.replace(/[^0-9]/g, "");
 
     const [newGuest] = await db
       .insert(guests)
       .values({
         name: validatedData.name,
-        classId: validatedData.classId,
-        mobilePhone: validatedData.email, // 임시로 email 사용
-        affiliation: "미정", // 기본값
-        grade: "미정", // 기본값
+        classId: validatedData.class_id,
+        mobilePhone: cleanPhone,
+        affiliation: validatedData.school_name,
+        grade: validatedData.grade,
         loginId: loginId,
-        password: "pw1234",
+        password: "pw1234", // 기본 비밀번호
       })
       .returning();
 
@@ -109,13 +114,13 @@ export const createUser = withAuth(async (user, formData: FormData) => {
       quantity: 0,
       price: INITIAL_WALLET_BALANCE,
       day: 1,
-      classId: validatedData.classId,
+      classId: validatedData.class_id,
     });
 
     revalidatePath("/protected/classes");
     return {
       success: true,
-      message: "학생 계정이 성공적으로 생성되었습니다.",
+      message: `학생 계정이 생성되었습니다.\n\n로그인 ID: ${loginId}\n비밀번호: pw1234`,
       error: undefined,
     };
   } catch (e) {
@@ -328,10 +333,7 @@ export const deleteGuests = withAuth(
 
       // 1. 해당 클래스의 학생들인지 확인
       const guestsToDelete = await db.query.guests.findMany({
-        where: and(
-          inArray(guests.id, guestIds),
-          eq(guests.classId, classId)
-        ),
+        where: and(inArray(guests.id, guestIds), eq(guests.classId, classId)),
         with: {
           wallet: true,
         },
@@ -358,21 +360,15 @@ export const deleteGuests = withAuth(
           }
 
           // 2-2. 보유 주식 삭제
-          await db
-            .delete(holdings)
-            .where(eq(holdings.guestId, guest.id));
+          await db.delete(holdings).where(eq(holdings.guestId, guest.id));
 
           // 2-3. 지갑 삭제
           if (guest.wallet?.id) {
-            await db
-              .delete(wallets)
-              .where(eq(wallets.id, guest.wallet.id));
+            await db.delete(wallets).where(eq(wallets.id, guest.wallet.id));
           }
 
           // 2-4. 학생 삭제 (surveys는 ON DELETE CASCADE로 자동 보존됨)
-          await db
-            .delete(guests)
-            .where(eq(guests.id, guest.id));
+          await db.delete(guests).where(eq(guests.id, guest.id));
 
           deletedCount++;
         } catch (err) {
