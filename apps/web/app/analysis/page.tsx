@@ -92,8 +92,8 @@ export default function AnalysisPage() {
           {/* 뉴스 있는 종목 우선 정렬 */}
           {dashboardData.holdingStocks
             .sort((a, b) => {
-              const aHasNews = newsData[a.stockId] && newsData[a.stockId].length > 0;
-              const bHasNews = newsData[b.stockId] && newsData[b.stockId].length > 0;
+              const aHasNews = newsData[a.stockId]?.length ?? 0 > 0;
+              const bHasNews = newsData[b.stockId]?.length ?? 0 > 0;
               if (aHasNews && !bHasNews) return -1;
               if (!aHasNews && bHasNews) return 1;
               return 0;
@@ -136,14 +136,14 @@ export default function AnalysisPage() {
 
               {/* 어제 뉴스 & 피드백 */}
               <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                {newsData[stock.stockId] && newsData[stock.stockId].length > 0 ? (
+                {(newsData[stock.stockId]?.length ?? 0) > 0 ? (
                   <div className="space-y-2 mb-3">
-                    {newsData[stock.stockId].map((news, idx) => (
+                    {newsData[stock.stockId]?.map((news, idx) => (
                       <div key={news.id} className="flex items-start gap-3">
                         <span className="text-xl flex-shrink-0">📰</span>
                         <div className="flex-1">
                           <p className="text-xs text-gray-500 mb-1">
-                            어제 뉴스 {newsData[stock.stockId].length > 1 ? `${idx + 1}` : ""}
+                            어제 뉴스 {(newsData[stock.stockId]?.length ?? 0) > 1 ? `${idx + 1}` : ""}
                           </p>
                           <p className="text-sm text-gray-900 font-medium">
                             {news.title || "제목 없음"}
@@ -165,7 +165,7 @@ export default function AnalysisPage() {
                 )}
 
                 {/* 뉴스가 있을 때만 피드백 표시 */}
-                {newsData[stock.stockId] && newsData[stock.stockId].length > 0 && (
+                {(newsData[stock.stockId]?.length ?? 0) > 0 && (
                   <div
                     className={`mt-3 pt-3 border-t border-gray-200 ${
                       stock.profitLoss >= 0
