@@ -61,9 +61,19 @@ export default function NewsPage() {
       <div className="max-w-4xl mx-auto p-4">
         <PageHeader
           title="뉴스"
-          description="시장 뉴스를 읽고 나만의 투자 결정을 내려보세요"
-          icon={<Newspaper className="h-7 w-7 text-blue-600" />}
+          description="시장 뉴스를 읽고 투자 결정을 내려보세요"
         />
+        
+        {/* 안내 배너 */}
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="text-xl flex-shrink-0">💡</div>
+            <p className="text-sm text-emerald-900">
+              <span className="font-bold">기업명을 클릭</span>하면 회사 정보를 자세히 볼 수 있어요
+            </p>
+          </div>
+        </div>
+
         {allNews.length === 0 ? (
           <EmptyState
             icon={<Newspaper className="h-16 w-16" />}
@@ -71,20 +81,20 @@ export default function NewsPage() {
             description="첫 뉴스를 기다리고 있어요. 관리자가 뉴스를 등록하면 여기에 표시됩니다."
           />
         ) : (
-          <div className="space-y-4">
+          <div id="news-list" className="space-y-4">
             {sortedDays.map((day) => (
               <div key={day} className="space-y-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex-1 h-px bg-gray-300"></div>
-                  <span className="px-3 py-1 bg-gray-700 text-white text-sm font-bold rounded-full">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex-1 h-px bg-gray-200"></div>
+                  <span className="px-3 py-1.5 bg-emerald-700 text-white text-xs font-bold rounded-full">
                     Day {day}
                   </span>
-                  <div className="flex-1 h-px bg-gray-300"></div>
+                  <div className="flex-1 h-px bg-gray-200"></div>
                 </div>
                 {newsByDay[day]?.map((newsItem) => (
                   <div
                     key={newsItem.id}
-                    className="bg-white rounded-lg p-4 shadow border border-gray-200"
+                    className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100"
                   >
                     <div className="flex flex-wrap gap-2 mb-3">
                       {newsItem.relatedStocks.map((stock) => (
@@ -93,16 +103,17 @@ export default function NewsPage() {
                           onClick={() =>
                             setSelectedStock({ id: stock.id, name: stock.name })
                           }
-                          className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded hover:bg-blue-100 transition-colors cursor-pointer"
+                          className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg hover:bg-emerald-100 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
                         >
-                          {stock.name}
+                          <span>{stock.name}</span>
+                          <span className="text-emerald-500">›</span>
                         </button>
                       ))}
                     </div>
-                    <h4 className="font-bold text-gray-900 mb-2">
+                    <h4 className="font-bold text-gray-900 text-base mb-2">
                       {newsItem.title}
                     </h4>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
                       {newsItem.content}
                     </p>
                   </div>

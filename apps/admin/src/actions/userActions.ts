@@ -80,7 +80,7 @@ export const createUser = withAuth(async (user, formData: FormData) => {
         affiliation: "미정", // 기본값
         grade: "미정", // 기본값
         loginId: loginId,
-        password: "youthfinlab1234",
+        password: "pw1234",
       })
       .returning();
 
@@ -265,7 +265,7 @@ export const bulkCreateUsers = withAuth(
               classId: userData.classId,
               nickname: userData.nickname,
               loginId: loginId,
-              password: "youthfinlab1234",
+              password: "pw1234",
             })
             .returning();
 

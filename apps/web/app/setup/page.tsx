@@ -8,7 +8,7 @@ import {
   checkNeedsSetup,
 } from "@/actions/profile";
 import { Button, Input, Label } from "@repo/ui";
-import { UserCircle, Lock, CheckCircle } from "lucide-react";
+import { UserCircle, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
 
 export default function SetupPage() {
   const router = useRouter();
@@ -21,6 +21,8 @@ export default function SetupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     checkSetupStatus();
@@ -79,7 +81,8 @@ export default function SetupPage() {
 
     setLoading(true);
 
-    const result = await updatePassword(currentPassword, newPassword);
+    // 초기 설정이므로 빈 문자열 전달 (서버에서 자동 처리)
+    const result = await updatePassword("", newPassword);
 
     if (result.error) {
       setError(result.error);
@@ -95,10 +98,10 @@ export default function SetupPage() {
 
   if (step === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">확인 중...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">확인하는 중이에요...</p>
         </div>
       </div>
     );
@@ -106,18 +109,18 @@ export default function SetupPage() {
 
   if (step === "complete") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100">
         <div className="text-center">
-          <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+          <CheckCircle className="h-16 w-16 text-emerald-600 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">설정 완료!</h2>
-          <p className="text-gray-600">메인 페이지로 이동합니다...</p>
+          <p className="text-gray-600">이제 시작해볼까요? 🎉</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 px-4">
       <div className="w-full max-w-md">
         {/* 진행 상태 표시 */}
         <div className="mb-8">
@@ -196,77 +199,97 @@ export default function SetupPage() {
         )}
 
         {step === "password" && (
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="bg-white rounded-3xl shadow-sm border border-emerald-100 p-6">
             <div className="text-center mb-6">
-              <Lock className="h-12 w-12 text-blue-600 mx-auto mb-3" />
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                비밀번호를 변경해주세요
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-100 mb-3">
+                <Lock className="h-6 w-6 text-emerald-700" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900 mb-2">
+                비밀번호를 설정해볼까요?
               </h1>
               <p className="text-sm text-gray-600">
-                보안을 위해 초기 비밀번호를 변경하세요
+                나만 알고 있는 비밀번호를 정해주세요
               </p>
             </div>
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="currentPassword">현재 비밀번호</Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="mt-1"
-                />
+                <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700">
+                  새로운 비밀번호
+                </Label>
+                <div className="relative mt-1.5">
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="비밀번호 (4자 이상)"
+                    minLength={4}
+                    required
+                    disabled={loading}
+                    className="pr-10 rounded-xl border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-600 focus:outline-none transition-colors"
+                    aria-label={showNewPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div>
-                <Label htmlFor="newPassword">새 비밀번호</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="새 비밀번호 (4자 이상)"
-                  minLength={4}
-                  required
-                  disabled={loading}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="confirmPassword">새 비밀번호 확인</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="새 비밀번호 확인"
-                  required
-                  disabled={loading}
-                  className="mt-1"
-                />
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                  비밀번호 다시 한번
+                </Label>
+                <div className="relative mt-1.5">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="같은 비밀번호를 한 번 더 입력해주세요"
+                    required
+                    disabled={loading}
+                    className="pr-10 rounded-xl border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-600 focus:outline-none transition-colors"
+                    aria-label={showConfirmPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {error && (
-                <div className="rounded-md bg-red-50 p-3">
+                <div className="rounded-xl bg-red-50 p-3 border border-red-100">
                   <p className="text-sm text-red-800">{error}</p>
                 </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 rounded-xl py-3 font-semibold text-white transition-colors"
                 disabled={
                   loading ||
-                  !currentPassword ||
                   !newPassword ||
                   !confirmPassword
                 }
               >
-                {loading ? "변경 중..." : "완료"}
+                {loading ? "설정하는 중이에요..." : "완료하기"}
               </Button>
             </form>
           </div>

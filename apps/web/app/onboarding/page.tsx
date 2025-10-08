@@ -3,30 +3,36 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, TrendingUp, Newspaper, Trophy, Wallet, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const slides = [
   {
-    icon: <Wallet className="w-16 h-16 text-blue-600" />,
-    title: "주식 투자 게임에 오신 것을 환영합니다!",
-    description: "가상의 돈으로 실제 주식 시장처럼 투자를 경험해보세요.",
+    title: "투자 게임에 오신 걸 환영해요! 🎉",
+    description: "이 게임을 하면서 이런 능력을 키울 수 있어요",
     details: [
-      "매일 지원금을 받아 투자할 수 있어요",
-      "실제 주식처럼 사고팔 수 있어요",
-      "친구들과 수익률을 경쟁해보세요"
-    ],
-    preview: "💰 지갑에서 잔액 확인 → 📰 뉴스로 시장 파악 → 📈 투자 탭에서 거래 → 🏆 랭킹에서 경쟁"
+      { text: "뉴스를 읽고 핵심 정보를 파악하는 힘이 생겨요", highlight: ["핵심 정보"] },
+      { text: "경제 용어와 분산투자 개념을 이해하게 돼요", highlight: ["경제 용어", "분산투자"] },
+      { text: "실전처럼 투자를 연습하며 감각을 키워요", highlight: ["실전", "감각"] }
+    ]
   },
   {
-    icon: <TrendingUp className="w-16 h-16 text-green-600" />,
-    title: "이제 시작해볼까요?",
-    description: "실제 화면을 보면서 하나씩 배워봐요!",
+    title: "게임은 이렇게 진행돼요",
+    description: "매일 새로운 뉴스와 함께 투자 기회가 찾아와요",
     details: [
-      "각 기능을 직접 사용하면서 배울 수 있어요",
-      "언제든 건너뛸 수 있어요",
-      "준비되면 시작하기를 눌러주세요"
-    ],
-    preview: "✨ 다음 화면에서 상세한 가이드를 시작합니다"
+      { text: "게임 시작하면 200만원 + 매일 10만원을 받아요", highlight: ["200만원", "매일 10만원"] },
+      { text: "뉴스를 읽고 주식을 사거나 팔아요", highlight: ["뉴스"] },
+      { text: "투자 결과는 다음날 오전 9시에 확인해요", highlight: ["다음날 오전 9시"] },
+      { text: "랭킹에서 친구들과 겨뤄봐요", highlight: ["랭킹"] }
+    ]
+  },
+  {
+    title: "준비되셨나요?",
+    description: "지금부터 투자 세계로 떠나봐요!",
+    details: [
+      { text: "실제 화면을 보면서 하나씩 배울 수 있어요", highlight: [] },
+      { text: "어려우면 언제든 도움말을 확인하세요", highlight: [] },
+      { text: "준비되면 시작하기를 눌러주세요", highlight: [] }
+    ]
   }
 ];
 
@@ -58,11 +64,6 @@ export default function OnboardingPage() {
     router.push("/");
   };
 
-  const handleSkip = () => {
-    localStorage.setItem("onboarding_completed", "true");
-    console.log("Onboarding skipped, localStorage set:", localStorage.getItem("onboarding_completed"));
-    router.push("/");
-  };
 
   const variants = {
     enter: (direction: number) => ({ x: direction > 0 ? 300 : -300, opacity: 0 }),
@@ -71,17 +72,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col">
-      {/* Skip 버튼 */}
-      <div className="absolute top-4 right-4 z-10">
-        <button
-          onClick={handleSkip}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors px-3 py-2 rounded-lg hover:bg-white/50"
-        >
-          건너뛰기 <X className="w-4 h-4" />
-        </button>
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 flex flex-col">
       {/* 메인 콘텐츠 */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-24">
         <div className="w-full max-w-md">
@@ -96,28 +87,18 @@ export default function OnboardingPage() {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="text-center"
             >
-              {/* 아이콘 */}
-              <motion.div
-                className="flex justify-center mb-8"
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              >
-                {slide.icon}
-              </motion.div>
-
               {/* 제목 */}
               <h1 className="text-2xl font-bold text-gray-900 mb-4">
                 {slide.title}
               </h1>
 
               {/* 설명 */}
-              <p className="text-gray-600 mb-8">
+              <p className="text-base text-gray-600 mb-8">
                 {slide.description}
               </p>
 
               {/* 상세 정보 */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
+              <div className="bg-white rounded-3xl p-5 shadow-sm border border-emerald-100 space-y-4">
                 <ul className="space-y-4 text-left">
                   {slide.details.map((detail, index) => (
                     <motion.li
@@ -127,25 +108,23 @@ export default function OnboardingPage() {
                       transition={{ delay: 0.3 + index * 0.1 }}
                       className="flex items-start gap-3"
                     >
-                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-blue-600 text-sm font-semibold">{index + 1}</span>
+                      <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-emerald-700 text-sm font-semibold">{index + 1}</span>
                       </div>
-                      <span className="text-gray-700">{detail}</span>
+                      <span className="text-sm text-gray-700">
+                        {typeof detail === 'string' ? detail : (
+                          <>
+                            {detail.text.split(new RegExp(`(${detail.highlight.join('|')})`)).map((part, i) => 
+                              detail.highlight.includes(part) ? (
+                                <strong key={i} className="text-emerald-700 font-semibold">{part}</strong>
+                              ) : part
+                            )}
+                          </>
+                        )}
+                      </span>
                     </motion.li>
                   ))}
                 </ul>
-                
-                {/* 프리뷰 */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                  className="pt-4 border-t border-gray-100"
-                >
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {slide.preview}
-                  </p>
-                </motion.div>
               </div>
             </motion.div>
           </AnimatePresence>
@@ -165,7 +144,7 @@ export default function OnboardingPage() {
                   setCurrentSlide(index);
                 }}
                 className={`h-2 rounded-full transition-all ${
-                  index === currentSlide ? "w-8 bg-blue-600" : "w-2 bg-gray-300"
+                  index === currentSlide ? "w-8 bg-emerald-600" : "w-2 bg-gray-300"
                 }`}
               />
             ))}
@@ -176,7 +155,7 @@ export default function OnboardingPage() {
             {currentSlide > 0 && (
               <button
                 onClick={handlePrev}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-emerald-200 text-gray-700 font-semibold hover:bg-emerald-50 transition-colors"
               >
                 <ChevronLeft className="w-5 h-5" />
                 이전
@@ -184,7 +163,7 @@ export default function OnboardingPage() {
             )}
             <button
               onClick={handleNext}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors shadow-sm"
             >
               {currentSlide === slides.length - 1 ? "시작하기" : "다음"}
               {currentSlide < slides.length - 1 && <ChevronRight className="w-5 h-5" />}

@@ -12,7 +12,8 @@ import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import { TrendingUp, ShoppingCart, Receipt } from "lucide-react";
+import { useTour } from "@/hooks/useTour";
+import { ShoppingCart, Receipt } from "lucide-react";
 
 interface Stock {
   id: string;
@@ -49,14 +50,19 @@ export default function InvestPage() {
   const [showOnlyHoldings, setShowOnlyHoldings] = useState(
     filterParam === "holdings"
   );
+  const [showOnlyNews, setShowOnlyNews] = useState(false);
   const [totalProfit, setTotalProfit] = useState<number>(0);
   const [totalProfitRate, setTotalProfitRate] = useState<number>(0);
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [showHistoryGuide, setShowHistoryGuide] = useState(true);
+  const [showStockGuide, setShowStockGuide] = useState(true);
   const [newsStock, setNewsStock] = useState<{
     id: string;
     name: string;
   } | null>(null);
+
+  // 투어 훅 추가
+  useTour(true);
 
   const loadData = async (isInitial = false) => {
     if (isInitial) {
@@ -91,6 +97,12 @@ export default function InvestPage() {
 
   useEffect(() => {
     loadData(true);
+    
+    // 가이드 표시 여부 확인
+    const hideStockGuide = localStorage.getItem("hideStockGuide");
+    if (hideStockGuide === "true") {
+      setShowStockGuide(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -111,12 +123,23 @@ export default function InvestPage() {
   });
 
   const holdingStocks = stocks.filter((s) => s.holdingQuantity > 0);
+  const newsStocks = stocks.filter((s) => s.newsCount > 0);
   const totalHoldingValue = holdingStocks.reduce(
     (sum, s) => sum + s.holdingValue,
     0
   );
 
-  const displayStocks = showOnlyHoldings ? holdingStocks : stocks;
+  let displayStocks = stocks;
+  if (showOnlyHoldings && showOnlyNews) {
+    // 둘 다 체크: 보유 중이면서 뉴스가 있는 종목
+    displayStocks = stocks.filter(
+      (s) => s.holdingQuantity > 0 && s.newsCount > 0
+    );
+  } else if (showOnlyHoldings) {
+    displayStocks = holdingStocks;
+  } else if (showOnlyNews) {
+    displayStocks = newsStocks;
+  }
 
   if (isInitialLoading) {
     return <PageLoading />;
@@ -127,7 +150,7 @@ export default function InvestPage() {
       {/* Pull-to-refresh 인디케이터 */}
       {isPulling && (
         <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4">
-          <div className="bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+          <div className="bg-emerald-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             <span className="text-sm font-medium">새로고침 중...</span>
           </div>
@@ -136,45 +159,70 @@ export default function InvestPage() {
       <div className="max-w-4xl mx-auto p-4">
         <PageHeader
           title="투자"
-          description={`Day ${currentDay} 진행 중! 뉴스를 보고 투자해보세요`}
-          icon={<TrendingUp className="h-7 w-7 text-blue-600" />}
+          description="뉴스를 읽고 주식을 사고팔아보세요"
         />
+
+        {/* 종목 클릭 안내 */}
+        {showStockGuide && stocks.length > 0 && (
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-2xl p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl flex-shrink-0">👆</div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-emerald-900 mb-1">
+                  종목 카드를 눌러보세요!
+                </p>
+                <p className="text-xs text-emerald-800">
+                  종목을 클릭하면 주식을 사고 팔 수 있어요. 뉴스를 확인하고 투자해보세요!
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowStockGuide(false);
+                  localStorage.setItem("hideStockGuide", "true");
+                }}
+                className="text-emerald-600 hover:text-emerald-800 text-xl flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Portfolio Summary */}
         <div className="mb-6">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 text-white shadow-lg">
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
             <div className="mb-4">
-              <p className="text-sm opacity-90 mb-1">잔액</p>
-              <p className="text-3xl font-bold">{balance.toLocaleString()}원</p>
+              <p className="text-xs text-gray-600 mb-1.5">남은 현금</p>
+              <p className="text-xl font-bold text-gray-900">{balance.toLocaleString()}원</p>
             </div>
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
               <div>
-                <p className="text-xs opacity-80 mb-1">보유 자산</p>
-                <p className="text-lg font-semibold">
+                <p className="text-xs text-gray-600 mb-1.5">내 주식</p>
+                <p className="text-base font-bold text-gray-900">
                   {totalHoldingValue.toLocaleString()}원
                 </p>
               </div>
               <div>
-                <p className="text-xs opacity-80 mb-1">평가손익</p>
+                <p className="text-xs text-gray-600 mb-1.5">투자 결과</p>
                 <p
-                  className={`text-lg font-semibold ${
+                  className={`text-base font-bold ${
                     totalProfit === 0
-                      ? "text-gray-300"
+                      ? "text-gray-500"
                       : totalProfit > 0
-                        ? "text-yellow-300"
-                        : "text-red-300"
+                        ? "text-red-600"
+                        : "text-blue-600"
                   }`}
                 >
                   {totalProfit === 0 ? "" : totalProfit > 0 ? "+" : ""}
                   {totalProfit.toLocaleString()}원
                 </p>
                 <p
-                  className={`text-xs opacity-90 ${
+                  className={`text-xs font-medium ${
                     totalProfit === 0
-                      ? "text-gray-300"
+                      ? "text-gray-500"
                       : totalProfit > 0
-                        ? "text-yellow-200"
-                        : "text-red-200"
+                        ? "text-red-600"
+                        : "text-blue-600"
                   }`}
                 >
                   {totalProfitRate === 0 ? "" : totalProfitRate > 0 ? "+" : ""}
@@ -189,20 +237,20 @@ export default function InvestPage() {
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setActiveTab("stocks")}
-            className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+            className={`flex-1 py-3 rounded-xl font-bold transition-all ${
               activeTab === "stocks"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-600"
+                ? "bg-emerald-700 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             투자 종목
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+            className={`flex-1 py-3 rounded-xl font-bold transition-all ${
               activeTab === "history"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-600"
+                ? "bg-emerald-700 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             거래내역
@@ -211,26 +259,64 @@ export default function InvestPage() {
 
         {/* Filter Toggle - 투자 종목 탭에서만 표시 */}
         {activeTab === "stocks" && (
-          <div className="mb-4 flex items-center justify-between bg-gray-50 rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showOnlyHoldings}
-                  onChange={(e) => setShowOnlyHoldings(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  보유 종목만 보기
-                </span>
-              </label>
-              {showOnlyHoldings && (
-                <span className="text-xs text-gray-500">
-                  ({holdingStocks.length}개)
-                </span>
-              )}
+          <>
+            <div className="mb-4 bg-gray-50 rounded-lg p-3 space-y-2">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showOnlyHoldings}
+                    onChange={(e) => setShowOnlyHoldings(e.target.checked)}
+                    className="w-4 h-4 text-emerald-600 rounded focus:ring-2 focus:ring-emerald-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    내가 가진 주식
+                  </span>
+                  {showOnlyHoldings && (
+                    <span className="text-xs text-gray-500">
+                      ({holdingStocks.length}개)
+                    </span>
+                  )}
+                </label>
+                
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showOnlyNews}
+                    onChange={(e) => setShowOnlyNews(e.target.checked)}
+                    className="w-4 h-4 text-emerald-600 rounded focus:ring-2 focus:ring-emerald-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    ⚡ 오늘 주목할 주식
+                  </span>
+                  {showOnlyNews && (
+                    <span className="text-xs text-gray-500">
+                      ({newsStocks.length}개)
+                    </span>
+                  )}
+                </label>
+              </div>
             </div>
-          </div>
+
+            {/* Day 1 안내 배너 */}
+            {currentDay === 1 && (
+              <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 text-2xl">
+                    🎉
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-emerald-900 mb-1">
+                      첫날입니다!
+                    </h4>
+                    <p className="text-xs text-emerald-800">
+                      뉴스를 읽고 주식을 사보세요. 내일 결과를 확인할 수 있어요!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Transaction History */}
@@ -238,39 +324,27 @@ export default function InvestPage() {
           <>
             {/* 안내 메시지 */}
             {showHistoryGuide && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
-                    <div className="bg-blue-100 rounded-full p-2 mt-0.5">
-                      <svg
-                        className="w-5 h-5 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
+                    <div className="flex-shrink-0 text-xl">
+                      💡
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-blue-900 mb-1">
+                      <h4 className="text-sm font-bold text-emerald-900 mb-1">
                         수익률 계산 안내
                       </h4>
-                      <p className="text-sm text-blue-800">
-                        수익률은 <strong>매수/매도 거래</strong>만 반영됩니다.
+                      <p className="text-xs text-emerald-800">
+                        수익률은 <strong>사고 팔기 거래</strong>만 반영됩니다.
                         <br />
-                        <span className="text-blue-600">지원금</span>은 초기
+                        <span className="font-bold">지원금</span>은 초기
                         자본이므로 수익률 계산에서 제외됩니다.
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowHistoryGuide(false)}
-                    className="text-blue-400 hover:text-blue-600 transition-colors ml-2"
+                    className="text-emerald-400 hover:text-emerald-600 transition-colors ml-2"
                   >
                     <svg
                       className="w-5 h-5"
@@ -340,11 +414,11 @@ export default function InvestPage() {
                   return sortedDays.map((day) => (
                     <div key={day} className="space-y-3">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="flex-1 h-px bg-gray-300"></div>
-                        <span className="px-3 py-1 bg-gray-700 text-white text-sm font-bold rounded-full">
+                        <div className="flex-1 h-px bg-gray-200"></div>
+                        <span className="px-3 py-1.5 bg-emerald-700 text-white text-xs font-bold rounded-full">
                           Day {day}
                         </span>
-                        <div className="flex-1 h-px bg-gray-300"></div>
+                        <div className="flex-1 h-px bg-gray-200"></div>
                       </div>
                       {txByDay[day]?.map((tx) => {
                         const isMoneyIn = tx.type === "deposit";
@@ -390,8 +464,8 @@ export default function InvestPage() {
                                     {isBenefit
                                       ? "지원금"
                                       : tx.subType === "buy"
-                                        ? "매수"
-                                        : "매도"}
+                                        ? "구매"
+                                        : "판매"}
                                   </span>
                                   {isBenefit && (
                                     <span className="ml-auto px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] rounded font-medium">
@@ -410,7 +484,7 @@ export default function InvestPage() {
                                 </p>
                                 {!isBenefit && (
                                   <p className="text-sm text-gray-600">
-                                    {tx.quantity}주 @{" "}
+                                    {tx.quantity}주 • 주당{" "}
                                     {parseFloat(tx.price).toLocaleString()}원
                                   </p>
                                 )}
@@ -493,19 +567,27 @@ export default function InvestPage() {
           <EmptyState
             icon={<ShoppingCart className="h-16 w-16" />}
             title={
-              showOnlyHoldings
-                ? "보유 중인 주식이 없어요"
-                : "투자 가능한 주식이 없어요"
+              showOnlyHoldings && showOnlyNews
+                ? "조건에 맞는 주식이 없어요"
+                : showOnlyHoldings
+                  ? "아직 산 주식이 없어요"
+                  : showOnlyNews
+                    ? "오늘 주목할 주식이 없어요"
+                    : "투자 가능한 주식이 없어요"
             }
             description={
-              showOnlyHoldings
-                ? "아직 투자한 주식이 없습니다. 주식을 매수하여 포트폴리오를 구성해보세요!"
-                : "관리자가 주식을 등록하면 여기에 표시됩니다."
+              showOnlyHoldings && showOnlyNews
+                ? "내가 가진 주식 중 오늘 뉴스가 있는 종목이 없어요."
+                : showOnlyHoldings
+                  ? "아직 투자한 주식이 없습니다. 주식을 사서 포트폴리오를 만들어보세요!"
+                  : showOnlyNews
+                    ? "오늘은 뉴스가 발표된 주식이 없습니다. 내일을 기대해주세요!"
+                    : "관리자가 주식을 등록하면 여기에 표시됩니다."
             }
           />
         ) : (
-          <div className="space-y-3">
-            {displayStocks.map((stock) => {
+          <div id="stock-list" className="space-y-3">
+            {displayStocks.map((stock, index) => {
               const profitLoss =
                 (stock.currentPrice - stock.averagePurchasePrice) *
                 stock.holdingQuantity;
@@ -515,17 +597,24 @@ export default function InvestPage() {
                       (stock.averagePurchasePrice * stock.holdingQuantity)) *
                     100
                   : 0;
+              const isHolding = stock.holdingQuantity > 0;
 
               return (
                 <div
                   key={stock.id}
+                  id={index === 0 ? "first-stock-card" : undefined}
                   onClick={() => setSelectedStock(stock)}
-                  className="bg-white rounded-lg p-4 shadow hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
+                  className="bg-white rounded-3xl p-5 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all duration-200 cursor-pointer border border-gray-100 relative group"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-lg">{stock.name}</h3>
+                        <h3 className="font-semibold text-base">{stock.name}</h3>
+                        {isHolding && (
+                          <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-semibold rounded-md">
+                            보유중
+                          </span>
+                        )}
                         {stock.newsCount > 0 && (
                           <button
                             onClick={(e) => {
@@ -535,10 +624,10 @@ export default function InvestPage() {
                                 name: stock.name,
                               });
                             }}
-                            className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-semibold hover:bg-blue-100 transition-colors"
+                            className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-100 active:scale-95 transition-all"
                           >
-                            <span>📰</span>
-                            <span>{stock.newsCount}</span>
+                            <span>뉴스 {stock.newsCount}</span>
+                            <span className="text-emerald-500">›</span>
                           </button>
                         )}
                       </div>
@@ -548,77 +637,55 @@ export default function InvestPage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold">
+                      <p className="text-base font-medium text-gray-900">
                         {stock.currentPrice.toLocaleString()}원
                       </p>
                       <p
-                        className={`text-sm font-semibold ${
+                        className={`text-sm font-medium ${
                           stock.changeRate === 0
-                            ? "text-gray-500"
+                            ? "text-gray-400"
                             : stock.changeRate > 0
                               ? "text-red-600"
                               : "text-blue-600"
                         }`}
                       >
-                        {stock.changeRate === 0
-                          ? "-"
-                          : stock.changeRate > 0
-                            ? "▲"
-                            : "▼"}{" "}
-                        {Math.abs(stock.change).toLocaleString()}원 (
-                        {stock.changeRate === 0
-                          ? "0.00"
-                          : Math.abs(stock.changeRate).toFixed(2)}
-                        %)
+                        <span className="text-xs opacity-70 mr-1">오늘</span>
+                        {stock.changeRate > 0 ? "+" : ""}
+                        {stock.changeRate.toFixed(2)}%
                       </p>
                     </div>
                   </div>
 
                   {/* Holdings Info */}
-                  {stock.holdingQuantity > 0 && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <div className="flex justify-between text-sm">
-                        <div>
-                          <span className="text-gray-600">보유 수량: </span>
-                          <span className="font-semibold">
+                  {isHolding && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-600">
+                          <span className="font-medium text-gray-900">
                             {stock.holdingQuantity}주
                           </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">평가액: </span>
-                          <span className="font-semibold">
-                            {stock.holdingValue.toLocaleString()}원
+                          <span className="text-gray-400 mx-1.5">·</span>
+                          <span className="text-xs">
+                            평균 {stock.averagePurchasePrice.toLocaleString()}원
                           </span>
                         </div>
-                      </div>
-                      <div className="flex justify-between text-sm mt-1">
-                        <div>
-                          <span className="text-gray-600">평균 단가: </span>
-                          <span className="font-semibold">
-                            {stock.averagePurchasePrice.toLocaleString()}원
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">손익: </span>
-                          <span
-                            className={`font-semibold ${
-                              profitLoss === 0
-                                ? "text-gray-500"
-                                : profitLoss > 0
-                                  ? "text-red-600"
-                                  : "text-blue-600"
+                        {profitLoss !== 0 && (
+                          <div
+                            className={`text-sm font-medium ${
+                              profitLoss > 0
+                                ? "text-red-600"
+                                : "text-blue-600"
                             }`}
                           >
-                            {profitLoss === 0 ? "" : profitLoss > 0 ? "+" : ""}
-                            {profitLoss.toLocaleString()}원 (
-                            {profitLossRate === 0
-                              ? ""
-                              : profitLossRate > 0
-                                ? "+"
-                                : ""}
-                            {profitLossRate.toFixed(2)}%)
-                          </span>
-                        </div>
+                            <span className="text-xs opacity-70 mr-1">내 수익</span>
+                            {profitLoss > 0 ? "+" : ""}
+                            {profitLoss.toLocaleString()}원
+                            <span className="text-xs ml-1 opacity-70">
+                              ({profitLossRate > 0 ? "+" : ""}
+                              {profitLossRate.toFixed(1)}%)
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

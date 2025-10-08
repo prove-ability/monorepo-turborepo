@@ -62,11 +62,11 @@ export default function AnimatedBalance({
 
   return (
     <div className="relative">
-      <p className="text-lg font-semibold">
+      <p className="text-base font-bold">
         {Math.round(displayBalance).toLocaleString()}원
       </p>
       {showIncrease && benefit && (
-        <div className="absolute -top-6 right-0 text-yellow-300 font-bold text-sm animate-bounce">
+        <div className="absolute -top-6 right-0 text-emerald-600 font-bold text-sm animate-bounce">
           +{benefit.amount.toLocaleString()}원
         </div>
       )}

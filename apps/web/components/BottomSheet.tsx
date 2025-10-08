@@ -58,6 +58,7 @@ export default function BottomSheet({
 
       {/* Bottom Sheet - 최상위 z-index */}
       <div
+        id="trade-modal"
         className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl flex flex-col animate-slide-up"
         style={{ 
           maxHeight,
@@ -68,24 +69,24 @@ export default function BottomSheet({
       >
         {/* Header */}
         {showHeader && (
-          <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white rounded-t-2xl">
+          <div className="flex items-center justify-between p-5 sticky top-0 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-t-2xl">
             {headerContent || (
               <div className="flex items-center gap-2">
                 {icon && <span className="text-2xl">{icon}</span>}
                 <div>
-                  {title && <h3 className="font-bold text-lg">{title}</h3>}
+                  {title && <h3 className="font-bold text-lg text-white">{title}</h3>}
                   {subtitle && (
-                    <p className="text-sm text-gray-500">{subtitle}</p>
+                    <p className="text-sm text-emerald-100">{subtitle}</p>
                   )}
                 </div>
               </div>
             )}
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-white/20 rounded-full transition-colors"
             >
               <svg
-                className="w-6 h-6 text-gray-600"
+                className="w-6 h-6 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

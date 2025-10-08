@@ -5,7 +5,6 @@ import { TrendingUp, TrendingDown, Newspaper } from "lucide-react";
 import BottomSheet from "./BottomSheet";
 import {
   Line,
-  Area,
   ComposedChart,
   XAxis,
   YAxis,
@@ -144,7 +143,7 @@ export default function StockNewsSheet({
                       >
                         <defs>
                           <linearGradient
-                            id="colorPrice"
+                            id="colorPriceRise"
                             x1="0"
                             y1="0"
                             x2="0"
@@ -152,12 +151,30 @@ export default function StockNewsSheet({
                           >
                             <stop
                               offset="5%"
-                              stopColor="#3B82F6"
-                              stopOpacity={0.3}
+                              stopColor="#DC2626"
+                              stopOpacity={0.2}
                             />
                             <stop
                               offset="95%"
-                              stopColor="#3B82F6"
+                              stopColor="#DC2626"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                          <linearGradient
+                            id="colorPriceFall"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#2563EB"
+                              stopOpacity={0.2}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#2563EB"
                               stopOpacity={0}
                             />
                           </linearGradient>
@@ -191,15 +208,16 @@ export default function StockNewsSheet({
                                   <p className="text-sm font-semibold">
                                     Day {data.day}
                                   </p>
-                                  <p className="text-lg font-bold text-blue-600">
+                                  <p className="text-lg font-bold text-gray-900">
                                     {data.price.toLocaleString()}원
                                   </p>
                                   {data.change !== 0 && (
                                     <p
-                                      className={`text-sm ${data.change >= 0 ? "text-red-600" : "text-blue-600"}`}
+                                      className={`text-sm font-semibold ${data.change >= 0 ? "text-red-600" : "text-blue-600"}`}
                                     >
-                                      {data.change >= 0 ? "+" : ""}
+                                      {data.change >= 0 ? "▲ +" : "▼ "}
                                       {data.change.toLocaleString()}원 (
+                                      {data.changePercent >= 0 ? "+" : ""}
                                       {data.changePercent.toFixed(2)}%)
                                     </p>
                                   )}
@@ -209,19 +227,57 @@ export default function StockNewsSheet({
                             return null;
                           }}
                         />
-                        <Area
-                          type="monotone"
-                          dataKey="price"
-                          fill="url(#colorPrice)"
-                          stroke="none"
-                        />
+                        
+                        {/* 세그먼트별 색상 Line */}
+                        {data.priceHistory.map((point, index) => {
+                          if (index === 0) return null;
+                          const prevPoint = data.priceHistory[index - 1];
+                          if (!prevPoint) return null;
+                          const isRise = point.price >= prevPoint.price;
+                          const segmentData = [prevPoint, point];
+                          
+                          return (
+                            <Line
+                              key={`segment-${index}`}
+                              data={segmentData}
+                              type="monotone"
+                              dataKey="price"
+                              stroke={isRise ? "#DC2626" : "#2563EB"}
+                              strokeWidth={3}
+                              dot={false}
+                              activeDot={false}
+                            />
+                          );
+                        })}
+                        
+                        {/* 포인트 강조 */}
                         <Line
                           type="monotone"
                           dataKey="price"
-                          stroke="#3B82F6"
-                          strokeWidth={2}
-                          dot={{ fill: "#3B82F6", r: 4 }}
-                          activeDot={{ r: 6 }}
+                          stroke="none"
+                          strokeWidth={0}
+                          dot={(props: {
+                            cx: number;
+                            cy: number;
+                            payload: { change: number; day: number };
+                            index?: number;
+                          }) => {
+                            const { cx, cy, payload, index } = props;
+                            const isRise = payload.change >= 0;
+                            const isFirst = payload.day === 1;
+                            return (
+                              <circle
+                                key={`dot-${payload.day}-${index || 0}`}
+                                cx={cx}
+                                cy={cy}
+                                r={5}
+                                fill={isFirst ? "#6B7280" : isRise ? "#DC2626" : "#2563EB"}
+                                stroke="white"
+                                strokeWidth={2}
+                              />
+                            );
+                          }}
+                          activeDot={{ r: 7, strokeWidth: 2 }}
                         />
                         {/* 뉴스 마커 */}
                         {data.relatedNews.map((news) => {

@@ -53,12 +53,12 @@ export default function TradeBottomSheet({
     }
 
     if (tradeType === "buy" && !canAfford) {
-      setMessage({ type: "error", text: "잔액이 부족합니다." });
+      setMessage({ type: "error", text: "돈이 부족해요. 남은 돈을 확인해주세요!" });
       return;
     }
 
     if (tradeType === "sell" && !canSell) {
-      setMessage({ type: "error", text: "보유 수량이 부족합니다." });
+      setMessage({ type: "error", text: "주식이 부족해요. 가진 수량을 확인해주세요!" });
       return;
     }
 
@@ -97,65 +97,67 @@ export default function TradeBottomSheet({
     });
   };
 
+  const headerContent = (
+    <div>
+      <h3 className="font-bold text-lg text-white mb-2">{stock.name}</h3>
+      <div className="flex items-baseline gap-2">
+        <span className="text-xl font-bold text-white">
+          {stock.currentPrice.toLocaleString()}원
+        </span>
+        <span
+          className={`text-sm font-medium ${
+            stock.changeRate === 0
+              ? "text-emerald-200"
+              : stock.changeRate > 0
+                ? "text-red-300"
+                : "text-blue-300"
+          }`}
+        >
+          {stock.changeRate === 0
+            ? "-"
+            : stock.changeRate > 0
+              ? "▲"
+              : "▼"}{" "}
+          {Math.abs(stock.change).toLocaleString()}원 (
+          {stock.changeRate === 0
+            ? "0.00"
+            : Math.abs(stock.changeRate).toFixed(2)}
+          %)
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <BottomSheet
       isOpen={!!stock}
       onClose={onClose}
-      title={stock.name}
+      headerContent={headerContent}
       maxHeight="66.67vh"
     >
       <div className="px-0">
-        {/* Current Price */}
-          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-600 mb-1">현재가</div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold">
-                {stock.currentPrice.toLocaleString()}원
-              </span>
-              <span
-                className={`text-sm ${
-                  stock.changeRate === 0
-                    ? "text-gray-500"
-                    : stock.changeRate > 0
-                      ? "text-red-600"
-                      : "text-blue-600"
-                }`}
-              >
-                {stock.changeRate === 0
-                  ? "-"
-                  : stock.changeRate > 0
-                    ? "▲"
-                    : "▼"}{" "}
-                {Math.abs(stock.change).toLocaleString()}원 (
-                {stock.changeRate === 0
-                  ? "0.00"
-                  : Math.abs(stock.changeRate).toFixed(2)}
-                %)
-              </span>
-            </div>
-          </div>
 
           {/* Buy/Sell Tabs */}
           <div className="flex gap-2 mb-4">
             <button
               onClick={() => setTradeType("buy")}
-              className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+              className={`flex-1 py-3 rounded-xl font-bold transition-all ${
                 tradeType === "buy"
-                  ? "bg-red-600 text-white"
-                  : "bg-gray-100 text-gray-600"
+                  ? "bg-emerald-700 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              매수
+              살래요
             </button>
             <button
               onClick={() => setTradeType("sell")}
-              className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+              className={`flex-1 py-3 rounded-xl font-bold transition-all ${
                 tradeType === "sell"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-600"
+                  ? "bg-emerald-700 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              매도
+              팔래요
             </button>
           </div>
 
@@ -163,15 +165,15 @@ export default function TradeBottomSheet({
           <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm">
             {tradeType === "buy" ? (
               <div className="flex justify-between">
-                <span className="text-gray-600">잔액</span>
-                <span className="font-semibold">
+                <span className="text-gray-600">남은 돈</span>
+                <span className="font-bold">
                   {balance.toLocaleString()}원
                 </span>
               </div>
             ) : (
               <div className="flex justify-between">
-                <span className="text-gray-600">보유 수량</span>
-                <span className="font-semibold">
+                <span className="text-gray-600">내가 가진 주식</span>
+                <span className="font-bold">
                   {stock.holdingQuantity || 0}주
                 </span>
               </div>
@@ -181,32 +183,32 @@ export default function TradeBottomSheet({
           {/* Quantity Input */}
           <div className="mb-4">
             <label className="block text-sm text-gray-600 mb-2">
-              {tradeType === "buy" ? "매수" : "매도"} 수량
+              {tradeType === "buy" ? "사고 싶은" : "팔고 싶은"} 수량
             </label>
             <input
               type="number"
               min="1"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
               placeholder="수량 입력"
             />
           </div>
 
           {/* Total Price */}
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="mb-4 p-3 bg-emerald-50 border border-emerald-100 rounded-lg">
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-600">
-                총 {tradeType === "buy" ? "매수" : "매도"} 금액
+                총 금액
               </span>
-              <span className="font-bold text-lg">
+              <span className="font-bold text-lg text-gray-900">
                 {totalPrice.toLocaleString()}원
               </span>
             </div>
             {tradeType === "buy" && (
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>잔액 - 매수금액</span>
-                <span className={canAfford ? "text-green-600" : "text-red-600"}>
+              <div className="flex justify-between text-xs text-gray-600">
+                <span>남은 돈</span>
+                <span className={canAfford ? "text-emerald-700 font-bold" : "text-red-600 font-bold"}>
                   {(balance - totalPrice).toLocaleString()}원
                 </span>
               </div>
@@ -216,10 +218,10 @@ export default function TradeBottomSheet({
           {/* Message */}
           {message && (
             <div
-              className={`mb-4 p-3 rounded-lg text-sm ${
+              className={`mb-4 p-3 rounded-xl text-sm font-medium ${
                 message.type === "success"
-                  ? "bg-green-50 text-green-800"
-                  : "bg-red-50 text-red-800"
+                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                  : "bg-red-50 text-red-800 border border-red-200"
               }`}
             >
               {message.text}
@@ -236,19 +238,17 @@ export default function TradeBottomSheet({
               (tradeType === "buy" && !canAfford) ||
               (tradeType === "sell" && !canSell)
             }
-            className={`w-full py-4 rounded-lg font-bold text-white transition-colors ${
+            className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
               isPending ||
               !quantity ||
               parseInt(quantity) <= 0 ||
               (tradeType === "buy" && !canAfford) ||
               (tradeType === "sell" && !canSell)
                 ? "bg-gray-300 cursor-not-allowed"
-                : tradeType === "buy"
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-blue-600 hover:bg-blue-700"
+                : "bg-emerald-700 hover:bg-emerald-800 active:scale-[0.98]"
             }`}
           >
-            {isPending ? "처리 중..." : tradeType === "buy" ? "매수" : "매도"}
+            {isPending ? "처리 중..." : tradeType === "buy" ? "살래요!" : "팔래요!"}
           </button>
       </div>
     </BottomSheet>

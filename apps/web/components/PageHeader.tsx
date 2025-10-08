@@ -16,7 +16,7 @@ export default function PageHeader({
 }: PageHeaderProps) {
   return (
     <motion.header
-      className="mb-6"
+      className="mb-8"
       role="banner"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -34,12 +34,12 @@ export default function PageHeader({
               {icon}
             </motion.div>
           )}
-          <h1 className="text-2xl font-bold">{title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
         </div>
       </div>
       {description && (
         <motion.p
-          className="text-sm text-gray-600 mt-1"
+          className="text-sm text-gray-600 mt-1.5"
           role="doc-subtitle"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

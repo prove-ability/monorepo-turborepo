@@ -51,27 +51,27 @@ export default function BenefitNotificationBanner({
   if (!benefit || !isVisible || benefit.day === 1) return null;
 
   return (
-    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-4 shadow-md animate-slide-down">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="bg-green-100 rounded-full p-2">
-            <span className="text-2xl">💰</span>
+    <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm animate-slide-down">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="bg-emerald-50 rounded-full p-2.5 flex-shrink-0">
+            <span className="text-xl">💰</span>
           </div>
-          <div>
-            <h3 className="font-bold text-green-900 text-lg">
+          <div className="min-w-0">
+            <h3 className="font-bold text-gray-900 text-sm mb-0.5">
               Day {benefit.day} 지원금 지급!
             </h3>
-            <p className="text-green-700 text-sm">
-              <span className="font-bold text-xl">
+            <p className="text-gray-600 text-xs">
+              <span className="font-semibold text-emerald-700 text-base">
                 {benefit.amount.toLocaleString()}원
-              </span>
-              이 잔액에 자동 입금되었습니다
+              </span>{" "}
+              입금완료
             </p>
           </div>
         </div>
         <button
           onClick={handleConfirm}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-sm"
+          className="px-4 py-2 bg-emerald-700 text-white rounded-xl hover:bg-emerald-800 active:scale-95 transition-all font-bold text-xs flex-shrink-0"
         >
           확인
         </button>

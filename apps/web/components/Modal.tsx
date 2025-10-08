@@ -27,7 +27,7 @@ export default function Modal({
   maxWidth = "lg",
   minHeight = "400px",
   showHeader = true,
-  headerClassName = "bg-gradient-to-br from-blue-600 to-indigo-700",
+  headerClassName = "bg-gradient-to-br from-emerald-600 to-teal-700",
 }: ModalProps) {
   // 배경 스크롤 막기
   useEffect(() => {
@@ -90,12 +90,12 @@ export default function Modal({
       >
         {/* Header */}
         {showHeader && (
-          <div className={`relative p-6 pb-8 ${headerClassName}`}>
+          <div className={`relative p-5 ${headerClassName}`}>
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
+              className="absolute top-3 right-3 p-2 hover:bg-white/20 rounded-full transition-colors"
             >
-              <X className="w-6 h-6 text-white" />
+              <X className="w-5 h-5 text-white" />
             </button>
             {headerContent || (
               <>
@@ -103,7 +103,7 @@ export default function Modal({
                   <h2 className="text-2xl font-bold text-white mb-1">{title}</h2>
                 )}
                 {subtitle && (
-                  <div className="text-blue-100 text-sm">{subtitle}</div>
+                  <div className="text-emerald-100 text-sm">{subtitle}</div>
                 )}
               </>
             )}
