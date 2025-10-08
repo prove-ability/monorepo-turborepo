@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { db, guests, wallets, transactions } from "@repo/db";
-import { eq, or, like, and, desc, asc } from "drizzle-orm";
+import { db, guests, wallets, transactions, holdings } from "@repo/db";
+import { eq, or, like, and, desc, asc, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
 import { INITIAL_WALLET_BALANCE } from "@/config/gameConfig";
 
@@ -312,6 +312,89 @@ export const bulkCreateUsers = withAuth(
       return {
         error: {
           _form: [`일괄 등록 중 오류 발생: ${error.message}`],
+        },
+      };
+    }
+  }
+);
+
+// 학생 일괄 삭제 (설문 테이블 제외)
+export const deleteGuests = withAuth(
+  async (user, guestIds: string[], classId: string) => {
+    try {
+      if (!guestIds || guestIds.length === 0) {
+        throw new Error("삭제할 학생을 선택해주세요");
+      }
+
+      // 1. 해당 클래스의 학생들인지 확인
+      const guestsToDelete = await db.query.guests.findMany({
+        where: and(
+          inArray(guests.id, guestIds),
+          eq(guests.classId, classId)
+        ),
+        with: {
+          wallet: true,
+        },
+      });
+
+      if (guestsToDelete.length === 0) {
+        throw new Error("삭제할 학생을 찾을 수 없습니다");
+      }
+
+      if (guestsToDelete.length !== guestIds.length) {
+        throw new Error("일부 학생이 해당 클래스에 속하지 않습니다");
+      }
+
+      let deletedCount = 0;
+
+      // 2. 각 학생별로 관련 데이터 삭제
+      for (const guest of guestsToDelete) {
+        try {
+          // 2-1. 거래내역 삭제 (wallet이 있는 경우)
+          if (guest.wallet?.id) {
+            await db
+              .delete(transactions)
+              .where(eq(transactions.walletId, guest.wallet.id));
+          }
+
+          // 2-2. 보유 주식 삭제
+          await db
+            .delete(holdings)
+            .where(eq(holdings.guestId, guest.id));
+
+          // 2-3. 지갑 삭제
+          if (guest.wallet?.id) {
+            await db
+              .delete(wallets)
+              .where(eq(wallets.id, guest.wallet.id));
+          }
+
+          // 2-4. 학생 삭제 (surveys는 ON DELETE CASCADE로 자동 보존됨)
+          await db
+            .delete(guests)
+            .where(eq(guests.id, guest.id));
+
+          deletedCount++;
+        } catch (err) {
+          console.error(`Failed to delete guest ${guest.id}:`, err);
+          // 개별 학생 삭제 실패 시 계속 진행
+        }
+      }
+
+      revalidatePath(`/protected/classes/${classId}`);
+      revalidatePath("/protected/classes");
+
+      return {
+        success: true,
+        message: `${deletedCount}명의 학생이 삭제되었습니다`,
+        deletedCount,
+      };
+    } catch (e) {
+      const error =
+        e instanceof Error ? e : new Error("An unknown error occurred");
+      return {
+        error: {
+          _form: [`학생 삭제 중 오류 발생: ${error.message}`],
         },
       };
     }

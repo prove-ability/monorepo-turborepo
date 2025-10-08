@@ -204,6 +204,13 @@
       "when": 1759904727113,
       "tag": "0028_typical_sumo",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1759926049413,
+      "tag": "0029_abnormal_lady_ursula",
+      "breakpoints": true
     }
   ]
 }

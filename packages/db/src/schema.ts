@@ -241,8 +241,7 @@ export const holdingsRelations = relations(holdings, ({ one }) => ({
 export const surveys = pgTable("surveys", {
   id: uuid("id").primaryKey().defaultRandom(),
   guestId: uuid("guest_id")
-    .references((): AnyPgColumn => guests.id, { onDelete: "cascade" })
-    .notNull(),
+    .references((): AnyPgColumn => guests.id, { onDelete: "set null" }),
   classId: uuid("class_id")
     .references((): AnyPgColumn => classes.id, { onDelete: "cascade" })
     .notNull(),

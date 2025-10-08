@@ -2,9 +2,9 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@repo/ui";
-import { ArrowLeft, Search, Users, Building2 } from "lucide-react";
+import { ArrowLeft, Search, Users, Building2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getUsersByClass } from "@/actions/userActions";
+import { getUsersByClass, deleteGuests } from "@/actions/userActions";
 import { StudentBulkUpload } from "./StudentBulkUpload";
 import { Class, Client, Manager } from "@/types";
 
@@ -29,6 +29,8 @@ export function ClassDetailClient({
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // 학생 목록 조회 함수 (재사용)
   const fetchStudents = async () => {
@@ -73,6 +75,58 @@ export function ClassDetailClient({
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ko-KR");
+  };
+
+  // 전체 선택/해제
+  const handleSelectAll = () => {
+    if (selectedIds.size === filteredStudents.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredStudents.map((s) => s.id)));
+    }
+  };
+
+  // 개별 선택
+  const handleSelectStudent = (studentId: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(studentId)) {
+      newSelected.delete(studentId);
+    } else {
+      newSelected.add(studentId);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  // 일괄 삭제
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) {
+      alert("삭제할 학생을 선택해주세요");
+      return;
+    }
+
+    const confirmMessage = `선택한 ${selectedIds.size}명의 학생을 삭제하시겠습니까?\n\n⚠️ 다음 데이터가 함께 삭제됩니다:\n- 거래 내역\n- 보유 주식\n- 지갑 정보\n\n⚠️ 설문 응답은 보존됩니다.\n\n이 작업은 되돌릴 수 없습니다.`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const result = await deleteGuests(Array.from(selectedIds), classId);
+
+      if (result.success) {
+        alert(result.message);
+        setSelectedIds(new Set());
+        await fetchStudents();
+      } else if (result.error) {
+        alert(`삭제 실패: ${result.error}`);
+      }
+    } catch (err) {
+      console.error("삭제 오류:", err);
+      alert("학생 삭제 중 오류가 발생했습니다");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -121,17 +175,35 @@ export function ClassDetailClient({
       {/* 학생 목록 섹션 */}
       <div className="bg-white rounded-lg shadow-md">
         <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4 gap-3">
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <h2 className="text-xl font-semibold text-gray-900">
               등록된 학생 ({filteredStudents.length}명)
             </h2>
-            <StudentBulkUpload
-              classId={classId}
-              clientId={classData.clientId}
-              onCompleted={async () => {
-                await fetchStudents();
-              }}
-            />
+            <div className="flex gap-2">
+              {selectedIds.size > 0 && (
+                <Button
+                  onClick={handleBulkDelete}
+                  disabled={isDeleting}
+                  variant="destructive"
+                  size="sm"
+                  className="flex items-center space-x-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>
+                    {isDeleting
+                      ? "삭제 중..."
+                      : `선택한 ${selectedIds.size}명 삭제`}
+                  </span>
+                </Button>
+              )}
+              <StudentBulkUpload
+                classId={classId}
+                clientId={classData.clientId}
+                onCompleted={async () => {
+                  await fetchStudents();
+                }}
+              />
+            </div>
           </div>
 
           {/* 검색 입력 */}
@@ -195,6 +267,17 @@ export function ClassDetailClient({
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-6 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={
+                          filteredStudents.length > 0 &&
+                          selectedIds.size === filteredStudents.length
+                        }
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       학생 정보
                     </th>
@@ -211,7 +294,20 @@ export function ClassDetailClient({
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredStudents.map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50">
+                    <tr
+                      key={student.id}
+                      className={`hover:bg-gray-50 ${
+                        selectedIds.has(student.id) ? "bg-blue-50" : ""
+                      }`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(student.id)}
+                          onChange={() => handleSelectStudent(student.id)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
