@@ -144,6 +144,11 @@ export async function executeTrade(
         throw new Error("사용자, 클래스 또는 지갑 정보를 찾을 수 없습니다.");
       }
 
+      if (user.class.currentDay === null || user.class.currentDay === undefined) {
+        throw new Error("클래스의 현재 게임 일차가 설정되지 않았습니다.");
+      }
+
+      const currentDay = user.class.currentDay;
       const walletBalance = parseFloat(user.wallet.balance);
 
       if (action === "buy") {
@@ -216,11 +221,11 @@ export async function executeTrade(
         walletId: user.wallet.id,
         classId: user.classId,
         stockId: stockId,
-        type: action === "buy" ? "loss" : "profit",
+        type: action === "buy" ? "withdrawal" : "deposit",
         subType: action,
         quantity: quantity,
         price: String(price),
-        day: user.class.currentDay,
+        day: currentDay,
       });
     });
 
