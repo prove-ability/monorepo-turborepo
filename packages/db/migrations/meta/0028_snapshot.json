@@ -1,6 +1,6 @@
 {
-  "id": "809f99bc-6e7e-43a9-a001-1572e9be0386",
-  "prevId": "a5259ff7-ff9a-47f0-addb-1aee264d6625",
+  "id": "dc41a585-fda4-4577-b681-b530489068a3",
+  "prevId": "809f99bc-6e7e-43a9-a001-1572e9be0386",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -135,7 +135,7 @@
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "current_day": {
           "name": "current_day",
@@ -380,13 +380,13 @@
           "name": "quantity",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "average_purchase_price": {
           "name": "average_purchase_price",
           "type": "numeric",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",

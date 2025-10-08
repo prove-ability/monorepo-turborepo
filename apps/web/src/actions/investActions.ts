@@ -1,6 +1,7 @@
 "use server";
 
 import { getSession } from "@/lib/session";
+import { ClassStockPrice } from "@/types";
 import {
   db,
   classStockPrices,
@@ -90,7 +91,8 @@ export async function getClassPortfolio(
     return portfolioData
       .filter(
         (item) =>
-          item.stock && (item.stock.classStockPrices as any[]).length > 0
+          item.stock &&
+          (item.stock.classStockPrices as ClassStockPrice[]).length > 0
       )
       .map((item) => ({
         quantity: item.quantity || 0,
@@ -128,7 +130,7 @@ export async function executeTrade(
   const totalValue = price * quantity;
 
   try {
-    await db.transaction(async (tx: any) => {
+    await db.transaction(async (tx) => {
       const user = await tx.query.guests.findFirst({
         where: eq(guests.id, authUser.id),
         columns: { id: true, classId: true },
@@ -224,7 +226,11 @@ export async function executeTrade(
 
     revalidatePath("/invest");
     return { success: true };
-  } catch (error: any) {
-    return { error: error.message };
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "거래 처리 중 오류가 발생했습니다.";
+    return { error: message };
   }
 }

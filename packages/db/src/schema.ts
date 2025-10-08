@@ -217,8 +217,8 @@ export const holdings = pgTable("holdings", {
   guestId: uuid("guest_id").references((): AnyPgColumn => guests.id),
   classId: uuid("class_id").references((): AnyPgColumn => classes.id),
   stockId: uuid("stock_id").references((): AnyPgColumn => stocks.id),
-  quantity: integer("quantity"),
-  averagePurchasePrice: numeric("average_purchase_price"),
+  quantity: integer("quantity").notNull(),
+  averagePurchasePrice: numeric("average_purchase_price").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

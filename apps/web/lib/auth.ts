@@ -1,4 +1,4 @@
-import { db, guests, classes } from "@repo/db";
+import { db, guests } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 
 export interface User {
