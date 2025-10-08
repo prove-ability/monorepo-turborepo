@@ -1,32 +1,35 @@
-const CACHE_NAME = 'crowed-rank-v2';
+const CACHE_NAME = 'crowed-rank-v3';
 
-// 설치 이벤트 - 빈 캐시로 시작 (런타임 캐싱만 사용)
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(() => {
-      console.log('Cache opened');
-      // 설치 시에는 캐싱하지 않음 (Next.js는 동적 chunks를 사용)
-      return Promise.resolve();
-    })
-  );
+// 설치 이벤트 - 즉시 활성화
+self.addEventListener('install', () => {
+  console.log('[SW] Installing new service worker');
+  // 대기 중인 Service Worker를 즉시 활성화
   self.skipWaiting();
 });
 
-// 활성화 이벤트
+// 활성화 이벤트 - 모든 이전 캐시 삭제
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating new service worker');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
+    Promise.all([
+      // 1. 모든 이전 캐시 삭제
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            console.log('[SW] Deleting cache:', cacheName);
             return caches.delete(cacheName);
-          }
-        })
-      );
+          })
+        );
+      }),
+      // 2. 새 캐시 생성
+      caches.open(CACHE_NAME).then(() => {
+        console.log('[SW] New cache created:', CACHE_NAME);
+      })
+    ]).then(() => {
+      // 3. 모든 클라이언트에서 즉시 제어권 가져오기
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
 });
 
 // Fetch 이벤트 (Network First 전략)

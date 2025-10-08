@@ -9,12 +9,31 @@ export default function PWAInstaller() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
-    // Service Worker 등록
+    // Service Worker 등록 및 업데이트
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then((registration) => {
             console.log('✅ Service Worker registered:', registration);
+            
+            // 업데이트 체크 (1분마다)
+            setInterval(() => {
+              registration.update();
+            }, 60000);
+            
+            // 새 Service Worker 발견 시 즉시 활성화
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('🔄 New Service Worker available, reloading...');
+                    // 새로고침하여 새 버전 적용
+                    window.location.reload();
+                  }
+                });
+              }
+            });
           })
           .catch((error) => {
             console.log('❌ Service Worker registration failed:', error);
