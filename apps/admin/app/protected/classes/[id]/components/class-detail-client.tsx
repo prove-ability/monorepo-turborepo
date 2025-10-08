@@ -312,13 +312,9 @@ export function ClassDetailClient({
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {student.name ?? "이름 없음"}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {student.nickname ? `(${student.nickname})` : ""}
-                          </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {student.name ?? "이름 없음"} (
+                          {student.nickname || "닉네임 없음"})
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
