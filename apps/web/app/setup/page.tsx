@@ -8,7 +8,7 @@ import {
   checkNeedsSetup,
 } from "@/actions/profile";
 import { Button, Input, Label } from "@repo/ui";
-import { UserCircle, Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { Lock, CheckCircle, Eye, EyeOff } from "lucide-react";
 
 export default function SetupPage() {
   const router = useRouter();
@@ -16,16 +16,17 @@ export default function SetupPage() {
     "loading" | "nickname" | "password" | "complete"
   >("loading");
   const [nickname, setNickname] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showNicknameConfirm, setShowNicknameConfirm] = useState(false);
 
   useEffect(() => {
     checkSetupStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function checkSetupStatus() {
@@ -46,8 +47,23 @@ export default function SetupPage() {
   async function handleNicknameSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    // 닉네임 유효성 검사 (영어, 숫자, 한글만 허용)
+    const nicknameRegex = /^[a-zA-Z0-9가-힣]+$/;
+    if (!nicknameRegex.test(nickname)) {
+      setError("닉네임은 영어, 숫자, 한글만 사용할 수 있어요");
+      return;
+    }
+
+    // 확인 모달 표시
+    setShowNicknameConfirm(true);
+  }
+
+  async function confirmNicknameSubmit() {
+    setShowNicknameConfirm(false);
     setLoading(true);
 
+    // 닉네임 저장 (중복 체크 포함)
     const result = await updateNickname(nickname);
 
     if (result.error) {
@@ -151,14 +167,16 @@ export default function SetupPage() {
         </div>
 
         {step === "nickname" && (
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="bg-white rounded-3xl shadow-sm border border-emerald-100 p-6">
             <div className="text-center mb-6">
-              <UserCircle className="h-12 w-12 text-blue-600 mx-auto mb-3" />
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                닉네임을 설정해주세요
+              <h1 className="text-xl font-bold text-gray-900 mb-2">
+                닉네임을 정해볼까요?
               </h1>
-              <p className="text-sm text-gray-600">
-                게임에서 사용할 닉네임을 입력하세요
+              <p className="text-sm text-gray-600 mb-2">
+                친구들과 랭킹을 겨룰 때 보여질 이름이에요
+              </p>
+              <p className="text-xs text-gray-500">
+                예시: 투자왕, 주식천재, 돈버는고양이, 재테크왕
               </p>
             </div>
 
@@ -170,14 +188,17 @@ export default function SetupPage() {
                   type="text"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  placeholder="닉네임 (최대 20자)"
+                  placeholder="닉네임을 입력하세요"
                   maxLength={20}
                   required
                   disabled={loading}
                   className="mt-1"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {nickname.length}/20자
+                  영어, 숫자, 한글만 가능 • {nickname.length}/20자
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  개인정보는 피해주세요
                 </p>
               </div>
 
@@ -214,7 +235,10 @@ export default function SetupPage() {
 
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="newPassword"
+                  className="text-sm font-medium text-gray-700"
+                >
                   새로운 비밀번호
                 </Label>
                 <div className="relative mt-1.5">
@@ -233,7 +257,9 @@ export default function SetupPage() {
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-600 focus:outline-none transition-colors"
-                    aria-label={showNewPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                    aria-label={
+                      showNewPassword ? "비밀번호 숨기기" : "비밀번호 보기"
+                    }
                   >
                     {showNewPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -245,7 +271,10 @@ export default function SetupPage() {
               </div>
 
               <div>
-                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-sm font-medium text-gray-700"
+                >
                   비밀번호 다시 한번
                 </Label>
                 <div className="relative mt-1.5">
@@ -263,7 +292,9 @@ export default function SetupPage() {
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-600 focus:outline-none transition-colors"
-                    aria-label={showConfirmPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                    aria-label={
+                      showConfirmPassword ? "비밀번호 숨기기" : "비밀번호 보기"
+                    }
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -283,15 +314,53 @@ export default function SetupPage() {
               <Button
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 rounded-xl py-3 font-semibold text-white transition-colors"
-                disabled={
-                  loading ||
-                  !newPassword ||
-                  !confirmPassword
-                }
+                disabled={loading || !newPassword || !confirmPassword}
               >
                 {loading ? "설정하는 중이에요..." : "완료하기"}
               </Button>
             </form>
+          </div>
+        )}
+
+        {/* 닉네임 확인 모달 */}
+        {showNicknameConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+            <div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-3xl">✨</span>
+                </div>
+                
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+                  이 닉네임으로 할까요?
+                </h3>
+                
+                <p className="text-sm text-gray-500 mb-6 text-center">
+                  한 번 정하면 바꿀 수 없어요
+                </p>
+                
+                <div className="w-full p-5 bg-emerald-50 rounded-2xl mb-6">
+                  <p className="text-3xl font-bold text-emerald-700 text-center">
+                    {nickname}
+                  </p>
+                </div>
+
+                <div className="flex gap-3 w-full">
+                  <button
+                    onClick={() => setShowNicknameConfirm(false)}
+                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                  >
+                    다시 생각할래요
+                  </button>
+                  <button
+                    onClick={confirmNicknameSubmit}
+                    className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors"
+                  >
+                    좋아요!
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

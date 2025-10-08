@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import BenefitNotificationBanner from "@/components/BenefitNotificationBanner";
 import DayChangeNotificationBanner from "@/components/DayChangeNotificationBanner";
-import GameCompletionSurvey from "@/components/GameCompletionSurvey";
+import GameEndModal from "@/components/GameEndModal";
 import AnimatedBalance from "@/components/AnimatedBalance";
 import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
@@ -22,8 +22,12 @@ export default function Home() {
   const [tapCount, setTapCount] = useState(0);
 
   // React Query로 데이터 페칭
-  const { data: dashboardData, isLoading, refetch } = useQuery({
-    queryKey: ['dashboard'],
+  const {
+    data: dashboardData,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["dashboard"],
     queryFn: getDashboardData,
     staleTime: 30 * 1000, // 30초
     refetchOnWindowFocus: true, // 탭 전환 시 자동 갱신
@@ -66,8 +70,11 @@ export default function Home() {
       )}
       {/* Day 변경 알림 배너 */}
       <DayChangeNotificationBanner currentDay={dashboardData.currentDay} />
-      {/* 게임 종료 설문조사 */}
-      <GameCompletionSurvey currentDay={dashboardData.currentDay} maxDay={5} />
+      {/* 게임 종료 모달 */}
+      <GameEndModal 
+        currentDay={dashboardData.currentDay} 
+        totalDays={dashboardData.totalDays} 
+      />
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         <PageHeader
           title="투자 게임"

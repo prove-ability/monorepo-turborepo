@@ -152,15 +152,15 @@ export default function OnboardingPage() {
 
           {/* 버튼 */}
           <div className="flex gap-3">
-            {currentSlide > 0 && (
-              <button
-                onClick={handlePrev}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-emerald-200 text-gray-700 font-semibold hover:bg-emerald-50 transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5" />
-                이전
-              </button>
-            )}
+            <button
+              onClick={handlePrev}
+              className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-emerald-200 text-gray-700 font-semibold hover:bg-emerald-50 transition-all ${
+                currentSlide > 0 ? "opacity-100 visible" : "opacity-0 invisible"
+              }`}
+            >
+              <ChevronLeft className="w-5 h-5" />
+              이전
+            </button>
             <button
               onClick={handleNext}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors shadow-sm"

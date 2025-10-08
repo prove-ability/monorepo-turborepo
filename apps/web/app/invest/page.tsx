@@ -48,7 +48,6 @@ export default function InvestPage() {
     filterParam === "holdings"
   );
   const [showOnlyNews, setShowOnlyNews] = useState(false);
-  const [showHistoryGuide, setShowHistoryGuide] = useState(true);
   const [showStockGuide, setShowStockGuide] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("hideStockGuide") !== "true";
@@ -87,11 +86,13 @@ export default function InvestPage() {
   // 투어 훅 추가
   useTour(true);
 
-  const handleTradeSuccess = () => {
+  const handleTradeSuccess = async () => {
     // 거래 성공 시 모든 관련 데이터 갱신
-    queryClient.invalidateQueries({ queryKey: ['stocks'] });
-    queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // 홈 화면도 갱신
+    await queryClient.invalidateQueries({ queryKey: ['stocks'] });
+    await queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    await queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // 홈 화면도 갱신
+    // 즉시 데이터 다시 가져오기
+    await refetchStocks();
   };
 
   // Pull-to-refresh 기능
@@ -277,10 +278,19 @@ export default function InvestPage() {
                   )}
                 </label>
               </div>
+              {/* 두 필터 동시 사용 안내 */}
+              {showOnlyHoldings && showOnlyNews && (
+                <div className="pt-2 border-t border-gray-200">
+                  <p className="text-xs text-emerald-700 flex items-center gap-1">
+                    <span>✓</span>
+                    <span>내가 가진 주식 중 오늘 뉴스가 있는 종목만 표시 중</span>
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* Day 1 안내 배너 */}
-            {currentDay === 1 && (
+            {/* Day별 안내 배너 */}
+            {currentDay === 1 ? (
               <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 text-2xl">
@@ -296,6 +306,24 @@ export default function InvestPage() {
                   </div>
                 </div>
               </div>
+            ) : currentDay >= 2 && holdingStocks.length > 0 && (
+              <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 text-2xl">
+                    💡
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-emerald-900 mb-1">
+                      투자 팁!
+                    </h4>
+                    <p className="text-xs text-emerald-800">
+                      현금이 부족한가요? <strong>"내가 가진 주식"</strong>을 체크해보세요!
+                      <br />
+                      오늘 뉴스를 읽고 불안한 종목은 정리하고, 유망한 주식에 투자해보세요!
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
           </>
         )}
@@ -304,46 +332,24 @@ export default function InvestPage() {
         {activeTab === "history" ? (
           <>
             {/* 안내 메시지 */}
-            {showHistoryGuide && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 text-xl">
-                      💡
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-bold text-emerald-900 mb-1">
-                        수익률 계산 안내
-                      </h4>
-                      <p className="text-xs text-emerald-800">
-                        수익률은 <strong>사고 팔기 거래</strong>만 반영됩니다.
-                        <br />
-                        <span className="font-bold">지원금</span>은 초기
-                        자본이므로 수익률 계산에서 제외됩니다.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowHistoryGuide(false)}
-                    className="text-emerald-400 hover:text-emerald-600 transition-colors ml-2"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 text-xl">
+                  💡
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-bold text-emerald-900 mb-1">
+                    수익률 계산 안내
+                  </h4>
+                  <p className="text-xs text-emerald-800">
+                    수익률은 <strong>사고 팔기 거래</strong>만 반영됩니다.
+                    <br />
+                    <span className="font-bold">지원금</span>은 초기
+                    자본이므로 수익률 계산에서 제외됩니다.
+                  </p>
                 </div>
               </div>
-            )}
+            </div>
 
             {isRefreshing ? (
               <TransactionListSkeleton />

@@ -47,11 +47,11 @@ export default function DayChangeNotificationBanner({
             </div>
             
             <h2 className="text-xl font-bold text-gray-900 mb-2">
-              새로운 결과가 발표되었어요! 🎉
+              Day {currentDay}가 시작되었어요! 🎉
             </h2>
             
             <p className="text-sm text-gray-600 mb-6">
-              Day {currentDay}의 투자 결과를 확인해보세요!
+              투자 결과를 확인하고 새로운 투자를 시작하세요!
             </p>
             
             <button

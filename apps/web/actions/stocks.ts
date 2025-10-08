@@ -1,6 +1,15 @@
 "use server";
 
-import { db, stocks, classStockPrices, holdings, classes, wallets, transactions, news } from "@repo/db";
+import {
+  db,
+  stocks,
+  classStockPrices,
+  holdings,
+  classes,
+  wallets,
+  transactions,
+  news,
+} from "@repo/db";
 import { eq, and, inArray, lte, asc } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
 import { checkClassStatus } from "@/lib/class-status";
@@ -183,12 +192,9 @@ export const getStocksForInvest = withAuth(async (user) => {
           })
         : [];
 
-    // 현재 Day까지의 뉴스만 조회 (주식별 뉴스 개수 계산용)
+    // 현재 Day의 뉴스만 조회 (주식별 뉴스 개수 계산용)
     const allNews = await db.query.news.findMany({
-      where: and(
-        eq(news.classId, user.classId),
-        lte(news.day, currentDay)
-      ),
+      where: and(eq(news.classId, user.classId), eq(news.day, currentDay)),
     });
 
     // 사용자의 보유 주식 조회
@@ -240,7 +246,10 @@ export const getStocksForInvest = withAuth(async (user) => {
 
       // 해당 주식 관련 뉴스 개수 계산
       const newsCount = allNews.filter((newsItem) => {
-        if (newsItem.relatedStockIds && Array.isArray(newsItem.relatedStockIds)) {
+        if (
+          newsItem.relatedStockIds &&
+          Array.isArray(newsItem.relatedStockIds)
+        ) {
           return newsItem.relatedStockIds.includes(stock.id);
         }
         return false;

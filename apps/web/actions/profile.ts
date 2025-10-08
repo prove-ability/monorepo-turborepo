@@ -21,7 +21,9 @@ export const updateNickname = withAuth(async (user, nickname: string) => {
     });
 
     if (existingUser && existingUser.id !== user.id) {
-      return { error: "이미 사용 중인 닉네임이에요" };
+      return {
+        error: "이미 사용 중인 닉네임이에요. 다른 닉네임을 입력해주세요!",
+      };
     }
 
     await db
@@ -78,9 +80,9 @@ export const updatePassword = withAuth(
       if (currentPassword && currentPassword === newPassword) {
         return { error: "새 비밀번호는 현재 비밀번호와 달라야 합니다." };
       }
-      
+
       // 초기 설정 시 기본 비밀번호와 같은지 확인
-      if (!currentPassword && (currentUser.password === newPassword)) {
+      if (!currentPassword && currentUser.password === newPassword) {
         return { error: "새 비밀번호는 현재 비밀번호와 달라야 합니다." };
       }
 
@@ -108,8 +110,11 @@ export const checkNeedsSetup = withAuth(async (user) => {
     }
 
     // 닉네임이 없거나 기본 비밀번호를 사용 중인 경우
-    const needsNickname = !currentUser.nickname || currentUser.nickname.trim() === "";
-    const needsPasswordChange = currentUser.password === "pw1234" || currentUser.password === "youthfinlab1234";
+    const needsNickname =
+      !currentUser.nickname || currentUser.nickname.trim() === "";
+    const needsPasswordChange =
+      currentUser.password === "pw1234" ||
+      currentUser.password === "youthfinlab1234";
 
     return {
       needsSetup: needsNickname || needsPasswordChange,
