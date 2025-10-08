@@ -20,6 +20,7 @@ import { getNews, deleteNews } from "@/actions/newsActions";
 interface GameDayManagementProps {
   selectedClass: string;
   selectedDay: number;
+  totalDays: number | undefined;
   stocks: Stock[];
   onRefresh: () => void;
 }
@@ -33,9 +34,12 @@ interface NewsInput {
 export default function GameDayManagement({
   selectedClass,
   selectedDay,
+  totalDays,
   stocks,
   onRefresh,
 }: GameDayManagementProps) {
+  // 마지막 Day 체크
+  const isLastDay = totalDays ? selectedDay === totalDays : false;
   const [newsLoading, setNewsLoading] = useState(false);
   const [deletingNewsId, setDeletingNewsId] = useState<string | null>(null);
   const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
@@ -229,15 +233,25 @@ export default function GameDayManagement({
                 영향)
               </CardTitle>
               <CardDescription>
-                📰 이 뉴스들은{" "}
-                <strong>다음 거래일(Day {selectedDay + 1})</strong> 주식 가격
-                변동에 영향을 줍니다
+                {isLastDay ? (
+                  <span className="text-orange-600 font-semibold">
+                    ⚠️ 마지막 Day입니다. 뉴스는 등록할 수 없으며 가격만 설정하세요.
+                  </span>
+                ) : (
+                  <>
+                    📰 이 뉴스들은{" "}
+                    <strong>다음 거래일(Day {selectedDay + 1})</strong> 주식 가격
+                    변동에 영향을 줍니다
+                  </>
+                )}
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={addNewsItem}>
-              <Plus className="h-4 w-4 mr-2" />
-              뉴스 추가
-            </Button>
+            {!isLastDay && (
+              <Button variant="outline" size="sm" onClick={addNewsItem}>
+                <Plus className="h-4 w-4 mr-2" />
+                뉴스 추가
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -351,7 +365,7 @@ export default function GameDayManagement({
               )}
 
               {/* 새 뉴스 작성 */}
-              {newsItems.length > 0 && (
+              {!isLastDay && newsItems.length > 0 && (
                 <div className="space-y-4">
                   {existingNews.length > 0 && (
                     <div className="flex items-center gap-2 mb-4">
@@ -453,12 +467,21 @@ export default function GameDayManagement({
               {/* 뉴스가 없을 때 안내 메시지 */}
               {existingNews.length === 0 && newsItems.length === 0 && (
                 <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
-                  <p className="text-muted-foreground mb-4">
-                    Day {selectedDay}에 작성된 뉴스가 없습니다.
-                  </p>
-                  <Button variant="outline" onClick={addNewsItem}>
-                    <Plus className="h-4 w-4 mr-2" />첫 번째 뉴스 작성하기
-                  </Button>
+                  {isLastDay ? (
+                    <p className="text-orange-600 font-semibold">
+                      ⚠️ 마지막 Day는 뉴스를 등록할 수 없습니다.<br />
+                      가격 관리 탭에서 최종 가격만 설정해주세요.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-muted-foreground mb-4">
+                        Day {selectedDay}에 작성된 뉴스가 없습니다.
+                      </p>
+                      <Button variant="outline" onClick={addNewsItem}>
+                        <Plus className="h-4 w-4 mr-2" />첫 번째 뉴스 작성하기
+                      </Button>
+                    </>
+                  )}
                 </div>
               )}
             </div>

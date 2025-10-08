@@ -26,6 +26,12 @@ export interface ClassWithRelations extends Class {
 
 const classSchema = z.object({
   name: z.string().min(1, "수업명은 필수입니다."),
+  totalDays: z.coerce
+    .number({
+      invalid_type_error: "총 게임 일수는 숫자여야 합니다.",
+    })
+    .min(1, "총 게임 일수는 1 이상이어야 합니다.")
+    .default(8),
   managerId: z.string().min(1, "매니저 선택은 필수입니다."),
   clientId: z.string().min(1, "클라이언트 선택은 필수입니다."),
   currentDay: z.coerce
@@ -48,6 +54,7 @@ export const createClass = withAuth(async (user, formData: FormData) => {
       .insert(classes)
       .values({
         name: validation.data.name,
+        totalDays: validation.data.totalDays,
         managerId: validation.data.managerId,
         clientId: validation.data.clientId,
         currentDay: validation.data.currentDay,

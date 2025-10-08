@@ -39,6 +39,7 @@ export function EditClassModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    totalDays: 0,
     managerId: "",
     clientId: "",
   });
@@ -71,6 +72,7 @@ export function EditClassModal({
     if (classData) {
       setFormData({
         name: classData.name || "",
+        totalDays: classData.totalDays || 8,
         managerId: classData.managerId || "",
         clientId: classData.clientId || "",
       });
@@ -176,6 +178,28 @@ export function EditClassModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="수업명을 입력하세요"
             />
+          </div>
+
+          <div>
+            <label
+              htmlFor="totalDays"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              총 게임 일수 *
+            </label>
+            <input
+              type="number"
+              id="totalDays"
+              name="totalDays"
+              required
+              min="1"
+              value={formData.totalDays}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              게임이 진행될 총 일수를 입력하세요 (예: 8일)
+            </p>
           </div>
 
           {/* <div className="mb-4">

@@ -19,6 +19,7 @@ import {
 import { DayAdjustmentModal } from "./components/DayAdjustmentModal";
 import { getStocks } from "@/actions/stockActions";
 import { getClassStockPrices, getGameProgress } from "@/actions/gameActions";
+import { getNews } from "@/actions/newsActions";
 import GameDayManagement from "@/components/game/GameDayManagement";
 import PriceManagement from "@/components/game/PriceManagement";
 import { ClassStockPrice, Stock } from "@/types";
@@ -143,6 +144,70 @@ export default function GameManagementPage() {
     if (selectedClass) {
       loadGameProgress();
       loadPrices();
+    }
+  };
+
+  // 다음 Day로 이동하기 전 검증
+  const handleNextDay = async () => {
+    if (!selectedClass) return;
+
+    // 현재 클래스의 totalDays 가져오기
+    const selectedClassData = classes.find((c) => c.id === selectedClass);
+    const totalDays = selectedClassData?.totalDays;
+
+    if (!totalDays) {
+      alert("클래스의 최대 Day가 설정되지 않았습니다.");
+      return;
+    }
+
+    // 최대 Day 초과 방지
+    if (selectedDay >= totalDays) {
+      alert(`최대 Day는 ${totalDays}입니다. 더 이상 진행할 수 없습니다.`);
+      return;
+    }
+
+    try {
+      // 현재 Day의 뉴스와 가격 정보 확인
+      const [allNews, currentPrices] = await Promise.all([
+        getNews(),
+        getClassStockPrices(selectedClass, selectedDay),
+      ]);
+
+      // 현재 클래스와 Day에 해당하는 뉴스 필터링
+      const currentDayNews = allNews.filter(
+        (news) => news.classId === selectedClass && news.day === selectedDay
+      );
+
+      // 마지막 Day는 뉴스 없이 가격만 있어야 함
+      const isLastDay = selectedDay === totalDays - 1;
+
+      if (isLastDay) {
+        // 마지막 Day 전날: 뉴스와 가격 모두 필요
+        if (currentDayNews.length === 0) {
+          alert(`Day ${selectedDay}에 뉴스가 1개 이상 필요합니다. 뉴스를 먼저 등록해주세요.`);
+          return;
+        }
+        if (currentPrices.length === 0) {
+          alert(`Day ${selectedDay}에 가격이 설정된 주식이 1개 이상 필요합니다. 가격을 먼저 설정해주세요.`);
+          return;
+        }
+      } else {
+        // 일반 Day: 뉴스와 가격 모두 필요
+        if (currentDayNews.length === 0) {
+          alert(`Day ${selectedDay}에 뉴스가 1개 이상 필요합니다. 뉴스를 먼저 등록해주세요.`);
+          return;
+        }
+        if (currentPrices.length === 0) {
+          alert(`Day ${selectedDay}에 가격이 설정된 주식이 1개 이상 필요합니다. 가격을 먼저 설정해주세요.`);
+          return;
+        }
+      }
+
+      // 검증 통과 시 다음 Day로 이동
+      setSelectedDay(selectedDay + 1);
+    } catch (error) {
+      console.error("Day 검증 실패:", error);
+      alert("Day 검증에 실패했습니다. 다시 시도해주세요.");
     }
   };
 
@@ -441,7 +506,7 @@ export default function GameManagementPage() {
             <span className="text-lg font-semibold">Day {selectedDay}</span>
             <Button
               variant="outline"
-              onClick={() => setSelectedDay(selectedDay + 1)}
+              onClick={handleNextDay}
             >
               다음 Day
             </Button>
@@ -460,6 +525,7 @@ export default function GameManagementPage() {
           <GameDayManagement
             selectedClass={selectedClass}
             selectedDay={selectedDay}
+            totalDays={classes.find((c) => c.id === selectedClass)?.totalDays}
             stocks={stocks}
             onRefresh={refreshData}
           />
