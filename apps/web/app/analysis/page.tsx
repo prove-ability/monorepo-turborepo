@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getDashboardData, DashboardData } from "@/actions/dashboard";
+import { useMemo } from "react";
+import { getDashboardData } from "@/actions/dashboard";
 import { getAllNews } from "@/actions/news";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
@@ -24,47 +25,39 @@ interface NewsItem {
 
 export default function AnalysisPage() {
   const router = useRouter();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [newsData, setNewsData] = useState<Record<string, NewsItem[]>>({});
 
-  useEffect(() => {
-    loadDashboard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // 대시보드 데이터 (cache에서 재사용)
+  const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: getDashboardData,
+  });
 
-  const loadDashboard = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getDashboardData();
-      setDashboardData(data);
-      
-      // 뉴스 데이터 불러오기
-      const allNews = await getAllNews();
-      
-      // 어제(currentDay - 1) 뉴스를 주식별로 그룹화
-      const yesterdayNews: Record<string, NewsItem[]> = {};
-      allNews.forEach((newsItem) => {
-        if (newsItem.day === data.currentDay - 1 && newsItem.relatedStockIds) {
-          newsItem.relatedStockIds.forEach((stockId) => {
-            if (!yesterdayNews[stockId]) {
-              yesterdayNews[stockId] = [];
-            }
-            yesterdayNews[stockId].push(newsItem);
-          });
-        }
-      });
-      
-      setNewsData(yesterdayNews);
-    } catch (error) {
-      console.error("Failed to load dashboard:", error);
-      router.push("/");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // 뉴스 데이터
+  const { data: allNews = [], isLoading: isNewsLoading } = useQuery({
+    queryKey: ['news'],
+    queryFn: getAllNews,
+    staleTime: 60 * 1000, // 1분 (뉴스는 자주 변하지 않음)
+  });
+
+  const isLoading = isDashboardLoading || isNewsLoading;
+
+  // 어제 뉴스를 주식별로 그룹화 (memoization)
+  const newsData = useMemo(() => {
+    if (!dashboardData || !allNews.length) return {};
+    
+    const yesterdayNews: Record<string, NewsItem[]> = {};
+    allNews.forEach((newsItem) => {
+      if (newsItem.day === dashboardData.currentDay - 1 && newsItem.relatedStockIds) {
+        newsItem.relatedStockIds.forEach((stockId) => {
+          if (!yesterdayNews[stockId]) {
+            yesterdayNews[stockId] = [];
+          }
+          yesterdayNews[stockId].push(newsItem);
+        });
+      }
+    });
+    return yesterdayNews;
+  }, [dashboardData, allNews]);
 
   if (isLoading || !dashboardData) {
     return <PageLoading />;

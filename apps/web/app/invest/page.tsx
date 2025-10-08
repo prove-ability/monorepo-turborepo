@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getStocksForInvest } from "@/actions/stocks";
-import { getTransactionHistory, TransactionItem } from "@/actions/transactions";
+import { getTransactionHistory } from "@/actions/transactions";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import TradeBottomSheet from "@/components/TradeBottomSheet";
 import StockNewsSheet from "@/components/StockNewsSheet";
 import StockListSkeleton from "@/components/StockListSkeleton";
@@ -39,87 +40,67 @@ const COUNTRY_NAMES: Record<string, string> = {
 export default function InvestPage() {
   const searchParams = useSearchParams();
   const filterParam = searchParams.get("filter");
+  const queryClient = useQueryClient();
   
-  const [stocks, setStocks] = useState<Stock[]>([]);
-  const [balance, setBalance] = useState<number>(0);
-  const [currentDay, setCurrentDay] = useState<number>(1);
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"stocks" | "history">("stocks");
   const [showOnlyHoldings, setShowOnlyHoldings] = useState(
     filterParam === "holdings"
   );
   const [showOnlyNews, setShowOnlyNews] = useState(false);
-  const [totalProfit, setTotalProfit] = useState<number>(0);
-  const [totalProfitRate, setTotalProfitRate] = useState<number>(0);
-  const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [showHistoryGuide, setShowHistoryGuide] = useState(true);
-  const [showStockGuide, setShowStockGuide] = useState(true);
+  const [showStockGuide, setShowStockGuide] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("hideStockGuide") !== "true";
+    }
+    return true;
+  });
   const [newsStock, setNewsStock] = useState<{
     id: string;
     name: string;
   } | null>(null);
 
+  // React Query로 주식 데이터 페칭
+  const { data: stockData, isLoading: isLoadingStocks, refetch: refetchStocks } = useQuery({
+    queryKey: ['stocks'],
+    queryFn: getStocksForInvest,
+    staleTime: 20 * 1000, // 20초
+  });
+
+  // React Query로 거래내역 페칭 (탭 활성화 시만)
+  const { data: transactions = [], isLoading: isLoadingHistory, refetch: refetchHistory } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: getTransactionHistory,
+    enabled: activeTab === "history", // history 탭일 때만 로드
+    staleTime: 30 * 1000, // 30초
+  });
+
+  const stocks = stockData?.stocks || [];
+  const balance = stockData?.balance || 0;
+  const currentDay = stockData?.currentDay || 1;
+  const totalProfit = stockData?.profit || 0;
+  const totalProfitRate = stockData?.profitRate || 0;
+
+  const isInitialLoading = isLoadingStocks;
+  const isRefreshing = activeTab === "stocks" ? isLoadingStocks : isLoadingHistory;
+
   // 투어 훅 추가
   useTour(true);
 
-  const loadData = async (isInitial = false) => {
-    if (isInitial) {
-      setIsInitialLoading(true);
-    } else {
-      setIsRefreshing(true);
-    }
-
-    try {
-      const data = await getStocksForInvest();
-      setStocks(data.stocks);
-      setBalance(data.balance);
-      setCurrentDay(data.currentDay);
-      setTotalProfit(data.profit || 0);
-      setTotalProfitRate(data.profitRate || 0);
-
-      // 거래내역 탭일 때만 거래내역 로드
-      if (activeTab === "history") {
-        const txHistory = await getTransactionHistory();
-        setTransactions(txHistory);
-      }
-    } catch (error) {
-      console.error("Failed to load stocks:", error);
-    } finally {
-      if (isInitial) {
-        setIsInitialLoading(false);
-      } else {
-        setIsRefreshing(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    loadData(true);
-    
-    // 가이드 표시 여부 확인
-    const hideStockGuide = localStorage.getItem("hideStockGuide");
-    if (hideStockGuide === "true") {
-      setShowStockGuide(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!isInitialLoading) {
-      loadData(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
-
   const handleTradeSuccess = () => {
-    loadData(false);
+    // 거래 성공 시 모든 관련 데이터 갱신
+    queryClient.invalidateQueries({ queryKey: ['stocks'] });
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // 홈 화면도 갱신
   };
 
   // Pull-to-refresh 기능
   const { isRefreshing: isPulling } = usePullToRefresh(async () => {
-    await loadData(false);
+    if (activeTab === "stocks") {
+      await refetchStocks();
+    } else {
+      await refetchHistory();
+    }
   });
 
   const holdingStocks = stocks.filter((s) => s.holdingQuantity > 0);

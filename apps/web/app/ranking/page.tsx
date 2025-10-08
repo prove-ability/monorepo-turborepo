@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { getClassRanking, type RankingEntry } from "@/actions/ranking";
+import { useEffect, useRef } from "react";
+import { getClassRanking } from "@/actions/ranking";
+import { useQuery } from "@tanstack/react-query";
 import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
@@ -9,13 +10,17 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Users } from "lucide-react";
 
 export default function RankingPage() {
-  const [rankings, setRankings] = useState<RankingEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const myRankRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadRankings();
-  }, []);
+  // React Query로 랭킹 데이터 페칭 (30초마다 자동 갱신)
+  const { data: rankings = [], isLoading, refetch } = useQuery({
+    queryKey: ['ranking'],
+    queryFn: getClassRanking,
+    staleTime: 15 * 1000, // 15초 (랭킹은 자주 변함)
+    refetchOnWindowFocus: true,
+    refetchInterval: 30 * 1000, // 30초마다 자동 갱신 (폴링)
+    refetchIntervalInBackground: false, // 백그라운드에서는 폴링 안함
+  });
 
   // 내 순위로 자동 스크롤
   useEffect(() => {
@@ -33,21 +38,9 @@ export default function RankingPage() {
     }
   }, [rankings]);
 
-  const loadRankings = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getClassRanking();
-      setRankings(data);
-    } catch (error) {
-      console.error("Failed to load rankings:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Pull-to-refresh 기능
   const { isRefreshing } = usePullToRefresh(async () => {
-    await loadRankings();
+    await refetch();
   });
 
   if (isLoading) {

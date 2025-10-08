@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { logout } from "@/actions/auth";
-import { getDashboardData, DashboardData } from "@/actions/dashboard";
+import { getDashboardData } from "@/actions/dashboard";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import BenefitNotificationBanner from "@/components/BenefitNotificationBanner";
 import DayChangeNotificationBanner from "@/components/DayChangeNotificationBanner";
@@ -18,33 +19,21 @@ import { useTour } from "@/hooks/useTour";
 
 export default function Home() {
   const router = useRouter();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
   const [tapCount, setTapCount] = useState(0);
+
+  // React Query로 데이터 페칭
+  const { data: dashboardData, isLoading, refetch } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: getDashboardData,
+    staleTime: 30 * 1000, // 30초
+    refetchOnWindowFocus: true, // 탭 전환 시 자동 갱신
+  });
 
   useTour(!isLoading && !!dashboardData);
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getDashboardData();
-      setDashboardData(data as DashboardData);
-    } catch (error) {
-      console.error("Failed to load dashboard:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Pull-to-refresh 기능
   const { isRefreshing } = usePullToRefresh(async () => {
-    await loadDashboard();
+    await refetch();
   });
 
   const handleLogout = async () => {

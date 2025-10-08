@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { buyStock, sellStock } from "@/actions/trades";
 import { useToast } from "@/contexts/ToastContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import BottomSheet from "@/components/BottomSheet";
 
 interface Stock {
@@ -32,12 +33,86 @@ export default function TradeBottomSheet({
 }: TradeBottomSheetProps) {
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [quantity, setQuantity] = useState<string>("1");
-  const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Optimistic Updates를 위한 mutation
+  const tradeMutation = useMutation({
+    mutationFn: async ({ type, stockId, qty, price }: { type: 'buy' | 'sell', stockId: string, qty: number, price: string }) => {
+      return type === 'buy'
+        ? await buyStock(stockId, qty, price, currentDay)
+        : await sellStock(stockId, qty, price, currentDay);
+    },
+    onMutate: async ({ type, qty, price }) => {
+      // 진행 중인 refetch 취소
+      await queryClient.cancelQueries({ queryKey: ['stocks'] });
+      await queryClient.cancelQueries({ queryKey: ['dashboard'] });
+
+      // 이전 데이터 백업
+      const previousStocks = queryClient.getQueryData(['stocks']);
+      const previousDashboard = queryClient.getQueryData(['dashboard']);
+
+      const totalValue = parseFloat(price) * qty;
+
+      // UI 즉시 업데이트
+      queryClient.setQueryData(['stocks'], (old: unknown) => {
+        if (!old || typeof old !== 'object') return old;
+        const data = old as { balance: number };
+        return {
+          ...data,
+          balance: type === 'buy' ? data.balance - totalValue : data.balance + totalValue,
+        };
+      });
+
+      queryClient.setQueryData(['dashboard'], (old: unknown) => {
+        if (!old || typeof old !== 'object') return old;
+        const data = old as { balance: number };
+        return {
+          ...data,
+          balance: type === 'buy' ? data.balance - totalValue : data.balance + totalValue,
+        };
+      });
+
+      return { previousStocks, previousDashboard };
+    },
+    onError: (err, variables, context) => {
+      // 에러 시 롤백
+      if (context?.previousStocks) {
+        queryClient.setQueryData(['stocks'], context.previousStocks);
+      }
+      if (context?.previousDashboard) {
+        queryClient.setQueryData(['dashboard'], context.previousDashboard);
+      }
+    },
+    onSuccess: (result) => {
+      if (result.success) {
+        // 성공 시 최종 데이터 갱신
+        queryClient.invalidateQueries({ queryKey: ['stocks'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        showToast(result.message, "success");
+        onTradeSuccess();
+        onClose();
+      } else {
+        // Day 불일치 에러 처리
+        if (result.dayMismatch) {
+          showToast(result.message + " 페이지를 새로고침합니다.", "warning");
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          setMessage({ type: "error", text: result.message });
+        }
+        // 실패 시에도 데이터 갱신 (서버 상태와 동기화)
+        queryClient.invalidateQueries({ queryKey: ['stocks'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      }
+    },
+  });
 
   if (!stock) return null;
 
@@ -62,38 +137,12 @@ export default function TradeBottomSheet({
       return;
     }
 
-    startTransition(async () => {
-      const result =
-        tradeType === "buy"
-          ? await buyStock(
-              stock.id,
-              qty,
-              stock.currentPrice.toString(),
-              currentDay
-            )
-          : await sellStock(
-              stock.id,
-              qty,
-              stock.currentPrice.toString(),
-              currentDay
-            );
-
-      if (result.success) {
-        showToast(result.message, "success");
-        onTradeSuccess();
-        onClose();
-      } else {
-        // Day 불일치 에러 처리
-        if (result.dayMismatch) {
-          showToast(result.message + " 페이지를 새로고침합니다.", "warning");
-          // 2초 후 새로고침
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
-        } else {
-          setMessage({ type: "error", text: result.message });
-        }
-      }
+    // Optimistic Updates 실행
+    tradeMutation.mutate({
+      type: tradeType,
+      stockId: stock.id,
+      qty,
+      price: stock.currentPrice.toString(),
     });
   };
 
@@ -232,14 +281,14 @@ export default function TradeBottomSheet({
           <button
             onClick={handleTrade}
             disabled={
-              isPending ||
+              tradeMutation.isPending ||
               !quantity ||
               parseInt(quantity) <= 0 ||
               (tradeType === "buy" && !canAfford) ||
               (tradeType === "sell" && !canSell)
             }
             className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
-              isPending ||
+              tradeMutation.isPending ||
               !quantity ||
               parseInt(quantity) <= 0 ||
               (tradeType === "buy" && !canAfford) ||
@@ -248,7 +297,7 @@ export default function TradeBottomSheet({
                 : "bg-emerald-700 hover:bg-emerald-800 active:scale-[0.98]"
             }`}
           >
-            {isPending ? "처리 중..." : tradeType === "buy" ? "살래요!" : "팔래요!"}
+            {tradeMutation.isPending ? "처리 중..." : tradeType === "buy" ? "살래요!" : "팔래요!"}
           </button>
       </div>
     </BottomSheet>
