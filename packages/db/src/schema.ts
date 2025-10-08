@@ -57,7 +57,8 @@ export const classes = pgTable("classes", {
     .$onUpdate(() => new Date())
     .notNull(),
   name: text("name").notNull(),
-  currentDay: integer("current_day"),
+  totalDays: integer("total_days").notNull(),
+  currentDay: integer("current_day").notNull().default(1),
   status: classStatusEnum("status").default("setting").notNull(),
   createdBy: uuid("created_by").notNull(),
   clientId: uuid("client_id")
