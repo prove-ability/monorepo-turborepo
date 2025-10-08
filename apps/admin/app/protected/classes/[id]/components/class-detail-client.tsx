@@ -282,6 +282,9 @@ export function ClassDetailClient({
                       학생 정보
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      로그인 정보
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       연락처
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -311,11 +314,20 @@ export function ClassDetailClient({
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {student.name ?? "이름 없음"} (
-                            {student.nickname || "닉네임 없음"})
+                            {student.name ?? "이름 없음"}
                           </div>
                           <div className="text-sm text-gray-500">
-                            ID: {student.id}
+                            {student.nickname ? `(${student.nickname})` : ""}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            ID: {student.loginId ?? "-"}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            PW: {student.password ?? "-"}
                           </div>
                         </div>
                       </td>
