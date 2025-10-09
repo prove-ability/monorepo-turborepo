@@ -103,6 +103,8 @@ export function useTour(isReady: boolean = false) {
     const driverObj = driver({
       showProgress: true,
       showButtons: ["next", "previous"],
+      allowClose: false, // 닫기 버튼 제거
+      disableActiveInteraction: true, // 하이라이트된 요소와 상호작용 방지
       steps: [
         {
           element: "#wallet-balance",
@@ -183,6 +185,8 @@ export function useTour(isReady: boolean = false) {
           localStorage.setItem("tour_completed", "true");
           localStorage.removeItem("tour_step");
           driverObj.destroy();
+          // 투어 완료 후 홈으로 이동
+          window.location.href = "/";
         } else if (currentStep === 2) {
           // Step 2: 투자 탭 클릭 후 이동
           localStorage.setItem("tour_step", currentStep.toString());
@@ -233,10 +237,6 @@ export function useTour(isReady: boolean = false) {
         } else {
           driverObj.movePrevious();
         }
-      },
-      onCloseClick: () => {
-        localStorage.removeItem("tour_step");
-        driverObj.destroy();
       },
     });
 
