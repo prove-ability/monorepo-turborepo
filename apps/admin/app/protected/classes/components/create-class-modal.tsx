@@ -52,6 +52,8 @@ export function CreateClassModal({
     try {
       const stocksData = await getStocks();
       setStocks(stocksData);
+      // 모든 주식을 기본 선택
+      setSelectedStockIds(stocksData.map((stock) => stock.id));
     } catch (error) {
       console.error("Error loading stocks:", error);
       alert("주식 목록을 불러오는 중 오류가 발생했습니다.");
