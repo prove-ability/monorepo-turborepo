@@ -210,34 +210,12 @@ export default function StockNewsSheet({
                     }}
                   />
 
-                  {/* 세그먼트별 색상 Line */}
-                  {data.priceHistory.map((point, index) => {
-                    if (index === 0) return null;
-                    const prevPoint = data.priceHistory[index - 1];
-                    if (!prevPoint) return null;
-                    const isRise = point.price >= prevPoint.price;
-                    const segmentData = [prevPoint, point];
-
-                    return (
-                      <Line
-                        key={`segment-${index}`}
-                        data={segmentData}
-                        type="monotone"
-                        dataKey="price"
-                        stroke={isRise ? "#DC2626" : "#2563EB"}
-                        strokeWidth={3}
-                        dot={false}
-                        activeDot={false}
-                      />
-                    );
-                  })}
-
-                  {/* 포인트 강조 */}
+                  {/* 가격 라인 */}
                   <Line
                     type="monotone"
                     dataKey="price"
-                    stroke="none"
-                    strokeWidth={0}
+                    stroke="#059669"
+                    strokeWidth={3}
                     dot={(props: {
                       cx: number;
                       cy: number;
