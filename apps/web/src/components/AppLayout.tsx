@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import DayChangeModal from "@/components/DayChangeModal";
 import GameEndModal from "@/components/GameEndModal";
+import GameCompletionSurvey from "@/components/GameCompletionSurvey";
 import { getGameProgress } from "@/actions/dashboard";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -37,6 +38,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             totalDays={gameProgress.totalDays}
           />
           <GameEndModal
+            currentDay={gameProgress.currentDay}
+            totalDays={gameProgress.totalDays}
+          />
+          <GameCompletionSurvey
             currentDay={gameProgress.currentDay}
             totalDays={gameProgress.totalDays}
           />

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Trophy } from "lucide-react";
-import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 
 interface GameEndModalProps {
@@ -15,7 +14,6 @@ export default function GameEndModal({
   totalDays,
 }: GameEndModalProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     // 게임이 종료되었는지 확인
@@ -30,8 +28,7 @@ export default function GameEndModal({
   const handleConfirm = () => {
     localStorage.setItem("gameEndModalShown", "true");
     setIsOpen(false);
-    // 랭킹 페이지로 이동
-    router.push("/ranking");
+    // 랭킹 페이지로 이동하지 않음 (GameCompletionSurvey가 표시됨)
   };
 
   const handleLater = () => {

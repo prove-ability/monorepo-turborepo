@@ -12,11 +12,11 @@ export const submitSurvey = withAuth(async (user, input: SubmitSurveyInput) => {
   try {
     const { rating, feedback } = input;
 
-    // 별점 유효성 검사
-    if (!rating || rating < 1 || rating > 5) {
+    // 별점 유효성 검사 (1-10점)
+    if (!rating || rating < 1 || rating > 10) {
       return {
         success: false,
-        error: "별점을 1-5점 사이로 선택해주세요.",
+        error: "별점을 1-10점 사이로 선택해주세요.",
       };
     }
 
