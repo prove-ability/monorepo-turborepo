@@ -5,8 +5,8 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
 // 커스텀 스타일 추가
-if (typeof window !== 'undefined') {
-  const style = document.createElement('style');
+if (typeof window !== "undefined") {
+  const style = document.createElement("style");
   style.textContent = `
     .driver-popover {
       border-radius: 1.5rem !important;
@@ -37,6 +37,7 @@ if (typeof window !== 'undefined') {
       font-size: 0.875rem !important;
       border: none !important;
       transition: all 0.2s !important;
+      text-shadow: none !important;
     }
     
     .driver-popover-next-btn:hover,
@@ -71,9 +72,9 @@ if (typeof window !== 'undefined') {
       font-size: 0.75rem !important;
     }
   `;
-  
-  if (!document.getElementById('driver-custom-styles')) {
-    style.id = 'driver-custom-styles';
+
+  if (!document.getElementById("driver-custom-styles")) {
+    style.id = "driver-custom-styles";
     document.head.appendChild(style);
   }
 }
@@ -127,8 +128,7 @@ export function useTour(isReady: boolean = false) {
           element: "#nav-invest",
           popover: {
             title: "📈 투자 탭",
-            description:
-              "여기를 눌러서 주식을 사고팔 수 있어요!",
+            description: "여기를 눌러서 주식을 사고팔 수 있어요!",
             side: "top",
             align: "center",
           },
@@ -190,7 +190,9 @@ export function useTour(isReady: boolean = false) {
           window.location.href = "/invest";
         } else if (currentStep === 5) {
           // Step 5: 모달 단계로 가기 전에 종목 카드 자동 클릭
-          const firstCard = document.querySelector("#first-stock-card") as HTMLElement;
+          const firstCard = document.querySelector(
+            "#first-stock-card"
+          ) as HTMLElement;
           if (firstCard) {
             firstCard.click();
             // 모달이 열릴 때까지 대기 후 다음 단계로
@@ -205,12 +207,14 @@ export function useTour(isReady: boolean = false) {
           // 모달의 닫기 버튼 찾아서 클릭 (rounded-full을 가진 button)
           const tradeModal = document.querySelector("#trade-modal");
           if (tradeModal) {
-            const closeButton = tradeModal.querySelector('button.rounded-full') as HTMLElement;
+            const closeButton = tradeModal.querySelector(
+              "button.rounded-full"
+            ) as HTMLElement;
             if (closeButton) {
               closeButton.click();
             }
           }
-          
+
           // 모달이 닫힐 때까지 대기 후 다음 단계로
           setTimeout(() => {
             driverObj.moveNext();
@@ -242,7 +246,7 @@ export function useTour(isReady: boolean = false) {
       const stepNum = parseInt(savedStep, 10);
       currentStep = stepNum;
       localStorage.removeItem("tour_step");
-      
+
       // 페이지 로드 대기 후 투어 시작
       setTimeout(() => {
         driverObj.drive(stepNum);
