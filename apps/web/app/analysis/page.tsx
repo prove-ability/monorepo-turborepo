@@ -33,7 +33,7 @@ export default function AnalysisPage() {
   });
 
   // 뉴스 데이터
-  const { data: allNews = [], isLoading: isNewsLoading } = useQuery({
+  const { data: allNewsData, isLoading: isNewsLoading } = useQuery({
     queryKey: ["news"],
     queryFn: getAllNews,
     staleTime: 60 * 1000, // 1분 (뉴스는 자주 변하지 않음)
@@ -43,10 +43,10 @@ export default function AnalysisPage() {
 
   // 어제 뉴스를 주식별로 그룹화 (memoization)
   const newsData = useMemo(() => {
-    if (!dashboardData || !allNews.length) return {};
+    if (!dashboardData || !allNewsData?.news.length) return {};
 
     const yesterdayNews: Record<string, NewsItem[]> = {};
-    allNews.forEach((newsItem) => {
+    allNewsData.news.forEach((newsItem) => {
       if (
         newsItem.day === dashboardData.currentDay - 1 &&
         newsItem.relatedStockIds
@@ -60,7 +60,7 @@ export default function AnalysisPage() {
       }
     });
     return yesterdayNews;
-  }, [dashboardData, allNews]);
+  }, [dashboardData, allNewsData]);
 
   if (isLoading || !dashboardData) {
     return <PageLoading />;
