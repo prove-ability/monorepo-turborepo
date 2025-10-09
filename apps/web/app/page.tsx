@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import BenefitNotificationBanner from "@/components/BenefitNotificationBanner";
-import DayChangeModal from "@/components/DayChangeModal";
 import AnimatedBalance from "@/components/AnimatedBalance";
 import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
@@ -67,8 +66,6 @@ export default function Home() {
           </div>
         </div>
       )}
-      {/* Day 변경 모달 */}
-      <DayChangeModal currentDay={dashboardData.currentDay} />
       <div className="max-w-4xl mx-auto p-4 space-y-4">
         <PageHeader
           title="투자 게임"

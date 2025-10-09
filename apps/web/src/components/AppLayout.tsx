@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
+import DayChangeModal from "@/components/DayChangeModal";
 import GameEndModal from "@/components/GameEndModal";
 import { getGameProgress } from "@/actions/dashboard";
 
@@ -28,12 +29,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <>
       <div className="max-w-xl mx-auto h-full min-h-screen">{children}</div>
       {!hideBottomNav && <BottomNav />}
-      {/* 게임 종료 모달 - 모든 페이지에서 표시 */}
+      {/* 게임 관련 모달 - 모든 페이지에서 표시 */}
       {gameProgress && (
-        <GameEndModal
-          currentDay={gameProgress.currentDay}
-          totalDays={gameProgress.totalDays}
-        />
+        <>
+          <DayChangeModal currentDay={gameProgress.currentDay} />
+          <GameEndModal
+            currentDay={gameProgress.currentDay}
+            totalDays={gameProgress.totalDays}
+          />
+        </>
       )}
     </>
   );

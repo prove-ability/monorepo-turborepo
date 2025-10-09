@@ -7,7 +7,6 @@ import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import InfoBanner from "@/components/InfoBanner";
-import DayChangeModal from "@/components/DayChangeModal";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Users } from "lucide-react";
 
@@ -30,7 +29,6 @@ export default function RankingPage() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const rankings = rankingData?.rankings || [];
-  const currentDay = rankingData?.currentDay || 1;
 
   // 내 순위로 자동 스크롤
   useEffect(() => {
@@ -62,8 +60,6 @@ export default function RankingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Day 변경 모달 */}
-      <DayChangeModal currentDay={currentDay} />
       {/* Pull-to-refresh 인디케이터 */}
       {isRefreshing && (
         <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4">

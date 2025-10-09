@@ -10,7 +10,6 @@ import EmptyState from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import StockInfoModal from "@/components/StockInfoModal";
 import InfoBanner from "@/components/InfoBanner";
-import DayChangeModal from "@/components/DayChangeModal";
 import { News, Stock } from "@/types";
 
 interface NewsItem extends News {
@@ -43,7 +42,6 @@ export default function NewsPage() {
   }
 
   const allNews = newsData?.news || [];
-  const currentDay = newsData?.currentDay || 1;
 
   // Day별로 그룹화
   const newsByDay = allNews.reduce(
@@ -63,8 +61,6 @@ export default function NewsPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {isRefreshing && <PageLoading />}
-      {/* Day 변경 모달 */}
-      <DayChangeModal currentDay={currentDay} />
       <div className="max-w-4xl mx-auto p-4">
         <PageHeader
           title="뉴스"
