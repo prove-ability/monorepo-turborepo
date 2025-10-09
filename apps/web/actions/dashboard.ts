@@ -13,6 +13,35 @@ import { eq, and, inArray, sql } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
 import { checkClassStatus } from "@/lib/class-status";
 
+/**
+ * 게임 진행 상태만 간단하게 조회 (GameEndModal용)
+ */
+export const getGameProgress = withAuth(async (user) => {
+  // 클래스 정보 조회
+  const classInfo = await db.query.classes.findFirst({
+    where: eq(classes.id, user.classId),
+    columns: {
+      currentDay: true,
+    },
+  });
+
+  if (!classInfo || classInfo.currentDay === null) {
+    return { currentDay: 0, totalDays: 0 };
+  }
+
+  // 최대 Day 조회
+  const maxDayResult = await db.query.classStockPrices.findMany({
+    where: eq(classStockPrices.classId, user.classId),
+    orderBy: (classStockPrices, { desc }) => [desc(classStockPrices.day)],
+    limit: 1,
+  });
+
+  return {
+    currentDay: classInfo.currentDay,
+    totalDays: maxDayResult[0]?.day || 0,
+  };
+});
+
 export interface DashboardData {
   // 기본 정보
   userName: string;

@@ -21,8 +21,8 @@ export default function GameEndModal({
     // 게임이 종료되었는지 확인
     const modalShown = localStorage.getItem("gameEndModalShown");
 
-    // 게임이 완료되고 아직 모달을 보지 않았으면 표시
-    if (currentDay > totalDays && !modalShown) {
+    // 게임이 완료되고 아직 모달을 보지 않았으면 표시 (마지막 Day 도달 시)
+    if (currentDay >= totalDays && totalDays > 0 && !modalShown) {
       setIsOpen(true);
     }
   }, [currentDay, totalDays]);
