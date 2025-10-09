@@ -56,8 +56,10 @@ export const generateGameData = withAuth(
 당신은 투자 교육 게임을 위한 데이터를 생성하는 전문가입니다.
 아래 주식 정보를 바탕으로 ${totalDays}일간의 현실적인 게임 데이터를 생성해주세요.
 
-**주식 정보:**
-${stocks.map((s) => `- ID: ${s.id} | 이름: ${s.name} | 국가: ${s.marketCountryCode} | 산업: ${s.industrySector}`).join("\n")}
+**⚠️ 매우 중요: 주식 ID는 아래 목록의 정확한 UUID만 사용하세요!**
+
+**사용 가능한 주식 ID 목록 (이 ID들만 사용!):**
+${stocks.map((s) => `- "${s.id}" → ${s.name} (${s.marketCountryCode}/${s.industrySector})`).join("\n")}
 
 **요구사항:**
 1. 각 날짜마다 8개의 뉴스를 생성하되, 마지막 날(${totalDays}일)은 뉴스가 없어야 합니다.
@@ -86,12 +88,12 @@ ${stocks.map((s) => `- ID: ${s.id} | 이름: ${s.name} | 국가: ${s.marketCount
         {
           "title": "뉴스 제목",
           "content": "뉴스 내용 (100-200자)",
-          "relatedStockIds": ["위 주식 목록의 정확한 UUID ID 사용"]
+          "relatedStockIds": ["⚠️ 위 '사용 가능한 주식 ID 목록'에서 복사한 정확한 UUID만 사용!"]
         }
       ],
       "prices": [
         {
-          "stockId": "위 주식 목록의 정확한 UUID ID 사용",
+          "stockId": "⚠️ 위 '사용 가능한 주식 ID 목록'에서 복사한 정확한 UUID만 사용!",
           "price": 가격숫자
         }
       ]
@@ -99,10 +101,11 @@ ${stocks.map((s) => `- ID: ${s.id} | 이름: ${s.name} | 국가: ${s.marketCount
   ]
 }
 
-**중요:** 
-- 반드시 위에 명시된 정확한 UUID ID를 stockId와 relatedStockIds에 사용하세요.
-- 주식 이름이나 심볼이 아닌, ID 필드의 UUID를 사용해야 합니다.
-- 반드시 유효한 JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.
+**🚨 절대 규칙:**
+1. stockId와 relatedStockIds에는 반드시 위 '사용 가능한 주식 ID 목록'의 정확한 UUID를 복사해서 사용하세요.
+2. 절대로 임의의 UUID를 생성하지 마세요!
+3. 주식 이름이나 심볼이 아닌, 위에 나열된 UUID 문자열을 그대로 사용하세요.
+4. 반드시 유효한 JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.
 `;
 
       // Gemini API 호출
@@ -134,6 +137,7 @@ ${stocks.map((s) => `- ID: ${s.id} | 이름: ${s.name} | 국가: ${s.marketCount
 
       // 주식 ID 목록 생성 (검증용)
       const validStockIds = new Set(stocks.map((s) => s.id));
+      const validStockList = stocks.map((s) => `${s.name}(${s.id})`).join(", ");
 
       // stockId 검증
       for (const dayData of gameData.days) {
@@ -141,7 +145,7 @@ ${stocks.map((s) => `- ID: ${s.id} | 이름: ${s.name} | 국가: ${s.marketCount
           for (const priceItem of dayData.prices) {
             if (!validStockIds.has(priceItem.stockId)) {
               throw new Error(
-                `잘못된 주식 ID: ${priceItem.stockId}. 유효한 ID를 사용해주세요.`
+                `AI가 잘못된 주식 ID를 생성했습니다: ${priceItem.stockId}\n유효한 ID 목록: ${validStockList}\n\n다시 시도해주세요.`
               );
             }
           }
@@ -152,7 +156,7 @@ ${stocks.map((s) => `- ID: ${s.id} | 이름: ${s.name} | 국가: ${s.marketCount
               for (const stockId of newsItem.relatedStockIds) {
                 if (!validStockIds.has(stockId)) {
                   throw new Error(
-                    `뉴스의 잘못된 주식 ID: ${stockId}. 유효한 ID를 사용해주세요.`
+                    `AI가 뉴스에 잘못된 주식 ID를 생성했습니다: ${stockId}\n유효한 ID 목록: ${validStockList}\n\n다시 시도해주세요.`
                   );
                 }
               }
