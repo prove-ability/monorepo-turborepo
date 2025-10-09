@@ -163,10 +163,18 @@ export const getStocksForInvest = withAuth(async (user) => {
     });
 
     if (!classInfo || classInfo.currentDay === null) {
-      return { stocks: [], balance: 0, currentDay: 1 };
+      return { stocks: [], balance: 0, currentDay: 1, totalDays: 0 };
     }
 
     const currentDay = classInfo.currentDay;
+
+    // 최대 Day 조회 (totalDays)
+    const maxDayResult = await db.query.classStockPrices.findMany({
+      where: eq(classStockPrices.classId, user.classId),
+      orderBy: (classStockPrices, { desc }) => [desc(classStockPrices.day)],
+      limit: 1,
+    });
+    const totalDays = maxDayResult[0]?.day || 0;
 
     // 투자 페이지에 필요한 주식 정보만 조회 (최적화)
     const allStocks = await db.query.stocks.findMany({
@@ -297,6 +305,7 @@ export const getStocksForInvest = withAuth(async (user) => {
       stocks: stocksWithInfo,
       balance,
       currentDay,
+      totalDays,
       initialCapital,
       totalAssets,
       profit,
@@ -307,6 +316,7 @@ export const getStocksForInvest = withAuth(async (user) => {
     return {
       stocks: [],
       balance: 0,
+      totalDays: 0,
       currentDay: 1,
       initialCapital: 0,
       totalAssets: 0,

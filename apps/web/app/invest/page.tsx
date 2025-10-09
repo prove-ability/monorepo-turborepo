@@ -80,8 +80,12 @@ export default function InvestPage() {
   const stocks = stockData?.stocks || [];
   const balance = stockData?.balance || 0;
   const currentDay = stockData?.currentDay || 1;
+  const totalDays = stockData?.totalDays || 0;
   const totalProfit = stockData?.profit || 0;
   const totalProfitRate = stockData?.profitRate || 0;
+  
+  // 마지막 Day 체크
+  const isLastDay = currentDay >= totalDays && totalDays > 0;
 
   const isInitialLoading = isLoadingStocks;
   const isRefreshing =
@@ -148,15 +152,26 @@ export default function InvestPage() {
           description="뉴스를 읽고 주식을 사고팔아보세요"
         />
 
+        {/* 마지막 Day 안내 */}
+        {isLastDay && (
+          <InfoBanner
+            icon="⚠️"
+            title="마지막 Day에요!"
+            description="게임이 종료되어 더 이상 매수/매도할 수 없어요. 최종 결과를 확인하고 랭킹을 확인해보세요!"
+          />
+        )}
+
         {/* 환율 안내 배너 */}
-        <InfoBanner
-          icon="💡"
-          title="모든 가격은 원화(₩)로 표시돼요"
-          description="해외 주식은 환율이 적용된 원화 가격이에요. 실제 투자와 동일한 환경에서 학습해보세요!"
-        />
+        {!isLastDay && (
+          <InfoBanner
+            icon="💡"
+            title="모든 가격은 원화(₩)로 표시돼요"
+            description="해외 주식은 환율이 적용된 원화 가격이에요. 실제 투자와 동일한 환경에서 학습해보세요!"
+          />
+        )}
 
         {/* 종목 클릭 안내 */}
-        {stocks.length > 0 && (
+        {stocks.length > 0 && !isLastDay && (
           <InfoBanner
             icon="👆"
             title="종목 카드를 눌러보세요!"
@@ -556,9 +571,26 @@ export default function InvestPage() {
                 <div
                   key={stock.id}
                   id={index === 0 ? "first-stock-card" : undefined}
-                  onClick={() => setSelectedStock(stock)}
-                  className="bg-white rounded-3xl p-5 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all duration-200 cursor-pointer border border-gray-100 relative group"
+                  onClick={() => !isLastDay && setSelectedStock(stock)}
+                  className={`bg-white rounded-3xl p-5 shadow-sm transition-all duration-200 border border-gray-100 relative group ${
+                    isLastDay 
+                      ? "cursor-not-allowed" 
+                      : "hover:shadow-lg hover:border-emerald-200 cursor-pointer"
+                  }`}
                 >
+                  {/* 마지막 Day 호버 가이드 */}
+                  {isLastDay && (
+                    <div className="absolute inset-0 bg-gray-900/80 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                      <div className="text-center px-6">
+                        <p className="text-white font-bold text-sm mb-1">
+                          🔒 거래 종료
+                        </p>
+                        <p className="text-gray-300 text-xs">
+                          마지막 Day는 매수/매도가 불가능해요
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
