@@ -30,7 +30,7 @@ export function ClassListItem({
 
   const handleStatusChange = async () => {
     const currentStatus = classItem.status || "setting";
-    
+
     let confirmMessage = "";
     let newStatus: "active" | "ended" = "active";
 
@@ -38,7 +38,8 @@ export function ClassListItem({
       confirmMessage = "클래스를 '진행 중' 상태로 변경하시겠습니까?";
       newStatus = "active";
     } else if (currentStatus === "active") {
-      confirmMessage = "클래스를 '종료' 상태로 변경하시겠습니까?\n종료된 클래스는 학생들이 접속할 수 없습니다.";
+      confirmMessage =
+        "클래스를 '종료' 상태로 변경하시겠습니까?\n종료된 클래스는 학생들이 접속할 수 없습니다.";
       newStatus = "ended";
     } else {
       alert("이미 종료된 클래스는 상태를 변경할 수 없습니다.");
@@ -98,7 +99,7 @@ export function ClassListItem({
       <div className="mb-4">
         <h3
           className="text-lg font-bold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors"
-          onClick={() => router.push(`/classes/${classItem.id}`)}
+          onClick={() => router.push(`/protected/classes/${classItem.id}`)}
         >
           {classItem.name}
         </h3>
