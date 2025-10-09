@@ -228,13 +228,14 @@ export function useTour(isReady: boolean = false) {
         }
       },
       onPrevClick: () => {
-        currentStep--;
-        if (currentStep === 2 && window.location.pathname === "/invest") {
-          // 투자 페이지에서 홈으로 돌아가기
+        // /invest 페이지에서 Step 3 이하일 때 이전을 누르면 홈으로 돌아가기
+        if (currentStep <= 3 && window.location.pathname === "/invest") {
+          currentStep--;
           localStorage.setItem("tour_step", currentStep.toString());
           driverObj.destroy();
           window.location.href = "/";
         } else {
+          currentStep--;
           driverObj.movePrevious();
         }
       },
