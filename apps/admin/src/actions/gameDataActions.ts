@@ -49,7 +49,7 @@ export const generateGameData = withAuth(
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
       // Gemini 모델 가져오기 (최신 안정 버전)
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
       // 프롬프트 생성
       const prompt = `
