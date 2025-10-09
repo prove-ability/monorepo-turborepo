@@ -42,7 +42,7 @@ export default function InvestPage() {
   const searchParams = useSearchParams();
   const filterParam = searchParams.get("filter");
   const queryClient = useQueryClient();
-  
+
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [activeTab, setActiveTab] = useState<"stocks" | "history">("stocks");
   const [showOnlyHoldings, setShowOnlyHoldings] = useState(
@@ -55,15 +55,23 @@ export default function InvestPage() {
   } | null>(null);
 
   // React Query로 주식 데이터 페칭
-  const { data: stockData, isLoading: isLoadingStocks, refetch: refetchStocks } = useQuery({
-    queryKey: ['stocks'],
+  const {
+    data: stockData,
+    isLoading: isLoadingStocks,
+    refetch: refetchStocks,
+  } = useQuery({
+    queryKey: ["stocks"],
     queryFn: getStocksForInvest,
     staleTime: 20 * 1000, // 20초
   });
 
   // React Query로 거래내역 페칭 (탭 활성화 시만)
-  const { data: transactions = [], isLoading: isLoadingHistory, refetch: refetchHistory } = useQuery({
-    queryKey: ['transactions'],
+  const {
+    data: transactions = [],
+    isLoading: isLoadingHistory,
+    refetch: refetchHistory,
+  } = useQuery({
+    queryKey: ["transactions"],
     queryFn: getTransactionHistory,
     enabled: activeTab === "history", // history 탭일 때만 로드
     staleTime: 30 * 1000, // 30초
@@ -76,16 +84,17 @@ export default function InvestPage() {
   const totalProfitRate = stockData?.profitRate || 0;
 
   const isInitialLoading = isLoadingStocks;
-  const isRefreshing = activeTab === "stocks" ? isLoadingStocks : isLoadingHistory;
+  const isRefreshing =
+    activeTab === "stocks" ? isLoadingStocks : isLoadingHistory;
 
   // 투어 훅 추가
   useTour(true);
 
   const handleTradeSuccess = async () => {
     // 거래 성공 시 모든 관련 데이터 갱신
-    await queryClient.invalidateQueries({ queryKey: ['stocks'] });
-    await queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    await queryClient.invalidateQueries({ queryKey: ['dashboard'] }); // 홈 화면도 갱신
+    await queryClient.invalidateQueries({ queryKey: ["stocks"] });
+    await queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    await queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // 홈 화면도 갱신
     // 즉시 데이터 다시 가져오기
     await refetchStocks();
   };
@@ -143,7 +152,7 @@ export default function InvestPage() {
         <InfoBanner
           icon="💡"
           title="모든 가격은 원화(₩)로 표시돼요"
-          description="해외 주식 🇺🇸은 환율이 적용된 원화 가격이에요. 실제 투자와 동일한 환경에서 학습해보세요!"
+          description="해외 주식은 환율이 적용된 원화 가격이에요. 실제 투자와 동일한 환경에서 학습해보세요!"
         />
 
         {/* 종목 클릭 안내 */}
@@ -160,7 +169,9 @@ export default function InvestPage() {
           <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
             <div className="mb-4">
               <p className="text-xs text-gray-600 mb-1.5">남은 현금</p>
-              <p className="text-xl font-bold text-gray-900">{balance.toLocaleString()}원</p>
+              <p className="text-xl font-bold text-gray-900">
+                {balance.toLocaleString()}원
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
               <div>
@@ -245,7 +256,7 @@ export default function InvestPage() {
                     </span>
                   )}
                 </label>
-                
+
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -268,7 +279,9 @@ export default function InvestPage() {
                 <div className="pt-2 border-t border-gray-200">
                   <p className="text-xs text-emerald-700 flex items-center gap-1">
                     <span>✓</span>
-                    <span>내가 가진 주식 중 오늘 뉴스가 있는 종목만 표시 중</span>
+                    <span>
+                      내가 가진 주식 중 오늘 뉴스가 있는 종목만 표시 중
+                    </span>
                   </p>
                 </div>
               )}
@@ -281,12 +294,15 @@ export default function InvestPage() {
                 title="첫날입니다!"
                 description="뉴스를 읽고 주식을 사보세요. 내일 결과를 확인할 수 있어요!"
               />
-            ) : currentDay >= 2 && holdingStocks.length > 0 && (
-              <InfoBanner
-                icon="💡"
-                title="투자 팁!"
-                description="현금이 부족한가요? 내가 가진 주식을 체크해보세요! 오늘 뉴스를 읽고 불안한 종목은 정리하고, 유망한 주식에 투자해보세요!"
-              />
+            ) : (
+              currentDay >= 2 &&
+              holdingStocks.length > 0 && (
+                <InfoBanner
+                  icon="💡"
+                  title="투자 팁!"
+                  description="현금이 부족한가요? 내가 가진 주식을 체크해보세요! 오늘 뉴스를 읽고 불안한 종목은 정리하고, 유망한 주식에 투자해보세요!"
+                />
+              )
             )}
           </>
         )}
@@ -546,7 +562,9 @@ export default function InvestPage() {
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-base">{stock.name}</h3>
+                        <h3 className="font-semibold text-base">
+                          {stock.name}
+                        </h3>
                         {isHolding && (
                           <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-semibold rounded-md">
                             보유중
@@ -609,12 +627,12 @@ export default function InvestPage() {
                         {profitLoss !== 0 && (
                           <div
                             className={`text-sm font-medium ${
-                              profitLoss > 0
-                                ? "text-red-600"
-                                : "text-blue-600"
+                              profitLoss > 0 ? "text-red-600" : "text-blue-600"
                             }`}
                           >
-                            <span className="text-xs opacity-70 mr-1">내 수익</span>
+                            <span className="text-xs opacity-70 mr-1">
+                              내 수익
+                            </span>
                             {profitLoss > 0 ? "+" : ""}
                             {profitLoss.toLocaleString()}원
                             <span className="text-xs ml-1 opacity-70">
