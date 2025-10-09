@@ -15,6 +15,7 @@ import EmptyState from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useTour } from "@/hooks/useTour";
 import { ShoppingCart, Receipt } from "lucide-react";
+import InfoBanner from "@/components/InfoBanner";
 
 interface Stock {
   id: string;
@@ -48,12 +49,6 @@ export default function InvestPage() {
     filterParam === "holdings"
   );
   const [showOnlyNews, setShowOnlyNews] = useState(false);
-  const [showStockGuide, setShowStockGuide] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("hideStockGuide") !== "true";
-    }
-    return true;
-  });
   const [newsStock, setNewsStock] = useState<{
     id: string;
     name: string;
@@ -144,30 +139,20 @@ export default function InvestPage() {
           description="뉴스를 읽고 주식을 사고팔아보세요"
         />
 
+        {/* 환율 안내 배너 */}
+        <InfoBanner
+          icon="💡"
+          title="모든 가격은 원화(₩)로 표시돼요"
+          description="해외 주식 🇺🇸은 환율이 적용된 원화 가격이에요. 실제 투자와 동일한 환경에서 학습해보세요!"
+        />
+
         {/* 종목 클릭 안내 */}
-        {showStockGuide && stocks.length > 0 && (
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-2xl p-4 mb-4">
-            <div className="flex items-start gap-3">
-              <div className="text-2xl flex-shrink-0">👆</div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-emerald-900 mb-1">
-                  종목 카드를 눌러보세요!
-                </p>
-                <p className="text-xs text-emerald-800">
-                  종목을 클릭하면 주식을 사고 팔 수 있어요. 뉴스를 확인하고 투자해보세요!
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowStockGuide(false);
-                  localStorage.setItem("hideStockGuide", "true");
-                }}
-                className="text-emerald-600 hover:text-emerald-800 text-xl flex-shrink-0"
-              >
-                ×
-              </button>
-            </div>
-          </div>
+        {stocks.length > 0 && (
+          <InfoBanner
+            icon="👆"
+            title="종목 카드를 눌러보세요!"
+            description="종목 카드를 클릭하면 주식을 사고팔 수 있어요. 뉴스를 읽고 현명하게 투자해보세요!"
+          />
         )}
 
         {/* Portfolio Summary */}
@@ -291,39 +276,17 @@ export default function InvestPage() {
 
             {/* Day별 안내 배너 */}
             {currentDay === 1 ? (
-              <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 text-2xl">
-                    🎉
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-bold text-emerald-900 mb-1">
-                      첫날입니다!
-                    </h4>
-                    <p className="text-xs text-emerald-800">
-                      뉴스를 읽고 주식을 사보세요. 내일 결과를 확인할 수 있어요!
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <InfoBanner
+                icon="🎉"
+                title="첫날입니다!"
+                description="뉴스를 읽고 주식을 사보세요. 내일 결과를 확인할 수 있어요!"
+              />
             ) : currentDay >= 2 && holdingStocks.length > 0 && (
-              <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 text-2xl">
-                    💡
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-bold text-emerald-900 mb-1">
-                      투자 팁!
-                    </h4>
-                    <p className="text-xs text-emerald-800">
-                      현금이 부족한가요? <strong>"내가 가진 주식"</strong>을 체크해보세요!
-                      <br />
-                      오늘 뉴스를 읽고 불안한 종목은 정리하고, 유망한 주식에 투자해보세요!
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <InfoBanner
+                icon="💡"
+                title="투자 팁!"
+                description="현금이 부족한가요? 내가 가진 주식을 체크해보세요! 오늘 뉴스를 읽고 불안한 종목은 정리하고, 유망한 주식에 투자해보세요!"
+              />
             )}
           </>
         )}
@@ -332,24 +295,11 @@ export default function InvestPage() {
         {activeTab === "history" ? (
           <>
             {/* 안내 메시지 */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 text-xl">
-                  💡
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-bold text-emerald-900 mb-1">
-                    수익률 계산 안내
-                  </h4>
-                  <p className="text-xs text-emerald-800">
-                    수익률은 <strong>사고 팔기 거래</strong>만 반영됩니다.
-                    <br />
-                    <span className="font-bold">지원금</span>은 초기
-                    자본이므로 수익률 계산에서 제외됩니다.
-                  </p>
-                </div>
-              </div>
-            </div>
+            <InfoBanner
+              icon="💡"
+              title="수익률 계산 안내"
+              description="수익률은 사고 팔기 거래만 반영됩니다. 지원금은 초기 자본이므로 수익률 계산에서 제외됩니다."
+            />
 
             {isRefreshing ? (
               <TransactionListSkeleton />

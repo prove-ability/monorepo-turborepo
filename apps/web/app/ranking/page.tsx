@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
+import InfoBanner from "@/components/InfoBanner";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Users } from "lucide-react";
 
@@ -68,14 +69,11 @@ export default function RankingPage() {
         />
 
         {/* TOP 10 안내 */}
-        <div className="mb-4 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🏆</span>
-            <p className="text-xs text-emerald-900">
-              <strong className="font-bold">상위 10명</strong>의 랭킹이 공개돼요
-            </p>
-          </div>
-        </div>
+        <InfoBanner
+          icon="🏆"
+          title="상위 10명의 랭킹이 공개돼요"
+          description="친구들과 수익률을 비교하고 더 나은 투자자가 되어보세요!"
+        />
 
         {/* 내 순위 표시 (상위 10위 밖일 경우) */}
         {myRanking && myRanking.rank > 10 && (

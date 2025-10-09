@@ -9,6 +9,7 @@ import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import StockInfoModal from "@/components/StockInfoModal";
+import InfoBanner from "@/components/InfoBanner";
 import { News, Stock } from "@/types";
 
 interface NewsItem extends News {
@@ -65,14 +66,11 @@ export default function NewsPage() {
         />
         
         {/* 안내 배너 */}
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-4">
-          <div className="flex items-start gap-3">
-            <div className="text-xl flex-shrink-0">💡</div>
-            <p className="text-sm text-emerald-900">
-              <span className="font-bold">기업명을 클릭</span>하면 회사 정보를 자세히 볼 수 있어요
-            </p>
-          </div>
-        </div>
+        <InfoBanner
+          icon="💡"
+          title="기업명을 클릭하면 회사 정보를 볼 수 있어요"
+          description="관심 있는 기업의 배경과 사업 내용을 확인해보세요!"
+        />
 
         {allNews.length === 0 ? (
           <EmptyState
