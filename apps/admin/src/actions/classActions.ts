@@ -212,8 +212,24 @@ export const getClasses = withAuth(async (user) => {
       orderBy: (classes, { desc }) => [desc(classes.createdAt)],
     });
 
+    // 각 클래스의 totalDays 조회
+    const classesWithTotalDays = await Promise.all(
+      classesData.map(async (classItem) => {
+        const maxDayResult = await db.query.classStockPrices.findMany({
+          where: eq(classStockPrices.classId, classItem.id),
+          orderBy: (classStockPrices, { desc }) => [desc(classStockPrices.day)],
+          limit: 1,
+        });
+        
+        return {
+          ...classItem,
+          totalDays: maxDayResult[0]?.day || 0,
+        };
+      })
+    );
+
     return {
-      data: classesData,
+      data: classesWithTotalDays,
       error: null,
       success: true,
     };

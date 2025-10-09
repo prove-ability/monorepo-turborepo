@@ -126,6 +126,9 @@ export function ClassListItem({
             <span className="font-medium">현재 Day:</span>{" "}
             <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
               Day {classItem.currentDay || 1}
+              {'totalDays' in classItem && classItem.totalDays > 0 && (
+                <span className="opacity-60 ml-1">/ {classItem.totalDays}</span>
+              )}
             </span>
           </p>
           <p>
