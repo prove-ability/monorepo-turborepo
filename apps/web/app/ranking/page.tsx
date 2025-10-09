@@ -7,6 +7,7 @@ import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import InfoBanner from "@/components/InfoBanner";
+import DayChangeModal from "@/components/DayChangeModal";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Users } from "lucide-react";
 
@@ -14,14 +15,22 @@ export default function RankingPage() {
   const myRankRef = useRef<HTMLDivElement>(null);
 
   // React Query로 랭킹 데이터 페칭 (30초마다 자동 갱신)
-  const { data: rankings = [], isLoading, refetch } = useQuery({
-    queryKey: ['ranking'],
+  const {
+    data: rankingData,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["ranking"],
     queryFn: getClassRanking,
     staleTime: 15 * 1000, // 15초 (랭킹은 자주 변함)
     refetchOnWindowFocus: true,
     refetchInterval: 30 * 1000, // 30초마다 자동 갱신 (폴링)
     refetchIntervalInBackground: false, // 백그라운드에서는 폴링 안함
   });
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const rankings = rankingData?.rankings || [];
+  const currentDay = rankingData?.currentDay || 1;
 
   // 내 순위로 자동 스크롤
   useEffect(() => {
@@ -53,6 +62,8 @@ export default function RankingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Day 변경 모달 */}
+      <DayChangeModal currentDay={currentDay} />
       {/* Pull-to-refresh 인디케이터 */}
       {isRefreshing && (
         <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4">
@@ -127,15 +138,9 @@ export default function RankingPage() {
                     {/* 왼쪽: 순위와 닉네임 */}
                     <div className="flex items-center gap-3">
                       <div className="text-xl font-semibold text-gray-700">
-                        {entry.rank === 1 && (
-                          <span className="mr-2">🥇</span>
-                        )}
-                        {entry.rank === 2 && (
-                          <span className="mr-2">🥈</span>
-                        )}
-                        {entry.rank === 3 && (
-                          <span className="mr-2">🥉</span>
-                        )}
+                        {entry.rank === 1 && <span className="mr-2">🥇</span>}
+                        {entry.rank === 2 && <span className="mr-2">🥈</span>}
+                        {entry.rank === 3 && <span className="mr-2">🥉</span>}
                         {entry.rank}
                       </div>
                       <div>
@@ -185,7 +190,6 @@ export default function RankingPage() {
             })
           )}
         </div>
-
       </div>
     </div>
   );

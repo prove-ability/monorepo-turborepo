@@ -40,7 +40,7 @@ export const getClassRanking = withAuth(async (user) => {
     });
 
     if (!classInfo || classInfo.currentDay === null) {
-      return [];
+      return { rankings: [], currentDay: 1 };
     }
 
     const currentDay = classInfo.currentDay;
@@ -149,9 +149,12 @@ export const getClassRanking = withAuth(async (user) => {
       rank: index + 1,
     }));
 
-    return rankedData;
+    return {
+      rankings: rankedData,
+      currentDay,
+    };
   } catch (error) {
     console.error("Failed to fetch class ranking:", error);
-    return [];
+    return { rankings: [], currentDay: 1 };
   }
 });

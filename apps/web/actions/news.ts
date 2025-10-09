@@ -140,7 +140,7 @@ export const getAllNews = withAuth(async (user) => {
     });
 
     if (!classInfo || !classInfo.currentDay) {
-      return [];
+      return { news: [], currentDay: 1 };
     }
 
     // 현재 Day까지의 뉴스만 조회
@@ -185,9 +185,12 @@ export const getAllNews = withAuth(async (user) => {
           : [],
     }));
 
-    return newsWithStockNames;
+    return {
+      news: newsWithStockNames,
+      currentDay: classInfo.currentDay,
+    };
   } catch (error) {
     console.error("Failed to fetch all news:", error);
-    return [];
+    return { news: [], currentDay: 1 };
   }
 });

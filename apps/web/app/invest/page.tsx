@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import TradeBottomSheet from "@/components/TradeBottomSheet";
 import StockNewsSheet from "@/components/StockNewsSheet";
 import StockListSkeleton from "@/components/StockListSkeleton";
+import DayChangeModal from "@/components/DayChangeModal";
 import TransactionListSkeleton from "@/components/TransactionListSkeleton";
 import PageLoading from "@/components/PageLoading";
 import PageHeader from "@/components/PageHeader";
@@ -133,6 +134,8 @@ export default function InvestPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Day 변경 모달 */}
+      <DayChangeModal currentDay={currentDay} />
       {/* Pull-to-refresh 인디케이터 */}
       {isPulling && (
         <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4">
