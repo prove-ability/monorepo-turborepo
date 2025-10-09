@@ -1,13 +1,23 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
-  "globalEnv": ["GEMINI_API_KEY"],
+  "globalEnv": [
+    "GEMINI_API_KEY",
+    "NEXT_PUBLIC_STACK_PROJECT_ID",
+    "NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY",
+    "STACK_SECRET_SERVER_KEY"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**"],
-      "env": ["GEMINI_API_KEY"]
+      "env": [
+        "GEMINI_API_KEY",
+        "NEXT_PUBLIC_STACK_PROJECT_ID",
+        "NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY",
+        "STACK_SECRET_SERVER_KEY"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
@@ -18,7 +28,12 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["GEMINI_API_KEY"]
+      "env": [
+        "GEMINI_API_KEY",
+        "NEXT_PUBLIC_STACK_PROJECT_ID",
+        "NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY",
+        "STACK_SECRET_SERVER_KEY"
+      ]
     }
   }
 }
