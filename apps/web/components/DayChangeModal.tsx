@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import Modal from "./Modal";
 
 interface DayChangeModalProps {
@@ -12,6 +13,7 @@ export default function DayChangeModal({
   currentDay,
 }: DayChangeModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // localStorage에서 마지막으로 확인한 Day 가져오기
@@ -27,10 +29,16 @@ export default function DayChangeModal({
     }
   }, [currentDay]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     localStorage.setItem("lastSeenDay", currentDay.toString());
     setIsOpen(false);
-    window.location.reload();
+    
+    // 모든 캐시된 데이터 갱신 (Day 변경으로 모든 데이터가 변경됨)
+    await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    await queryClient.invalidateQueries({ queryKey: ['stocks'] });
+    await queryClient.invalidateQueries({ queryKey: ['news'] });
+    await queryClient.invalidateQueries({ queryKey: ['ranking'] });
+    await queryClient.invalidateQueries({ queryKey: ['transactions'] });
   };
 
   return (
