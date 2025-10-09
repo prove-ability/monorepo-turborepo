@@ -7,7 +7,7 @@ import "./globals.css";
 import "driver.js/dist/driver.css";
 
 export const metadata: Metadata = {
-  title: "크라우드 랭크 - 주식 투자 게임",
+  title: "유스핀랩 | 모의 투자 게임",
   description: "학생용 주식 투자 시뮬레이션 게임",
   viewport: {
     width: "device-width",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "크라우드랭크",
+    title: "유스핀랩 | 모의 투자 게임",
   },
   icons: {
     icon: [
