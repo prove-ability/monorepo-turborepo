@@ -168,9 +168,14 @@ export const getStocksForInvest = withAuth(async (user) => {
 
     const currentDay = classInfo.currentDay;
 
-    // 모든 주식 조회
+    // 투자 페이지에 필요한 주식 정보만 조회 (최적화)
     const allStocks = await db.query.stocks.findMany({
       orderBy: [asc(stocks.name)],
+      columns: {
+        id: true,
+        name: true,
+        marketCountryCode: true,
+      },
     });
 
     // 현재 Day의 가격 조회
@@ -192,9 +197,12 @@ export const getStocksForInvest = withAuth(async (user) => {
           })
         : [];
 
-    // 현재 Day의 뉴스만 조회 (주식별 뉴스 개수 계산용)
+    // 현재 Day의 뉴스만 조회 (주식별 뉴스 개수 계산용 - 최적화)
     const allNews = await db.query.news.findMany({
       where: and(eq(news.classId, user.classId), eq(news.day, currentDay)),
+      columns: {
+        relatedStockIds: true,
+      },
     });
 
     // 사용자의 보유 주식 조회
@@ -212,19 +220,24 @@ export const getStocksForInvest = withAuth(async (user) => {
 
     const balance = parseFloat(wallet?.balance || "0");
 
-    // 초기 자본 계산 (모든 지원금 합계)
+    // 초기 자본 계산 (지원금만 조회 - 최적화)
     let initialCapital = 0;
     if (wallet) {
-      const allTransactions = await db.query.transactions.findMany({
-        where: eq(transactions.walletId, wallet.id),
+      const benefitTransactions = await db.query.transactions.findMany({
+        where: and(
+          eq(transactions.walletId, wallet.id),
+          eq(transactions.type, "deposit"),
+          eq(transactions.subType, "benefit")
+        ),
+        columns: {
+          price: true,
+        },
       });
 
-      for (const tx of allTransactions) {
-        const amount = parseFloat(tx.price || "0");
-        if (tx.type === "deposit" && tx.subType === "benefit") {
-          initialCapital += amount;
-        }
-      }
+      initialCapital = benefitTransactions.reduce(
+        (sum, tx) => sum + parseFloat(tx.price || "0"),
+        0
+      );
     }
 
     // 주식 데이터 조합
