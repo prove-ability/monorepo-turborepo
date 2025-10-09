@@ -6,6 +6,7 @@ import { ArrowLeft, Search, Users, Building2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getUsersByClass, deleteGuests } from "@/actions/userActions";
 import { StudentBulkUpload } from "./StudentBulkUpload";
+import { StudentHistoryModal } from "./StudentHistoryModal";
 import { Class, Client, Manager } from "@/types";
 
 type Student = Awaited<ReturnType<typeof getUsersByClass>>["data"][number];
@@ -31,6 +32,7 @@ export function ClassDetailClient({
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<{ id: string; name: string } | null>(null);
 
   // 학생 목록 조회 함수 (재사용)
   const fetchStudents = async () => {
@@ -299,15 +301,23 @@ export function ClassDetailClient({
                   {filteredStudents.map((student) => (
                     <tr
                       key={student.id}
-                      className={`hover:bg-gray-50 ${
+                      className={`hover:bg-gray-50 cursor-pointer transition-colors ${
                         selectedIds.has(student.id) ? "bg-blue-50" : ""
                       }`}
+                      onClick={(e) => {
+                        // 체크박스 클릭은 무시
+                        const target = e.target as HTMLInputElement;
+                        if (target.type !== 'checkbox') {
+                          setSelectedStudent({ id: student.id, name: student.name ?? "이름 없음" });
+                        }
+                      }}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(student.id)}
                           onChange={() => handleSelectStudent(student.id)}
+                          onClick={(e) => e.stopPropagation()}
                           className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                         />
                       </td>
@@ -355,6 +365,15 @@ export function ClassDetailClient({
           )}
         </div>
       </div>
+
+      {/* 학생 이력 모달 */}
+      {selectedStudent && (
+        <StudentHistoryModal
+          studentId={selectedStudent.id}
+          studentName={selectedStudent.name}
+          onClose={() => setSelectedStudent(null)}
+        />
+      )}
     </div>
   );
 }

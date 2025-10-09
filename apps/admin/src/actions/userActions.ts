@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { db, guests, wallets, transactions, holdings } from "@repo/db";
+import { db, guests, wallets, transactions, holdings, stocks } from "@repo/db";
 import { eq, or, like, and, desc, asc, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
 import { INITIAL_WALLET_BALANCE } from "@/config/gameConfig";
@@ -396,3 +396,83 @@ export const deleteGuests = withAuth(
     }
   }
 );
+
+// 학생 게임 참여 이력 조회
+export async function getStudentGameHistory(guestId: string) {
+  try {
+    // 학생 정보 조회
+    const guest = await db.query.guests.findFirst({
+      where: eq(guests.id, guestId),
+      with: {
+        class: true,
+        wallet: true,
+      },
+    });
+
+    if (!guest) {
+      throw new Error("학생을 찾을 수 없습니다");
+    }
+
+    // 거래 내역 조회 (주식 정보 포함)
+    const transactionsList = await db.query.transactions.findMany({
+      where: guest.wallet?.id 
+        ? eq(transactions.walletId, guest.wallet.id)
+        : undefined,
+      orderBy: [desc(transactions.day), desc(transactions.createdAt)],
+    });
+
+    // 주식 정보 조회
+    const stockIds = transactionsList
+      .filter(t => t.stockId)
+      .map(t => t.stockId!);
+    const uniqueStockIds = [...new Set(stockIds)];
+
+    const stocksData = uniqueStockIds.length > 0
+      ? await db.query.stocks.findMany({
+          where: inArray(stocks.id, uniqueStockIds),
+        })
+      : [];
+
+    const stockMap = new Map(stocksData.map(s => [s.id, s]));
+
+    // 거래 내역에 주식 정보 추가
+    const transactionsWithStock = transactionsList.map(t => ({
+      ...t,
+      stock: t.stockId ? stockMap.get(t.stockId) : null,
+    }));
+
+    // 보유 주식 조회
+    const holdingsList = await db.query.holdings.findMany({
+      where: eq(holdings.guestId, guestId),
+    });
+
+    // 보유 주식에 주식 정보 추가
+    const holdingsWithStock = await Promise.all(
+      holdingsList.map(async (holding) => {
+        const stock = await db.query.stocks.findFirst({
+          where: eq(stocks.id, holding.stockId!),
+        });
+        return {
+          ...holding,
+          stock,
+        };
+      })
+    );
+
+    return {
+      success: true,
+      data: {
+        guest,
+        transactions: transactionsWithStock,
+        holdings: holdingsWithStock,
+        currentDay: guest.class?.currentDay || 1,
+      },
+    };
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error("An unknown error occurred");
+    return {
+      success: false,
+      error: `게임 이력 조회 실패: ${error.message}`,
+    };
+  }
+}
