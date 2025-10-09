@@ -94,9 +94,9 @@ export function DayAdjustmentModal({
 
   const dayChange = newDay - currentDay;
   const isIncreasing = dayChange > 0;
-  // 다음 Day 진행 가능 여부: 증가일 때 뉴스와 가격이 모두 1개 이상 있어야 함
+  // 다음 Day 진행 가능 여부: 증가일 때 가격만 필수 (뉴스는 마지막 Day에 없을 수 있음)
   const canConfirm =
-    !loading && (!isIncreasing || (news.length > 0 && prices.length > 0));
+    !loading && (!isIncreasing || prices.length > 0);
 
   // 전날 대비 변화 계산 헬퍼
   const getPrevPrice = (stockId?: string) => {
@@ -312,17 +312,18 @@ export function DayAdjustmentModal({
               </>
             )}
 
-            {/* 진행 불가 안내 (증가 시 데이터 미존재) */}
-            {isIncreasing &&
-              !loading &&
-              (news.length === 0 || prices.length === 0) && (
-                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3">
-                  다음 Day에 {news.length === 0 ? "뉴스" : ""}
-                  {news.length === 0 && prices.length === 0 ? "와 " : ""}
-                  {prices.length === 0 ? "주식 가격" : ""} 데이터가 없습니다.
-                  등록 후 진행해 주세요.
-                </div>
-              )}
+            {/* 진행 불가 안내 (주식 가격 필수) */}
+            {isIncreasing && !loading && prices.length === 0 && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3">
+                다음 Day에 주식 가격 데이터가 없습니다. 등록 후 진행해 주세요.
+              </div>
+            )}
+            {/* 뉴스 없음 경고 (마지막 Day는 뉴스 없을 수 있음) */}
+            {isIncreasing && !loading && news.length === 0 && prices.length > 0 && (
+              <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-3">
+                ⚠️ 다음 Day에 뉴스가 없습니다. (마지막 Day의 경우 뉴스 없이 진행 가능합니다)
+              </div>
+            )}
           </div>
         )}
 
