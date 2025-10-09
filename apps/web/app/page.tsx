@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import BenefitNotificationBanner from "@/components/BenefitNotificationBanner";
-import DayChangeNotificationBanner from "@/components/DayChangeNotificationBanner";
+import DayChangeModal from "@/components/DayChangeModal";
 import GameEndModal from "@/components/GameEndModal";
 import AnimatedBalance from "@/components/AnimatedBalance";
 import PageLoading from "@/components/PageLoading";
@@ -68,8 +68,8 @@ export default function Home() {
           </div>
         </div>
       )}
-      {/* Day 변경 알림 배너 */}
-      <DayChangeNotificationBanner currentDay={dashboardData.currentDay} />
+      {/* Day 변경 모달 */}
+      <DayChangeModal currentDay={dashboardData.currentDay} />
       {/* 게임 종료 모달 */}
       <GameEndModal 
         currentDay={dashboardData.currentDay} 
