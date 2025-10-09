@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   description: "학생용 주식 투자 시뮬레이션 게임",
   viewport: {
     width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
+    initialScale: 1.0,
+    maximumScale: 1.0,
     userScalable: false,
     viewportFit: "cover",
   },
