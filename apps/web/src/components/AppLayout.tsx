@@ -32,7 +32,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* 게임 관련 모달 - 모든 페이지에서 표시 */}
       {gameProgress && (
         <>
-          <DayChangeModal currentDay={gameProgress.currentDay} />
+          <DayChangeModal
+            currentDay={gameProgress.currentDay}
+            totalDays={gameProgress.totalDays}
+          />
           <GameEndModal
             currentDay={gameProgress.currentDay}
             totalDays={gameProgress.totalDays}

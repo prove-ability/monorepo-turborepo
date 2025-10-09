@@ -7,10 +7,12 @@ import Modal from "./Modal";
 
 interface DayChangeModalProps {
   currentDay: number;
+  totalDays: number;
 }
 
 export default function DayChangeModal({
   currentDay,
+  totalDays,
 }: DayChangeModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -20,14 +22,14 @@ export default function DayChangeModal({
     const lastSeenDay = localStorage.getItem("lastSeenDay");
     const lastSeenDayNum = lastSeenDay ? parseInt(lastSeenDay, 10) : 0;
 
-    // Day가 변경되었으면 모달 표시
-    if (currentDay > lastSeenDayNum && lastSeenDayNum > 0) {
+    // Day가 변경되었으면 모달 표시 (단, 마지막 Day는 GameEndModal만 표시)
+    if (currentDay > lastSeenDayNum && lastSeenDayNum > 0 && currentDay < totalDays) {
       setIsOpen(true);
     } else {
       // 현재 Day 저장
       localStorage.setItem("lastSeenDay", currentDay.toString());
     }
-  }, [currentDay]);
+  }, [currentDay, totalDays]);
 
   const handleConfirm = async () => {
     localStorage.setItem("lastSeenDay", currentDay.toString());
