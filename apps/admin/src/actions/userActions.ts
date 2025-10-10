@@ -81,8 +81,6 @@ export const createUser = withAuth(async (user, formData: FormData) => {
       })
       .returning();
 
-    console.log("newGuest", newGuest);
-
     if (!newGuest) {
       throw new Error("게스트 생성에 실패했습니다.");
     }
