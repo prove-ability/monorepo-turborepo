@@ -65,8 +65,6 @@ export const createUser = withAuth(async (user, formData: FormData) => {
       validatedData.class_id
     );
 
-    console.log("loginId", loginId);
-
     // 전화번호 정리 (하이픈 제거)
     const cleanPhone = validatedData.phone.replace(/[^0-9]/g, "");
 
