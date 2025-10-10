@@ -15,11 +15,12 @@ import { eq, or, like, and, desc, asc, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
 import { INITIAL_WALLET_BALANCE } from "@/config/gameConfig";
 
-// loginId 생성 헬퍼 함수 (중복 시 숫자 증가)
-async function generateUniqueLoginId(
-  name: string,
-  classId: string
-): Promise<string> {
+/**
+ * loginId 생성 헬퍼 함수 (중복 시 숫자 증가)
+ * @TODO: loginId 생성시 classId를 받아서 class 내에서 중복 체크하는 방식으로 수정
+ * 이떄, 게스트는 수업코드를 입력하고 로그인 하는 방식으로 변경되어야 함
+ */
+async function generateUniqueLoginId(name: string): Promise<string> {
   // 같은 클래스 내에서 같은 이름으로 시작하는 모든 loginId 조회
   const existingUsers = await db.query.guests.findMany({
     where: eq(guests.name, name),
@@ -68,10 +69,7 @@ export const createUser = withAuth(async (user, formData: FormData) => {
       class_id: formData.get("class_id"),
     });
 
-    const loginId = await generateUniqueLoginId(
-      validatedData.name,
-      validatedData.class_id
-    );
+    const loginId = await generateUniqueLoginId(validatedData.name);
 
     // 전화번호 정리 (하이픈 제거)
     const cleanPhone = validatedData.phone.replace(/[^0-9]/g, "");
@@ -258,10 +256,7 @@ export const bulkCreateUsers = withAuth(
       // 각 사용자를 개별적으로 삽입 (일부 실패해도 나머지 진행)
       for (const userData of usersData) {
         try {
-          const loginId = await generateUniqueLoginId(
-            userData.name,
-            userData.classId
-          );
+          const loginId = await generateUniqueLoginId(userData.name);
 
           await dbWithTransaction.transaction(async (tx) => {
             const [newGuest] = await tx
