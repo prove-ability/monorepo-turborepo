@@ -369,6 +369,7 @@ export function ClassDetailClient({
       {/* 학생 이력 모달 */}
       {selectedStudent && (
         <StudentHistoryModal
+          isOpen={!!selectedStudent}
           studentId={selectedStudent.id}
           studentName={selectedStudent.name}
           onClose={() => setSelectedStudent(null)}
