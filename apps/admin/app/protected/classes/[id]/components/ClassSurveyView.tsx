@@ -29,7 +29,10 @@ export function ClassSurveyView({ classId }: ClassSurveyViewProps) {
         const result = await getSurveysByClass(classId);
         setData(result);
         if (!result.success) {
-          setError(result.error || "데이터를 불러오는데 실패했습니다");
+          const errorMsg = typeof result.error === "string" 
+            ? result.error 
+            : "데이터를 불러오는데 실패했습니다";
+          setError(errorMsg);
         }
       } catch (err) {
         console.error("Failed to fetch surveys:", err);
@@ -77,7 +80,7 @@ export function ClassSurveyView({ classId }: ClassSurveyViewProps) {
     );
   }
 
-  if (!data?.success || !data.data) {
+  if (!data?.success || !("data" in data) || !data.data) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <MessageSquare className="w-16 h-16 text-gray-400 mb-4" />
@@ -152,7 +155,7 @@ export function ClassSurveyView({ classId }: ClassSurveyViewProps) {
           <h3 className="text-lg font-semibold text-gray-900">평점 분포</h3>
         </div>
         <div className="space-y-3">
-          {statistics.ratingDistribution.reverse().map((item) => {
+          {statistics.ratingDistribution.reverse().map((item: { rating: number; count: number }) => {
             const percentage =
               statistics.total > 0 ? (item.count / statistics.total) * 100 : 0;
             return (
@@ -194,7 +197,7 @@ export function ClassSurveyView({ classId }: ClassSurveyViewProps) {
         </div>
         <div className="p-6">
           <div className="space-y-4">
-            {surveys.map((survey) => (
+            {surveys.map((survey: any) => (
               <div
                 key={survey.id}
                 className="border border-gray-200 rounded-lg p-5 hover:border-gray-300 transition-colors bg-white"
