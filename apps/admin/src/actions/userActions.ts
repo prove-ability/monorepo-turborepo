@@ -2,7 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { db, guests, wallets, transactions, holdings, stocks } from "@repo/db";
+import {
+  db,
+  dbWithTransaction,
+  guests,
+  wallets,
+  transactions,
+  holdings,
+  stocks,
+} from "@repo/db";
 import { eq, or, like, and, desc, asc, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
 import { INITIAL_WALLET_BALANCE } from "@/config/gameConfig";
@@ -68,45 +76,47 @@ export const createUser = withAuth(async (user, formData: FormData) => {
     // 전화번호 정리 (하이픈 제거)
     const cleanPhone = validatedData.phone.replace(/[^0-9]/g, "");
 
-    const [newGuest] = await db
-      .insert(guests)
-      .values({
-        name: validatedData.name,
+    await dbWithTransaction.transaction(async (tx) => {
+      const [newGuest] = await tx
+        .insert(guests)
+        .values({
+          name: validatedData.name,
+          classId: validatedData.class_id,
+          mobilePhone: cleanPhone,
+          affiliation: validatedData.school_name,
+          grade: validatedData.grade,
+          loginId: loginId,
+          password: "pw1234", // 기본 비밀번호
+        })
+        .returning();
+
+      if (!newGuest) {
+        throw new Error("게스트 생성에 실패했습니다.");
+      }
+
+      // wallet 자동 생성
+      const [newWallet] = await tx
+        .insert(wallets)
+        .values({
+          guestId: newGuest.id,
+          balance: INITIAL_WALLET_BALANCE,
+        })
+        .returning();
+
+      if (!newWallet) {
+        throw new Error("지갑 생성에 실패했습니다.");
+      }
+
+      // 초기 자본 거래 내역 기록
+      await tx.insert(transactions).values({
+        walletId: newWallet.id,
+        type: "deposit",
+        subType: "benefit",
+        quantity: 0,
+        price: INITIAL_WALLET_BALANCE,
+        day: 1,
         classId: validatedData.class_id,
-        mobilePhone: cleanPhone,
-        affiliation: validatedData.school_name,
-        grade: validatedData.grade,
-        loginId: loginId,
-        password: "pw1234", // 기본 비밀번호
-      })
-      .returning();
-
-    if (!newGuest) {
-      throw new Error("게스트 생성에 실패했습니다.");
-    }
-
-    // wallet 자동 생성
-    const [newWallet] = await db
-      .insert(wallets)
-      .values({
-        guestId: newGuest.id,
-        balance: INITIAL_WALLET_BALANCE,
-      })
-      .returning();
-
-    if (!newWallet) {
-      throw new Error("지갑 생성에 실패했습니다.");
-    }
-
-    // 초기 자본 거래 내역 기록
-    await db.insert(transactions).values({
-      walletId: newWallet.id,
-      type: "deposit",
-      subType: "benefit",
-      quantity: 0,
-      price: INITIAL_WALLET_BALANCE,
-      day: 1,
-      classId: validatedData.class_id,
+      });
     });
 
     revalidatePath("/protected/classes");
@@ -253,46 +263,48 @@ export const bulkCreateUsers = withAuth(
             userData.classId
           );
 
-          const [newGuest] = await db
-            .insert(guests)
-            .values({
-              name: userData.name,
-              mobilePhone: userData.mobilePhone,
-              grade: userData.grade,
-              affiliation: userData.affiliation,
+          await dbWithTransaction.transaction(async (tx) => {
+            const [newGuest] = await tx
+              .insert(guests)
+              .values({
+                name: userData.name,
+                mobilePhone: userData.mobilePhone,
+                grade: userData.grade,
+                affiliation: userData.affiliation,
+                classId: userData.classId,
+                nickname: userData.nickname,
+                loginId: loginId,
+                password: "pw1234",
+              })
+              .returning();
+
+            if (!newGuest) {
+              throw new Error("게스트 생성에 실패했습니다.");
+            }
+
+            // wallet 자동 생성
+            const [newWallet] = await tx
+              .insert(wallets)
+              .values({
+                guestId: newGuest.id,
+                balance: INITIAL_WALLET_BALANCE,
+              })
+              .returning();
+
+            if (!newWallet) {
+              throw new Error("지갑 생성에 실패했습니다.");
+            }
+
+            // 초기 자본 거래 내역 기록
+            await tx.insert(transactions).values({
+              walletId: newWallet.id,
+              type: "deposit",
+              subType: "benefit",
+              quantity: 0,
+              price: INITIAL_WALLET_BALANCE,
+              day: 1,
               classId: userData.classId,
-              nickname: userData.nickname,
-              loginId: loginId,
-              password: "pw1234",
-            })
-            .returning();
-
-          if (!newGuest) {
-            throw new Error("게스트 생성에 실패했습니다.");
-          }
-
-          // wallet 자동 생성
-          const [newWallet] = await db
-            .insert(wallets)
-            .values({
-              guestId: newGuest.id,
-              balance: INITIAL_WALLET_BALANCE,
-            })
-            .returning();
-
-          if (!newWallet) {
-            throw new Error("지갑 생성에 실패했습니다.");
-          }
-
-          // 초기 자본 거래 내역 기록
-          await db.insert(transactions).values({
-            walletId: newWallet.id,
-            type: "deposit",
-            subType: "benefit",
-            quantity: 0,
-            price: INITIAL_WALLET_BALANCE,
-            day: 1,
-            classId: userData.classId,
+            });
           });
 
           successCount++;
