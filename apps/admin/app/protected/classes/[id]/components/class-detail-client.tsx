@@ -2,11 +2,19 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@repo/ui";
-import { ArrowLeft, Search, Users, Building2, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Search,
+  Users,
+  Building2,
+  Trash2,
+  MessageSquare,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getUsersByClass, deleteGuests } from "@/actions/userActions";
 import { StudentBulkUpload } from "./StudentBulkUpload";
 import { StudentHistoryModal } from "./StudentHistoryModal";
+import { ClassSurveyView } from "./ClassSurveyView";
 import { Class, Client, Manager } from "@/types";
 
 type Student = Awaited<ReturnType<typeof getUsersByClass>>["data"][number];
@@ -21,18 +29,22 @@ interface ClassDetailClientProps {
   classId: string;
 }
 
+type TabType = "students" | "surveys";
+
 export function ClassDetailClient({
   classData,
   classId,
 }: ClassDetailClientProps) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>("students");
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<{ id: string; name: string } | null>(null);
+  const [selectedStudent, setSelectedStudent] =
+    useState<{ id: string; name: string } | null>(null);
 
   // 학생 목록 조회 함수 (재사용)
   const fetchStudents = async () => {
@@ -174,9 +186,39 @@ export function ClassDetailClient({
         </div>
       </div>
 
-      {/* 학생 목록 섹션 */}
+      {/* 탭 네비게이션 */}
       <div className="bg-white rounded-lg shadow-md">
-        <div className="p-6 border-b border-gray-200">
+        <div className="border-b border-gray-200">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab("students")}
+              className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors relative ${
+                activeTab === "students"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              학생 관리 ({students.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("surveys")}
+              className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors relative ${
+                activeTab === "surveys"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <MessageSquare className="w-5 h-5" />
+              서베이 결과
+            </button>
+          </div>
+        </div>
+
+        {/* 탭 컨텐츠 */}
+        {activeTab === "students" ? (
+          <div>
+            <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <h2 className="text-xl font-semibold text-gray-900">
               등록된 학생 ({filteredStudents.length}명)
@@ -363,7 +405,11 @@ export function ClassDetailClient({
               </table>
             </div>
           )}
-        </div>
+            </div>
+          </div>
+        ) : (
+          <ClassSurveyView classId={classId} />
+        )}
       </div>
 
       {/* 학생 이력 모달 */}
