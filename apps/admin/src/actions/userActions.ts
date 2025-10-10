@@ -415,7 +415,7 @@ export async function getStudentGameHistory(guestId: string) {
 
     // 거래 내역 조회 (주식 정보 포함)
     const transactionsList = await db.query.transactions.findMany({
-      where: guest.wallet?.id 
+      where: guest.wallet?.id
         ? eq(transactions.walletId, guest.wallet.id)
         : undefined,
       orderBy: [desc(transactions.day), desc(transactions.createdAt)],
@@ -423,20 +423,21 @@ export async function getStudentGameHistory(guestId: string) {
 
     // 주식 정보 조회
     const stockIds = transactionsList
-      .filter(t => t.stockId)
-      .map(t => t.stockId!);
+      .filter((t) => t.stockId)
+      .map((t) => t.stockId!);
     const uniqueStockIds = [...new Set(stockIds)];
 
-    const stocksData = uniqueStockIds.length > 0
-      ? await db.query.stocks.findMany({
-          where: inArray(stocks.id, uniqueStockIds),
-        })
-      : [];
+    const stocksData =
+      uniqueStockIds.length > 0
+        ? await db.query.stocks.findMany({
+            where: inArray(stocks.id, uniqueStockIds),
+          })
+        : [];
 
-    const stockMap = new Map(stocksData.map(s => [s.id, s]));
+    const stockMap = new Map(stocksData.map((s) => [s.id, s]));
 
     // 거래 내역에 주식 정보 추가
-    const transactionsWithStock = transactionsList.map(t => ({
+    const transactionsWithStock = transactionsList.map((t) => ({
       ...t,
       stock: t.stockId ? stockMap.get(t.stockId) : null,
     }));
@@ -469,7 +470,8 @@ export async function getStudentGameHistory(guestId: string) {
       },
     };
   } catch (e) {
-    const error = e instanceof Error ? e : new Error("An unknown error occurred");
+    const error =
+      e instanceof Error ? e : new Error("An unknown error occurred");
     return {
       success: false,
       error: `게임 이력 조회 실패: ${error.message}`,
