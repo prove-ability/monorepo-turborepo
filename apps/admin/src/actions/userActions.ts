@@ -14,22 +14,14 @@ async function generateUniqueLoginId(
 ): Promise<string> {
   // 같은 클래스 내에서 같은 이름으로 시작하는 모든 loginId 조회
   const existingUsers = await db.query.guests.findMany({
-    where: and(eq(guests.classId, classId), like(guests.loginId, `${name}%`)),
+    where: eq(guests.name, name),
     columns: {
-      loginId: true,
+      name: true,
     },
   });
 
   // 중복이 없으면 그대로 반환
   if (existingUsers.length === 0) {
-    return name;
-  }
-
-  // 기존 loginId들 확인
-  const existingLoginIds = new Set(existingUsers.map((u) => u.loginId));
-
-  // 중복이 없으면 그대로 사용
-  if (!existingLoginIds.has(name)) {
     return name;
   }
 
@@ -73,6 +65,8 @@ export const createUser = withAuth(async (user, formData: FormData) => {
       validatedData.class_id
     );
 
+    console.log("loginId", loginId);
+
     // 전화번호 정리 (하이픈 제거)
     const cleanPhone = validatedData.phone.replace(/[^0-9]/g, "");
 
@@ -88,6 +82,8 @@ export const createUser = withAuth(async (user, formData: FormData) => {
         password: "pw1234", // 기본 비밀번호
       })
       .returning();
+
+    console.log("newGuest", newGuest);
 
     if (!newGuest) {
       throw new Error("게스트 생성에 실패했습니다.");
@@ -124,6 +120,7 @@ export const createUser = withAuth(async (user, formData: FormData) => {
       error: undefined,
     };
   } catch (e) {
+    console.error("e", e);
     const error =
       e instanceof Error ? e : new Error("An unknown error occurred");
     if (error instanceof z.ZodError) {
