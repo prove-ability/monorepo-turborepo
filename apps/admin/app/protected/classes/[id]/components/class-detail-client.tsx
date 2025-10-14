@@ -39,7 +39,6 @@ export function ClassDetailClient({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("students");
   const [searchTerm, setSearchTerm] = useState("");
-  const [students, setStudents] = useState<Student[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
@@ -57,9 +56,10 @@ export function ClassDetailClient({
     },
   });
 
+  const students = (data as Student[]) ?? [];
+
   useEffect(() => {
     if (Array.isArray(data)) {
-      setStudents(data as Student[]);
       setError(null);
     }
   }, [data]);
@@ -207,7 +207,7 @@ export function ClassDetailClient({
               }`}
             >
               <Users className="w-5 h-5" />
-              학생 관리 ({students.length})
+              학생 관리 ({filteredStudents.length})
             </button>
             <button
               onClick={() => setActiveTab("surveys")}
@@ -229,7 +229,7 @@ export function ClassDetailClient({
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  등록된 학생 ({filteredStudents.length}명)
+                  학생 관리 ({filteredStudents.length}명)
                 </h2>
                 <div className="flex gap-2">
                   {selectedIds.size > 0 && (
