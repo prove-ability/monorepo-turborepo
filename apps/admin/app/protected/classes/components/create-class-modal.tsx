@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@repo/ui";
 import { createClass, getClientsAndManagers } from "@/actions/classActions";
 import { getStocks } from "@/actions/stockActions";
@@ -19,6 +20,7 @@ export function CreateClassModal({
   setIsOpen,
   onClassCreated,
 }: CreateClassModalProps) {
+  const queryClient = useQueryClient();
   const [clients, setClients] = useState<Partial<Client>[]>([]);
   const [managers, setManagers] = useState<Partial<Manager>[]>([]);
   const [stocks, setStocks] = useState<Stock[]>([]);
@@ -162,6 +164,8 @@ export function CreateClassModal({
       }
 
       onClassCreated(createdClass);
+      // 캐시 무효화로 목록 최신화
+      queryClient.invalidateQueries({ queryKey: ["classes", "list"] });
       setIsOpen(false);
 
       // 폼 리셋

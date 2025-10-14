@@ -8,7 +8,7 @@ import { CreateClientModal } from "@/components/dialog/create-client-modal";
 import { Button } from "@repo/ui";
 import { AddManagerForm } from "./add-manager-form";
 import { ManagerListItem } from "./manager-list-item";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getClients } from "@/actions/clientActions";
 
 // page.tsx에서 내려준 타입 (Client와 Manager 배열을 포함)
@@ -17,6 +17,7 @@ type ClientWithManagers = Client & {
 };
 
 export function ClientList() {
+  const queryClient = useQueryClient();
   const [clients, setClients] = useState<ClientWithManagers[]>([]);
   const { data, isLoading, error } = useQuery<ClientWithManagers[]>({
     queryKey: ["clients", "list"],
@@ -49,6 +50,8 @@ export function ClientList() {
           : client
       )
     );
+    // 캐시 무효화로 서버 최신화 동기화
+    queryClient.invalidateQueries({ queryKey: ["clients", "list"] });
   };
 
   const handleManagerDeleted = (managerId: string) => {
@@ -64,10 +67,14 @@ export function ClientList() {
           : client
       )
     );
+    // 캐시 무효화로 서버 최신화 동기화
+    queryClient.invalidateQueries({ queryKey: ["clients", "list"] });
   };
 
   const handleClientCreated = (newClient: ClientWithManagers) => {
     setClients((prevClients) => [newClient, ...prevClients]);
+    // 캐시 무효화로 서버 최신화 동기화
+    queryClient.invalidateQueries({ queryKey: ["clients", "list"] });
   };
 
   const handleClientDelete = async (clientId: string, clientName: string) => {
@@ -91,6 +98,8 @@ export function ClientList() {
         if (selectedClientId === clientId) {
           setSelectedClientId(null);
         }
+        // 캐시 무효화로 서버 최신화 동기화
+        queryClient.invalidateQueries({ queryKey: ["clients", "list"] });
       } else {
         alert("삭제 실패: " + result.message);
       }

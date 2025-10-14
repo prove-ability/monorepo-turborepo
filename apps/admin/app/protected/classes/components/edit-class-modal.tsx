@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@repo/ui";
 import { updateClass, getClientsAndManagers } from "@/actions/classActions";
 import { Manager, Client, Class } from "@/types";
@@ -24,6 +25,7 @@ export function EditClassModal({
   classData,
   onClassUpdated,
 }: EditClassModalProps) {
+  const queryClient = useQueryClient();
   const [clients, setClients] = useState<Partial<Client>[]>([]);
   const [managers, setManagers] = useState<Partial<Manager>[]>([]);
   const [selectedClientId, setSelectedClientId] = useState(
@@ -139,6 +141,8 @@ export function EditClassModal({
       } else if ("data" in result && result.data) {
         alert("수업이 성공적으로 수정되었습니다.");
         onClassUpdated(result.data);
+        // 캐시 무효화로 목록 최신화
+        queryClient.invalidateQueries({ queryKey: ["classes", "list"] });
         setIsOpen(false);
       }
     } catch (error) {

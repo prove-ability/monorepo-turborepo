@@ -23,9 +23,10 @@ import { getNews } from "@/actions/newsActions";
 import GameDayManagement from "@/components/game/GameDayManagement";
 import PriceManagement from "@/components/game/PriceManagement";
 import { ClassStockPrice, Stock } from "@/types";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function GameManagementPage() {
+  const queryClient = useQueryClient();
   const [classes, setClasses] = useState<ClassWithRelations[]>([]);
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [prices, setPrices] = useState<ClassStockPrice[]>([]);
@@ -291,6 +292,9 @@ export default function GameManagementPage() {
     try {
       await updateClassCurrentDay(selectedClass, newDay);
       loadInitialData();
+      // 캐시 무효화: 진행 상황/가격
+      queryClient.invalidateQueries({ queryKey: ["game", "progress", selectedClass] });
+      queryClient.invalidateQueries({ queryKey: ["game", "prices", { classId: selectedClass, day: selectedDay }] });
       alert(`현재 Day가 ${newDay}로 업데이트되었습니다.`);
     } catch (error) {
       console.error("현재 Day 업데이트 실패:", error);
@@ -330,6 +334,9 @@ export default function GameManagementPage() {
         const result = await incrementDayAndPayAllowance(selectedClass);
         if (result.success) {
           loadInitialData();
+          // 캐시 무효화: 진행 상황/가격
+          queryClient.invalidateQueries({ queryKey: ["game", "progress", selectedClass] });
+          queryClient.invalidateQueries({ queryKey: ["game", "prices", { classId: selectedClass, day: selectedDay }] });
           const message =
             "message" in result && result.message
               ? result.message
@@ -349,6 +356,9 @@ export default function GameManagementPage() {
         // Day 감소 시: 단순 업데이트만
         await updateClassCurrentDay(selectedClass, dayAdjustmentModal.newDay);
         loadInitialData();
+        // 캐시 무효화: 진행 상황/가격
+        queryClient.invalidateQueries({ queryKey: ["game", "progress", selectedClass] });
+        queryClient.invalidateQueries({ queryKey: ["game", "prices", { classId: selectedClass, day: selectedDay }] });
         alert(`현재 Day가 ${dayAdjustmentModal.newDay}로 업데이트되었습니다.`);
       }
     } catch (error) {
