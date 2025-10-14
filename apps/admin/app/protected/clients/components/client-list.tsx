@@ -1,7 +1,7 @@
 "use client";
 
 import { deleteClientAction } from "@/actions/clientActions";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { type Client } from "@/types/client";
 import { type Manager } from "@/types/manager";
 import { CreateClientModal } from "@/components/dialog/create-client-modal";
@@ -18,7 +18,6 @@ type ClientWithManagers = Client & {
 
 export function ClientList() {
   const queryClient = useQueryClient();
-  const [clients, setClients] = useState<ClientWithManagers[]>([]);
   const { data, isLoading, error } = useQuery<ClientWithManagers[]>({
     queryKey: ["clients", "list"],
     queryFn: async () => {
@@ -27,13 +26,7 @@ export function ClientList() {
       return [];
     },
   });
-
-  // 쿼리 결과를 로컬 상태에 동기화 (동작 동일 유지)
-  useEffect(() => {
-    if (Array.isArray(data)) {
-      setClients(data);
-    }
-  }, [data]);
+  const clients = data ?? [];
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
@@ -43,36 +36,36 @@ export function ClientList() {
   };
 
   const handleManagerAdded = (clientId: string, newManager: Manager) => {
-    setClients((prevClients) =>
-      prevClients.map((client) =>
+    queryClient.setQueryData<ClientWithManagers[]>(["clients", "list"], (prev) => {
+      const arr = prev ?? [];
+      return arr.map((client) =>
         client.id === clientId
           ? { ...client, managers: [...client.managers, newManager] }
           : client
-      )
-    );
+      );
+    });
     // 캐시 무효화로 서버 최신화 동기화
     queryClient.invalidateQueries({ queryKey: ["clients", "list"] });
   };
 
   const handleManagerDeleted = (managerId: string) => {
-    setClients((prevClients) =>
-      prevClients.map((client) =>
-        client.managers.some((manager) => manager.id === managerId)
-          ? {
-              ...client,
-              managers: client.managers.filter(
-                (manager) => manager.id !== managerId
-              ),
-            }
+    queryClient.setQueryData<ClientWithManagers[]>(["clients", "list"], (prev) => {
+      const arr = prev ?? [];
+      return arr.map((client) =>
+        client.managers.some((m) => m.id === managerId)
+          ? { ...client, managers: client.managers.filter((m) => m.id !== managerId) }
           : client
-      )
-    );
+      );
+    });
     // 캐시 무효화로 서버 최신화 동기화
     queryClient.invalidateQueries({ queryKey: ["clients", "list"] });
   };
 
   const handleClientCreated = (newClient: ClientWithManagers) => {
-    setClients((prevClients) => [newClient, ...prevClients]);
+    queryClient.setQueryData<ClientWithManagers[]>(["clients", "list"], (prev) => {
+      const arr = prev ?? [];
+      return [newClient, ...arr];
+    });
     // 캐시 무효화로 서버 최신화 동기화
     queryClient.invalidateQueries({ queryKey: ["clients", "list"] });
   };
@@ -91,9 +84,10 @@ export function ClientList() {
       const result = await deleteClientAction(clientId);
       if (result.success) {
         alert(result.message);
-        setClients((prevClients) =>
-          prevClients.filter((client) => client.id !== clientId)
-        );
+        queryClient.setQueryData<ClientWithManagers[]>(["clients", "list"], (prev) => {
+          const arr = prev ?? [];
+          return arr.filter((client) => client.id !== clientId);
+        });
         // 삭제된 클라이언트가 현재 선택된 클라이언트라면 선택 해제
         if (selectedClientId === clientId) {
           setSelectedClientId(null);
