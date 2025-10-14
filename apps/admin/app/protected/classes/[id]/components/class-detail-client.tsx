@@ -11,6 +11,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { getUsersByClass, deleteGuests } from "@/actions/userActions";
 import { StudentBulkUpload } from "./StudentBulkUpload";
 import { StudentHistoryModal } from "./StudentHistoryModal";
@@ -37,6 +38,7 @@ export function ClassDetailClient({
   classId,
 }: ClassDetailClientProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>("students");
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -138,7 +140,14 @@ export function ClassDetailClient({
 
       if (result.success) {
         alert(result.message);
+        // 즉시 반영: 캐시에서 선택된 학생 제거
+        queryClient.setQueryData<Student[]>(["classes", "detail", classId, "students"], (prev) => {
+          const arr = Array.isArray(prev) ? prev : [];
+          const removeSet = new Set(selectedIds);
+          return arr.filter((s) => !removeSet.has(s.id));
+        });
         setSelectedIds(new Set());
+        // 서버 최신화 유지
         await fetchStudents();
       } else if (result.error) {
         alert(`삭제 실패: ${result.error}`);
