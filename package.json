@@ -24,7 +24,7 @@
     "postgres": "^3.4.7",
     "prettier": "^3.5.3",
     "tsx": "^4.20.5",
-    "turbo": "^2.5.4",
+    "turbo": "^2.5.8",
     "typescript": "5.8.2"
   },
   "packageManager": "pnpm@9.0.0",
