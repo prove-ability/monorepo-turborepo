@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import {
   Users,
   Building2,
@@ -21,6 +21,7 @@ import {
   getClassProgress,
   getRecentSurveys,
 } from "@/actions/dashboardActions";
+import { useQuery } from "@tanstack/react-query";
 
 type DashboardStats = Awaited<ReturnType<typeof getDashboardStats>>;
 type RecentClasses = Awaited<ReturnType<typeof getRecentClasses>>;
@@ -29,46 +30,50 @@ type ClassProgress = Awaited<ReturnType<typeof getClassProgress>>;
 type RecentSurveys = Awaited<ReturnType<typeof getRecentSurveys>>;
 
 export function DashboardClient() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentClasses, setRecentClasses] = useState<RecentClasses | null>(
-    null
-  );
-  const [recentGuests, setRecentGuests] = useState<RecentGuests | null>(null);
-  const [classProgress, setClassProgress] = useState<ClassProgress | null>(
-    null
-  );
-  const [recentSurveys, setRecentSurveys] = useState<RecentSurveys | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
+  const { data: stats, isLoading: isStatsLoading } = useQuery<DashboardStats>({
+    queryKey: ["dashboard", "stats"],
+    queryFn: () => getDashboardStats(),
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [statsData, classesData, guestsData, progressData, surveysData] =
-          await Promise.all([
-            getDashboardStats(),
-            getRecentClasses(5),
-            getRecentGuests(10),
-            getClassProgress(),
-            getRecentSurveys(5),
-          ]);
+  const { data: recentClasses, isLoading: isRecentClassesLoading } =
+    useQuery<RecentClasses>({
+      queryKey: ["dashboard", "recent-classes", { limit: 5 }],
+      queryFn: () => getRecentClasses(5),
+    });
 
-        setStats(statsData);
-        setRecentClasses(classesData);
-        setRecentGuests(guestsData);
-        setClassProgress(progressData);
-        setRecentSurveys(surveysData);
-      } catch (err) {
-        console.error("Failed to fetch dashboard data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: recentGuests, isLoading: isRecentGuestsLoading } =
+    useQuery<RecentGuests>({
+      queryKey: ["dashboard", "recent-guests", { limit: 10 }],
+      queryFn: () => getRecentGuests(10),
+    });
 
-    fetchData();
-  }, []);
+  const { data: classProgress, isLoading: isClassProgressLoading } =
+    useQuery<ClassProgress>({
+      queryKey: ["dashboard", "class-progress"],
+      queryFn: () => getClassProgress(),
+    });
+
+  const { data: recentSurveys, isLoading: isRecentSurveysLoading } =
+    useQuery<RecentSurveys>({
+      queryKey: ["dashboard", "recent-surveys", { limit: 5 }],
+      queryFn: () => getRecentSurveys(5),
+    });
+
+  const loading = useMemo(
+    () =>
+      isStatsLoading ||
+      isRecentClassesLoading ||
+      isRecentGuestsLoading ||
+      isClassProgressLoading ||
+      isRecentSurveysLoading,
+    [
+      isStatsLoading,
+      isRecentClassesLoading,
+      isRecentGuestsLoading,
+      isClassProgressLoading,
+      isRecentSurveysLoading,
+    ]
+  );
 
   if (loading) {
     return (
