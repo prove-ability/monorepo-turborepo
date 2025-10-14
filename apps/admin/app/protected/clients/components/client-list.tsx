@@ -1,7 +1,7 @@
 "use client";
 
 import { deleteClientAction } from "@/actions/clientActions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type Client } from "@/types/client";
 import { type Manager } from "@/types/manager";
 import { CreateClientModal } from "@/components/dialog/create-client-modal";
@@ -16,25 +16,23 @@ type ClientWithManagers = Client & {
   managers: Manager[];
 };
 
-export function ClientList({
-  initialClients,
-}: {
-  initialClients: ClientWithManagers[];
-}) {
-  // 캐시 워밍 (기능 변경 없음): 초기 데이터만 등록, 네트워크 호출 비활성화
-  useQuery<ClientWithManagers[]>({
+export function ClientList() {
+  const [clients, setClients] = useState<ClientWithManagers[]>([]);
+  const { data, isLoading, error } = useQuery<ClientWithManagers[]>({
     queryKey: ["clients", "list"],
     queryFn: async () => {
       const res = await getClients();
-      return "data" in res ? (res.data as ClientWithManagers[]) : [];
+      if ("data" in res) return res.data as ClientWithManagers[];
+      return [];
     },
-    initialData: initialClients,
-    staleTime: Infinity,
-    refetchOnMount: false,
-    enabled: false,
   });
 
-  const [clients, setClients] = useState(initialClients);
+  // 쿼리 결과를 로컬 상태에 동기화 (동작 동일 유지)
+  useEffect(() => {
+    if (Array.isArray(data)) {
+      setClients(data);
+    }
+  }, [data]);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
@@ -103,6 +101,17 @@ export function ClientList({
       setDeletingClientId(null);
     }
   };
+
+  if (isLoading && clients.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-500 text-lg">고객사 목록을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
