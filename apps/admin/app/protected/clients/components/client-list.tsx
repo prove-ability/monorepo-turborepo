@@ -8,6 +8,8 @@ import { CreateClientModal } from "@/components/dialog/create-client-modal";
 import { Button } from "@repo/ui";
 import { AddManagerForm } from "./add-manager-form";
 import { ManagerListItem } from "./manager-list-item";
+import { useQuery } from "@tanstack/react-query";
+import { getClients } from "@/actions/clientActions";
 
 // page.tsx에서 내려준 타입 (Client와 Manager 배열을 포함)
 type ClientWithManagers = Client & {
@@ -19,6 +21,19 @@ export function ClientList({
 }: {
   initialClients: ClientWithManagers[];
 }) {
+  // 캐시 워밍 (기능 변경 없음): 초기 데이터만 등록, 네트워크 호출 비활성화
+  useQuery<ClientWithManagers[]>({
+    queryKey: ["clients", "list"],
+    queryFn: async () => {
+      const res = await getClients();
+      return "data" in res ? (res.data as ClientWithManagers[]) : [];
+    },
+    initialData: initialClients,
+    staleTime: Infinity,
+    refetchOnMount: false,
+    enabled: false,
+  });
+
   const [clients, setClients] = useState(initialClients);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isCreateClientModalOpen, setIsCreateClientModalOpen] = useState(false);
