@@ -78,7 +78,7 @@ export function ClassDetailClient({
       }
       const rows = res.data as Student[];
       // 서버 응답을 UI 경량 타입으로 매핑
-      return rows.map((s) => ({
+      const mapped = rows.map((s) => ({
         id: s.id,
         name: s.name,
         mobilePhone: s.mobilePhone,
@@ -92,6 +92,11 @@ export function ClassDetailClient({
         loginId: (s as any).loginId ?? (s as any).login_id,
         password: (s as any).password ?? (s as any).pw,
       }));
+      // 최신 생성일 순으로 정렬 (최근 생성이 상단)
+      mapped.sort(
+        (a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0)
+      );
+      return mapped;
     },
   });
 
@@ -315,7 +320,13 @@ export function ClassDetailClient({
                               (g) => !existingIds.has(g.id)
                             );
                             // createdGuests는 StudentsLite와 동일 필드 집합
-                            return [...arr, ...toAppend];
+                            const merged = [...toAppend, ...arr];
+                            merged.sort(
+                              (a, b) =>
+                                (b.createdAt?.getTime() ?? 0) -
+                                (a.createdAt?.getTime() ?? 0)
+                            );
+                            return merged;
                           }
                         );
                       }}

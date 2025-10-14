@@ -1,6 +1,5 @@
-import { notFound } from "next/navigation";
 import { getClassById } from "@/actions/classActions";
-import { ClassDetailClient } from "./components/class-detail-client";
+import { ClassDetailPageClient } from "./components/ClassDetailPageClient";
 
 interface ClassDetailPageProps {
   params: Promise<{
@@ -8,20 +7,8 @@ interface ClassDetailPageProps {
   }>;
 }
 
-export default async function ClassDetailPage({
-  params,
-}: ClassDetailPageProps) {
+export default async function ClassDetailPage({ params }: ClassDetailPageProps) {
   const { id } = await params;
-  const classInfo = await getClassById(id);
-
-  // Type guard: check if the result has 'data' property
-  if (!classInfo || !("data" in classInfo) || !classInfo.data) {
-    notFound();
-  }
-
-  return (
-    <div className="space-y-6">
-      <ClassDetailClient classData={classInfo.data} classId={id} />
-    </div>
-  );
+  // 서버 액션을 얇은 래퍼로 전달하고, 데이터 패칭/로딩은 클라이언트에서 수행
+  return <ClassDetailPageClient classId={id} getClassByIdAction={getClassById} />;
 }
