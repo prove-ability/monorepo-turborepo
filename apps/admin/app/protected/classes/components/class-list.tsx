@@ -7,6 +7,7 @@ import { CreateClassModal } from "./create-class-modal";
 import { EditClassModal } from "./edit-class-modal";
 import { ClassListItem } from "./class-list-item";
 import { Class, Manager, Client } from "@/types";
+import { useQuery } from "@tanstack/react-query";
 
 interface ClassWithRelations extends Class {
   client: Client | null;
@@ -15,7 +16,6 @@ interface ClassWithRelations extends Class {
 
 export function ClassList() {
   const [classes, setClasses] = useState<ClassWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassWithRelations | null>(
@@ -32,51 +32,41 @@ export function ClassList() {
     );
   };
 
-  useEffect(() => {
-    async function loadClasses() {
-      try {
-        setLoading(true);
-        const result = await getClasses();
-
-        // Check for authentication or API errors
-        if (!result.success) {
-          const errorMsg =
-            "message" in result
-              ? result.message
-              : "error" in result && result.error instanceof Error
-                ? result.error.message
-                : "데이터를 불러오는데 실패했습니다.";
-          setError(errorMsg || "인증에 실패했습니다.");
-          return;
-        }
-
-        // Success case: result has 'data' property
-        if ("data" in result && result.data) {
-          setClasses(result.data);
-          setError(null);
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다."
-        );
-      } finally {
-        setLoading(false);
+  const { data, isLoading, error: queryError, refetch } = useQuery({
+    queryKey: ["classes", "list"],
+    queryFn: async () => {
+      const result = await getClasses();
+      if (!result.success) {
+        const errorMsg =
+          "message" in result
+            ? result.message
+            : "error" in result && result.error instanceof Error
+              ? result.error.message
+              : "데이터를 불러오는데 실패했습니다.";
+        throw new Error(errorMsg || "인증에 실패했습니다.");
       }
-    }
+      return "data" in result && result.data ? result.data : [];
+    },
+  });
 
-    loadClasses();
-  }, []);
+  useEffect(() => {
+    if (Array.isArray(data)) {
+      setClasses(data as ClassWithRelations[]);
+      setError(null);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (queryError instanceof Error) {
+      setError(queryError.message);
+    }
+  }, [queryError]);
 
   const onClassUpdated = async () => {
-    const result = await getClasses();
-
-    // Only update if successful and has data
-    if (result.success && "data" in result && result.data) {
-      setClasses(result.data);
-    }
+    await refetch();
   };
 
-  if (loading) {
+  if (isLoading) {
     return <div>로딩 중...</div>;
   }
 

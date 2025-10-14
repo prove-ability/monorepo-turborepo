@@ -1,4 +1,4 @@
-"use client";
+    "use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { getNews } from "@/actions/newsActions";
 import GameDayManagement from "@/components/game/GameDayManagement";
 import PriceManagement from "@/components/game/PriceManagement";
 import { ClassStockPrice, Stock } from "@/types";
+import { useQuery } from "@tanstack/react-query";
 
 export default function GameManagementPage() {
   const [classes, setClasses] = useState<ClassWithRelations[]>([]);
@@ -39,6 +40,70 @@ export default function GameManagementPage() {
   const [loading, setLoading] = useState(true);
   const [gameProgressLoading, setGameProgressLoading] = useState(false);
 
+  // React Query: 초기 로드 - 클래스 목록
+  const {
+    data: classesDataQ,
+    isLoading: isLoadingClasses,
+    refetch: refetchClasses,
+  } = useQuery({
+    queryKey: ["classes", "list"],
+    queryFn: async () => {
+      const res = await getClasses();
+      return "data" in res && res.data ? res.data : [];
+    },
+  });
+
+  // React Query: 초기 로드 - 종목 목록
+  const {
+    data: stocksDataQ,
+    isLoading: isLoadingStocks,
+    refetch: refetchStocks,
+  } = useQuery({
+    queryKey: ["stocks", "list"],
+    queryFn: async () => {
+      return await getStocks();
+    },
+  });
+
+  // React Query: 게임 진행 상황
+  const {
+    data: gameProgressData,
+    refetch: refetchGameProgress,
+  } = useQuery({
+    queryKey: ["game", "progress", selectedClass],
+    queryFn: async () => {
+      if (!selectedClass) return null;
+      return await getGameProgress(selectedClass);
+    },
+    enabled: !!selectedClass,
+  });
+
+  // React Query: 가격 데이터
+  const {
+    data: pricesData,
+    refetch: refetchPrices,
+  } = useQuery({
+    queryKey: ["game", "prices", { classId: selectedClass, day: selectedDay }],
+    queryFn: async () => {
+      if (!selectedClass) return [] as ClassStockPrice[];
+      return await getClassStockPrices(selectedClass, selectedDay);
+    },
+    enabled: !!selectedClass,
+  });
+
+  // 쿼리 결과를 기존 상태에 동기화 (렌더/동작 동일 유지)
+  useEffect(() => {
+    if (gameProgressData) {
+      setGameProgress(gameProgressData);
+    }
+  }, [gameProgressData]);
+
+  useEffect(() => {
+    if (Array.isArray(pricesData)) {
+      setPrices(pricesData as ClassStockPrice[]);
+    }
+  }, [pricesData]);
+
   // Day 조정 모달 상태
   const [dayAdjustmentModal, setDayAdjustmentModal] = useState({
     isOpen: false,
@@ -48,6 +113,32 @@ export default function GameManagementPage() {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // 쿼리 결과를 기존 상태에 동기화 (클래스/종목)
+  useEffect(() => {
+    if (Array.isArray(classesDataQ)) {
+      setClasses(classesDataQ);
+      // 초기 선택 설정 (처음 로드 시 한 번)
+      if (classesDataQ.length > 0 && !selectedClass) {
+        const firstClientId = (classesDataQ[0] as any)?.client?.id;
+        if (firstClientId) {
+          setSelectedClientId(firstClientId);
+          const firstClassOfClient = classesDataQ.find(
+            (c) => (c as any)?.client?.id === firstClientId
+          );
+          setSelectedClass(firstClassOfClient?.id || classesDataQ[0]?.id || "");
+        } else {
+          setSelectedClass(classesDataQ[0]?.id || "");
+        }
+      }
+    }
+  }, [classesDataQ]);
+
+  useEffect(() => {
+    if (Array.isArray(stocksDataQ)) {
+      setStocks(stocksDataQ);
+    }
+  }, [stocksDataQ]);
 
   useEffect(() => {
     if (selectedClass) {
@@ -59,33 +150,7 @@ export default function GameManagementPage() {
 
   const loadInitialData = async () => {
     try {
-      const [classesResponse, stocksData] = await Promise.all([
-        getClasses(),
-        getStocks(),
-      ]);
-
-      // Type guard: classesResponse가 data 속성을 가지고 있는지 확인
-      const classesData =
-        "data" in classesResponse && classesResponse.data
-          ? classesResponse.data
-          : [];
-
-      setClasses(classesData);
-      setStocks(stocksData);
-
-      if (classesData.length > 0) {
-        // 기본 선택: 첫 고객사 및 해당 고객사의 첫 클래스
-        const firstClientId = (classesData[0] as any)?.client?.id;
-        if (firstClientId) {
-          setSelectedClientId(firstClientId);
-          const firstClassOfClient = classesData.find(
-            (c) => (c as any)?.client?.id === firstClientId
-          );
-          setSelectedClass(firstClassOfClient?.id || classesData[0]?.id || "");
-        } else {
-          setSelectedClass(classesData[0]?.id || "");
-        }
-      }
+      await Promise.all([refetchClasses(), refetchStocks()]);
     } catch (error) {
       console.error("데이터 로드 실패:", error);
     } finally {
@@ -119,8 +184,7 @@ export default function GameManagementPage() {
 
     setGameProgressLoading(true);
     try {
-      const progress = await getGameProgress(selectedClass);
-      setGameProgress(progress);
+      await refetchGameProgress();
     } catch (error) {
       console.error("게임 진행 상황 로드 실패:", error);
     } finally {
@@ -132,8 +196,7 @@ export default function GameManagementPage() {
     if (!selectedClass) return;
 
     try {
-      const pricesData = await getClassStockPrices(selectedClass, selectedDay);
-      setPrices(pricesData);
+      await refetchPrices();
     } catch (error) {
       console.error("가격 데이터 로드 실패:", error);
     }
@@ -296,7 +359,7 @@ export default function GameManagementPage() {
     }
   };
 
-  if (loading) {
+  if (loading || isLoadingClasses || isLoadingStocks) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-lg">데이터를 불러오는 중...</div>

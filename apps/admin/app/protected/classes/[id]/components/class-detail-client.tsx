@@ -16,6 +16,7 @@ import { StudentBulkUpload } from "./StudentBulkUpload";
 import { StudentHistoryModal } from "./StudentHistoryModal";
 import { ClassSurveyView } from "./ClassSurveyView";
 import { Class, Client, Manager } from "@/types";
+import { useQuery } from "@tanstack/react-query";
 
 type Student = Awaited<ReturnType<typeof getUsersByClass>>["data"][number];
 
@@ -39,35 +40,45 @@ export function ClassDetailClient({
   const [activeTab, setActiveTab] = useState<TabType>("students");
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedStudent, setSelectedStudent] =
     useState<{ id: string; name: string } | null>(null);
 
-  // 학생 목록 조회 함수 (재사용)
-  const fetchStudents = async () => {
-    try {
-      setLoading(true);
+  const { data, isLoading, error: queryError, refetch } = useQuery({
+    queryKey: ["classes", "detail", classId, "students"],
+    queryFn: async () => {
+      const res = await getUsersByClass(classId);
+      if (!res || !("data" in res)) {
+        throw new Error("학생 목록을 불러오는 중 오류가 발생했습니다.");
+      }
+      return res.data as Student[];
+    },
+  });
+
+  useEffect(() => {
+    if (Array.isArray(data)) {
+      setStudents(data as Student[]);
       setError(null);
-      const studentsData = await getUsersByClass(classId);
-      setStudents(studentsData.data);
-    } catch (err) {
-      console.error("학생 목록 조회 실패:", err);
-      setError("학생 목록을 불러오는 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
     }
+  }, [data]);
+
+  useEffect(() => {
+    if (queryError instanceof Error) {
+      setError(queryError.message);
+    }
+  }, [queryError]);
+
+  const fetchStudents = async () => {
+    await refetch();
   };
 
-  // 클라이언트에서 학생 목록 조회
   useEffect(() => {
     fetchStudents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
-  // 검색 기능
   const filteredStudents = useMemo(() => {
     if (!searchTerm.trim()) return students;
 
@@ -91,7 +102,6 @@ export function ClassDetailClient({
     return new Date(dateString).toLocaleDateString("ko-KR");
   };
 
-  // 전체 선택/해제
   const handleSelectAll = () => {
     if (selectedIds.size === filteredStudents.length) {
       setSelectedIds(new Set());
@@ -100,7 +110,6 @@ export function ClassDetailClient({
     }
   };
 
-  // 개별 선택
   const handleSelectStudent = (studentId: string) => {
     const newSelected = new Set(selectedIds);
     if (newSelected.has(studentId)) {
@@ -111,7 +120,6 @@ export function ClassDetailClient({
     setSelectedIds(newSelected);
   };
 
-  // 일괄 삭제
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) {
       alert("삭제할 학생을 선택해주세요");
@@ -119,7 +127,7 @@ export function ClassDetailClient({
     }
 
     const confirmMessage = `선택한 ${selectedIds.size}명의 학생을 삭제하시겠습니까?\n\n⚠️ 다음 데이터가 함께 삭제됩니다:\n- 거래 내역\n- 보유 주식\n- 지갑 정보\n\n⚠️ 설문 응답은 보존됩니다.\n\n이 작업은 되돌릴 수 없습니다.`;
-    
+
     if (!confirm(confirmMessage)) {
       return;
     }
@@ -219,34 +227,34 @@ export function ClassDetailClient({
         {activeTab === "students" ? (
           <div>
             <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-            <h2 className="text-xl font-semibold text-gray-900">
-              등록된 학생 ({filteredStudents.length}명)
-            </h2>
-            <div className="flex gap-2">
-              {selectedIds.size > 0 && (
-                <Button
-                  onClick={handleBulkDelete}
-                  disabled={isDeleting}
-                  variant="destructive"
-                  size="sm"
-                  className="flex items-center space-x-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>
-                    {isDeleting
-                      ? "삭제 중..."
-                      : `선택한 ${selectedIds.size}명 삭제`}
-                  </span>
-                </Button>
-              )}
-              <StudentBulkUpload
-                classId={classId}
-                clientId={classData.clientId}
-                onCompleted={async () => {
-                  await fetchStudents();
-                }}
-              />
+              <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  등록된 학생 ({filteredStudents.length}명)
+                </h2>
+                <div className="flex gap-2">
+                  {selectedIds.size > 0 && (
+                    <Button
+                      onClick={handleBulkDelete}
+                      disabled={isDeleting}
+                      variant="destructive"
+                      size="sm"
+                      className="flex items-center space-x-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>
+                        {isDeleting
+                          ? "삭제 중..."
+                          : `선택한 ${selectedIds.size}명 삭제`}
+                      </span>
+                    </Button>
+                  )}
+                  <StudentBulkUpload
+                    classId={classId}
+                    clientId={classData.clientId}
+                    onCompleted={async () => {
+                      await fetchStudents();
+                    }}
+                  />
             </div>
           </div>
 
@@ -265,46 +273,27 @@ export function ClassDetailClient({
 
         {/* 학생 목록 */}
         <div className="p-6">
-          {loading ? (
+          {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-500 text-lg">
-                학생 목록을 불러오는 중...
-              </p>
+              <p className="text-gray-500 text-lg">학생 목록을 불러오는 중...</p>
             </div>
           ) : error ? (
             <div className="text-center py-12">
               <div className="text-red-500 mb-4">
-                <svg
-                  className="w-12 h-12 mx-auto"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <p className="text-red-500 text-lg mb-4">{error}</p>
-              <Button
-                onClick={() => window.location.reload()}
-                className="bg-blue-500 hover:bg-blue-600 text-white"
-              >
+              <Button onClick={() => window.location.reload()} className="bg-blue-500 hover:bg-blue-600 text-white">
                 다시 시도
               </Button>
             </div>
           ) : filteredStudents.length === 0 ? (
             <div className="text-center py-12">
               <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">
-                {searchTerm
-                  ? "검색 결과가 없습니다."
-                  : "등록된 학생이 없습니다."}
-              </p>
+              <p className="text-gray-500 text-lg">{searchTerm ? "검색 결과가 없습니다." : "등록된 학생이 없습니다."}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
