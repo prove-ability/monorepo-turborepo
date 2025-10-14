@@ -11,6 +11,17 @@ interface CreateUserModalProps {
   classId: string;
   clientId: string;
   onUserCreated: () => void;
+  onCreatedWithStudent?: (student: {
+    id: string;
+    name: string;
+    mobilePhone: string;
+    affiliation: string;
+    grade: string;
+    classId: string;
+    loginId: string;
+    password: string;
+    createdAt: Date;
+  }) => void;
 }
 
 export function CreateUserModal({
@@ -19,6 +30,7 @@ export function CreateUserModal({
   classId,
   clientId,
   onUserCreated,
+  onCreatedWithStudent,
 }: CreateUserModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -53,6 +65,9 @@ export function CreateUserModal({
       } else if ("message" in result && result.message) {
         // 생성된 계정 정보를 표시
         alert(result.message);
+        if ((result as any).createdGuest) {
+          onCreatedWithStudent?.((result as any).createdGuest);
+        }
         setIsOpen(false);
         onUserCreated();
         // 폼 초기화

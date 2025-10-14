@@ -74,6 +74,18 @@ export const createUser = withAuth(async (user, formData: FormData) => {
     // 전화번호 정리 (하이픈 제거)
     const cleanPhone = validatedData.phone.replace(/[^0-9]/g, "");
 
+    let createdGuest: {
+      id: string;
+      name: string;
+      mobilePhone: string;
+      affiliation: string;
+      grade: string;
+      classId: string;
+      loginId: string;
+      password: string;
+      createdAt: Date;
+    } | null = null;
+
     await dbWithTransaction.transaction(async (tx) => {
       const [newGuest] = await tx
         .insert(guests)
@@ -115,12 +127,26 @@ export const createUser = withAuth(async (user, formData: FormData) => {
         day: 1,
         classId: validatedData.class_id,
       });
+
+      // collect minimal guest info for immediate UI usage
+      createdGuest = {
+        id: newGuest.id,
+        name: newGuest.name,
+        mobilePhone: newGuest.mobilePhone,
+        affiliation: newGuest.affiliation,
+        grade: newGuest.grade,
+        classId: newGuest.classId,
+        loginId: newGuest.loginId!,
+        password: newGuest.password!,
+        createdAt: newGuest.createdAt,
+      };
     });
 
     revalidatePath("/protected/classes");
     return {
       success: true,
       message: `학생 계정이 생성되었습니다.\n\n로그인 ID: ${loginId}\n비밀번호: pw1234`,
+      createdGuest,
       error: undefined,
     };
   } catch (e) {

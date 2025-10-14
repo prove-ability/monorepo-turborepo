@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getUsersByClass, deleteGuests } from "@/actions/userActions";
 import { StudentBulkUpload } from "./StudentBulkUpload";
 import { StudentHistoryModal } from "./StudentHistoryModal";
+import { CreateUserModal } from "../../components/create-user-modal";
 import { ClassSurveyView } from "./ClassSurveyView";
 import { Class, Client, Manager } from "@/types";
 import { useQuery } from "@tanstack/react-query";
@@ -61,6 +62,7 @@ export function ClassDetailClient({
     id: string;
     name: string;
   } | null>(null);
+  const [isCreateStudentOpen, setIsCreateStudentOpen] = useState(false);
 
   const {
     data,
@@ -272,214 +274,257 @@ export function ClassDetailClient({
 
         {/* 탭 컨텐츠 */}
         {activeTab === "students" ? (
-          <div>
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  학생 관리 ({filteredStudents.length}명)
-                </h2>
-                <div className="flex gap-2">
-                  {selectedIds.size > 0 && (
+          <>
+            <div>
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    학생 관리 ({filteredStudents.length}명)
+                  </h2>
+                  <div className="flex gap-2">
+                    {selectedIds.size > 0 && (
+                      <Button
+                        onClick={handleBulkDelete}
+                        disabled={isDeleting}
+                        variant="destructive"
+                        size="sm"
+                        className="flex items-center space-x-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>
+                          {isDeleting
+                            ? "삭제 중..."
+                            : `선택한 ${selectedIds.size}명 삭제`}
+                        </span>
+                      </Button>
+                    )}
+                    <StudentBulkUpload
+                      classId={classId}
+                      clientId={classData.clientId}
+                      onCompleted={async () => {
+                        await fetchStudents();
+                      }}
+                      onCompletedWithStudents={({ createdGuests }) => {
+                        // 즉시 반영: 업로드로 생성된 학생들을 캐시에 추가 (중복 방지)
+                        queryClient.setQueryData<StudentsLite[]>(
+                          ["classes", "detail", classId, "students"],
+                          (prev) => {
+                            const arr = Array.isArray(prev) ? prev : [];
+                            const existingIds = new Set(arr.map((s) => s.id));
+                            const toAppend = createdGuests.filter(
+                              (g) => !existingIds.has(g.id)
+                            );
+                            // createdGuests는 StudentsLite와 동일 필드 집합
+                            return [...arr, ...toAppend];
+                          }
+                        );
+                      }}
+                    />
                     <Button
-                      onClick={handleBulkDelete}
-                      disabled={isDeleting}
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
-                      className="flex items-center space-x-2"
+                      onClick={() => setIsCreateStudentOpen(true)}
                     >
-                      <Trash2 className="w-4 h-4" />
-                      <span>
-                        {isDeleting
-                          ? "삭제 중..."
-                          : `선택한 ${selectedIds.size}명 삭제`}
-                      </span>
+                      + 학생 등록
                     </Button>
-                  )}
-                  <StudentBulkUpload
-                    classId={classId}
-                    clientId={classData.clientId}
-                    onCompleted={async () => {
-                      await fetchStudents();
-                    }}
-                    onCompletedWithStudents={({ createdGuests }) => {
-                      // 즉시 반영: 업로드로 생성된 학생들을 캐시에 추가 (중복 방지)
-                      queryClient.setQueryData<StudentsLite[]>(
-                        ["classes", "detail", classId, "students"],
-                        (prev) => {
-                          const arr = Array.isArray(prev) ? prev : [];
-                          const existingIds = new Set(arr.map((s) => s.id));
-                          const toAppend = createdGuests.filter(
-                            (g) => !existingIds.has(g.id)
-                          );
-                          // createdGuests는 StudentsLite와 동일 필드 집합
-                          return [...arr, ...toAppend];
-                        }
-                      );
-                    }}
+                  </div>
+                </div>
+
+                {/* 검색 입력 */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="학생 이름, 닉네임, 전화번호, 소속으로 검색..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
 
-              {/* 검색 입력 */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="학생 이름, 닉네임, 전화번호, 소속으로 검색..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* 학생 목록 */}
-            <div className="p-6">
-              {isLoading ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                  <p className="text-gray-500 text-lg">
-                    학생 목록을 불러오는 중...
-                  </p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-12">
-                  <div className="text-red-500 mb-4">
-                    <svg
-                      className="w-12 h-12 mx-auto"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+              {/* 학생 목록 */}
+              <div className="p-6">
+                {isLoading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p className="text-gray-500 text-lg">
+                      학생 목록을 불러오는 중...
+                    </p>
                   </div>
-                  <p className="text-red-500 text-lg mb-4">{error}</p>
-                  <Button
-                    onClick={() => window.location.reload()}
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
-                  >
-                    다시 시도
-                  </Button>
-                </div>
-              ) : filteredStudents.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg">
-                    {searchTerm
-                      ? "검색 결과가 없습니다."
-                      : "등록된 학생이 없습니다."}
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left">
-                          <input
-                            type="checkbox"
-                            checked={
-                              filteredStudents.length > 0 &&
-                              selectedIds.size === filteredStudents.length
-                            }
-                            onChange={handleSelectAll}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          학생 정보
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          로그인 정보
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          연락처
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          소속/학년
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          등록일
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredStudents.map((student) => (
-                        <tr
-                          key={student.id}
-                          className={`hover:bg-gray-50 cursor-pointer transition-colors ${
-                            selectedIds.has(student.id) ? "bg-blue-50" : ""
-                          }`}
-                          onClick={(e) => {
-                            // 체크박스 클릭은 무시
-                            const target = e.target as HTMLInputElement;
-                            if (target.type !== "checkbox") {
-                              setSelectedStudent({
-                                id: student.id,
-                                name: student.name ?? "이름 없음",
-                              });
-                            }
-                          }}
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap">
+                ) : error ? (
+                  <div className="text-center py-12">
+                    <div className="text-red-500 mb-4">
+                      <svg
+                        className="w-12 h-12 mx-auto"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-red-500 text-lg mb-4">{error}</p>
+                    <Button
+                      onClick={() => window.location.reload()}
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      다시 시도
+                    </Button>
+                  </div>
+                ) : filteredStudents.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">
+                      {searchTerm
+                        ? "검색 결과가 없습니다."
+                        : "등록된 학생이 없습니다."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left">
                             <input
                               type="checkbox"
-                              checked={selectedIds.has(student.id)}
-                              onChange={() => handleSelectStudent(student.id)}
-                              onClick={(e) => e.stopPropagation()}
+                              checked={
+                                filteredStudents.length > 0 &&
+                                selectedIds.size === filteredStudents.length
+                              }
+                              onChange={handleSelectAll}
                               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                             />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
-                              {student.name ?? "이름 없음"} (
-                              {student.nickname || "닉네임 없음"})
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                ID: {student.loginId ?? "-"}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                PW: {student.password ?? "-"}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {student.mobilePhone ?? "-"}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm text-gray-900">
-                                {student.affiliation ?? "-"}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {student.grade ?? "?"}학년
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {student.createdAt
-                              ? formatDate(student.createdAt.toISOString())
-                              : "-"}
-                          </td>
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            학생 정보
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            로그인 정보
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            연락처
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            소속/학년
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            등록일
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredStudents.map((student) => (
+                          <tr
+                            key={student.id}
+                            className={`hover:bg-gray-50 cursor-pointer transition-colors ${
+                              selectedIds.has(student.id) ? "bg-blue-50" : ""
+                            }`}
+                            onClick={(e) => {
+                              // 체크박스 클릭은 무시
+                              const target = e.target as HTMLInputElement;
+                              if (target.type !== "checkbox") {
+                                setSelectedStudent({
+                                  id: student.id,
+                                  name: student.name ?? "이름 없음",
+                                });
+                              }
+                            }}
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(student.id)}
+                                onChange={() => handleSelectStudent(student.id)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {student.name ?? "이름 없음"} (
+                                {student.nickname || "닉네임 없음"})
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  ID: {student.loginId ?? "-"}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  PW: {student.password ?? "-"}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {student.mobilePhone ?? "-"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm text-gray-900">
+                                  {student.affiliation ?? "-"}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {student.grade ?? "?"}학년
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {student.createdAt
+                                ? formatDate(student.createdAt.toISOString())
+                                : "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+            <CreateUserModal
+              isOpen={isCreateStudentOpen}
+              setIsOpen={setIsCreateStudentOpen}
+              classId={classId}
+              clientId={classData.clientId}
+              onUserCreated={async () => {
+                await fetchStudents();
+              }}
+              onCreatedWithStudent={(stu) => {
+                // 즉시 반영: 생성 학생 추가 (중복 방지)
+                queryClient.setQueryData<StudentsLite[]>(
+                  ["classes", "detail", classId, "students"],
+                  (prev) => {
+                    const arr = Array.isArray(prev) ? prev : [];
+                    if (arr.some((s) => s.id === stu.id)) return arr;
+                    return [
+                      ...arr,
+                      {
+                        id: stu.id,
+                        name: stu.name,
+                        mobilePhone: stu.mobilePhone,
+                        affiliation: stu.affiliation,
+                        grade: stu.grade,
+                        classId: stu.classId,
+                        createdAt: stu.createdAt,
+                        nickname: undefined,
+                        loginId: stu.loginId,
+                        password: stu.password,
+                      },
+                    ];
+                  }
+                );
+              }}
+            />
+          </>
         ) : (
           <ClassSurveyView classId={classId} />
         )}
