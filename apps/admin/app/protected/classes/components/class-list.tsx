@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { getClasses } from "@/actions/classActions";
 import { Button } from "@repo/ui";
 import { CreateClassModal } from "./create-class-modal";
 import { EditClassModal } from "./edit-class-modal";
 import { ClassListItem } from "./class-list-item";
 import { Class, Manager, Client } from "@/types";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface ClassWithRelations extends Class {
   client: Client | null;
@@ -15,21 +15,25 @@ interface ClassWithRelations extends Class {
 }
 
 export function ClassList() {
-  const [classes, setClasses] = useState<ClassWithRelations[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassWithRelations | null>(
     null
   );
 
   const handleClassCreated = (newClass: ClassWithRelations) => {
-    setClasses((prev) => [newClass, ...prev]);
+    // 캐시에 즉시 반영 후, 외부에서 무효화되어도 UX 동일 유지
+    queryClient.setQueryData<ClassWithRelations[]>(["classes", "list"], (prev) => {
+      const arr = prev ?? [];
+      return [newClass, ...arr];
+    });
   };
 
   const handleClassUpdated = (updatedClass: ClassWithRelations) => {
-    setClasses((prev) =>
-      prev.map((cls) => (cls.id === updatedClass.id ? updatedClass : cls))
-    );
+    queryClient.setQueryData<ClassWithRelations[]>(["classes", "list"], (prev) => {
+      const arr = prev ?? [];
+      return arr.map((cls) => (cls.id === updatedClass.id ? updatedClass : cls));
+    });
   };
 
   const { data, isLoading, error: queryError, refetch } = useQuery({
@@ -48,19 +52,7 @@ export function ClassList() {
       return "data" in result && result.data ? result.data : [];
     },
   });
-
-  useEffect(() => {
-    if (Array.isArray(data)) {
-      setClasses(data as ClassWithRelations[]);
-      setError(null);
-    }
-  }, [data]);
-
-  useEffect(() => {
-    if (queryError instanceof Error) {
-      setError(queryError.message);
-    }
-  }, [queryError]);
+  const classes = (data as ClassWithRelations[]) ?? [];
 
   const onClassUpdated = async () => {
     await refetch();
@@ -70,8 +62,8 @@ export function ClassList() {
     return <div>로딩 중...</div>;
   }
 
-  if (error) {
-    return <div className="text-red-500">오류: {error}</div>;
+  if (queryError instanceof Error) {
+    return <div className="text-red-500">오류: {queryError.message}</div>;
   }
 
   return (
