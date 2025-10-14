@@ -251,6 +251,15 @@ export const bulkCreateUsers = withAuth(
   ) => {
     let successCount = 0;
     let failureCount = 0;
+    const createdGuests: Array<{
+      id: string;
+      name: string;
+      mobilePhone: string;
+      grade: string;
+      affiliation: string;
+      classId: string;
+      createdAt: Date;
+    }> = [];
 
     try {
       // 각 사용자를 개별적으로 삽입 (일부 실패해도 나머지 진행)
@@ -300,6 +309,17 @@ export const bulkCreateUsers = withAuth(
               day: 1,
               classId: userData.classId,
             });
+
+            // 수집: 즉시 반영용 최소 학생 정보
+            createdGuests.push({
+              id: newGuest.id,
+              name: newGuest.name,
+              mobilePhone: newGuest.mobilePhone,
+              grade: newGuest.grade,
+              affiliation: newGuest.affiliation,
+              classId: newGuest.classId,
+              createdAt: newGuest.createdAt,
+            });
           });
 
           successCount++;
@@ -310,7 +330,7 @@ export const bulkCreateUsers = withAuth(
       }
 
       revalidatePath("/protected/classes");
-      return { successCount, failureCount };
+      return { successCount, failureCount, createdGuests };
     } catch (e) {
       const error =
         e instanceof Error ? e : new Error("An unknown error occurred");

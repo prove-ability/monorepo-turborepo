@@ -27,6 +27,19 @@ interface StudentBulkUploadProps {
     successCount: number;
     failureCount: number;
   }) => void;
+  onCompletedWithStudents?: (payload: {
+    successCount: number;
+    failureCount: number;
+    createdGuests: Array<{
+      id: string;
+      name: string;
+      mobilePhone: string;
+      affiliation: string;
+      grade: string;
+      classId: string;
+      createdAt: Date;
+    }>;
+  }) => void;
 }
 
 interface ParsedRow extends BulkRowInput {
@@ -95,6 +108,7 @@ export function StudentBulkUpload({
   classId,
   clientId,
   onCompleted,
+  onCompletedWithStudents,
 }: StudentBulkUploadProps) {
   const [open, setOpen] = useState(false);
   const [fileName, setFileName] = useState<string>("");
@@ -179,6 +193,13 @@ export function StudentBulkUpload({
           successCount: res.successCount,
           failureCount: res.failureCount,
         });
+        if ("createdGuests" in res && Array.isArray((res as any).createdGuests)) {
+          onCompletedWithStudents?.({
+            successCount: res.successCount,
+            failureCount: res.failureCount,
+            createdGuests: (res as any).createdGuests,
+          });
+        }
         // 성공 시 모달 닫기
         setOpen(false);
       }
