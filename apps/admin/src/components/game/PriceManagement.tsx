@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -51,6 +52,7 @@ export default function PriceManagement({
   stocks,
   onRefresh,
 }: PriceManagementProps) {
+  const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingPrice, setEditingPrice] = useState<ClassStockPrice | null>(
@@ -111,6 +113,11 @@ export default function PriceManagement({
       setIsCreateDialogOpen(false);
       resetForm();
       onRefresh();
+      // invalidate related caches for consistency (progress/prices)
+      if (selectedClass) {
+        queryClient.invalidateQueries({ queryKey: ["game", "progress", selectedClass] });
+        queryClient.invalidateQueries({ queryKey: ["game", "prices", { classId: selectedClass, day: selectedDay }] });
+      }
     } catch (error) {
       console.error("주식 가격 생성 실패:", error);
       alert("주식 가격 생성에 실패했습니다.");
@@ -134,6 +141,11 @@ export default function PriceManagement({
       setEditingPrice(null);
       resetForm();
       onRefresh();
+      // invalidate related caches for consistency (progress/prices)
+      if (selectedClass) {
+        queryClient.invalidateQueries({ queryKey: ["game", "progress", selectedClass] });
+        queryClient.invalidateQueries({ queryKey: ["game", "prices", { classId: selectedClass, day: selectedDay }] });
+      }
     } catch (error) {
       console.error("주식 가격 수정 실패:", error);
       alert("주식 가격 수정에 실패했습니다.");
@@ -156,6 +168,11 @@ export default function PriceManagement({
     try {
       await deleteStockPrice(price.id);
       onRefresh();
+      // invalidate related caches for consistency (progress/prices)
+      if (selectedClass) {
+        queryClient.invalidateQueries({ queryKey: ["game", "progress", selectedClass] });
+        queryClient.invalidateQueries({ queryKey: ["game", "prices", { classId: selectedClass, day: selectedDay }] });
+      }
     } catch (error) {
       console.error("주식 가격 삭제 실패:", error);
       alert("주식 가격 삭제에 실패했습니다.");

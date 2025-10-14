@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,6 +39,7 @@ export default function GameDayManagement({
   stocks,
   onRefresh,
 }: GameDayManagementProps) {
+  const queryClient = useQueryClient();
   // 마지막 Day 체크
   const isLastDay = totalDays ? selectedDay === totalDays : false;
   const [newsLoading, setNewsLoading] = useState(false);
@@ -147,6 +149,11 @@ export default function GameDayManagement({
       await deleteNews(newsId);
       await loadExistingNews();
       onRefresh();
+      // invalidate related caches for consistency
+      if (selectedClass) {
+        queryClient.invalidateQueries({ queryKey: ["game", "progress", selectedClass] });
+        queryClient.invalidateQueries({ queryKey: ["game", "prices", { classId: selectedClass, day: selectedDay }] });
+      }
       alert("뉴스가 성공적으로 삭제되었습니다!");
     } catch (error) {
       console.error("뉴스 삭제 실패:", error);
@@ -191,6 +198,11 @@ export default function GameDayManagement({
 
       await loadExistingNews();
       onRefresh();
+      // invalidate related caches for consistency
+      if (selectedClass) {
+        queryClient.invalidateQueries({ queryKey: ["game", "progress", selectedClass] });
+        queryClient.invalidateQueries({ queryKey: ["game", "prices", { classId: selectedClass, day: selectedDay }] });
+      }
       alert("뉴스가 성공적으로 저장되었습니다!");
     } catch (error) {
       console.error("뉴스 저장 실패:", error);
