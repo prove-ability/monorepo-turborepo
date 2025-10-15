@@ -71,25 +71,6 @@ export default function GameManagementPage() {
     }
   }, [classes]);
 
-  // 선택된 고객사 변경 시 첫 클래스 자동 선택
-  useEffect(() => {
-    if (!selectedClientId || !isInitialized.current) return;
-    const classesOfClient = classes.filter(
-      (c) => (c as any)?.client?.id === selectedClientId
-    );
-    if (classesOfClient.length === 0) {
-      setSelectedClass("");
-      return;
-    }
-    const currentSelectedBelongs = classesOfClient.some(
-      (c) => c.id === selectedClass
-    );
-    if (!currentSelectedBelongs) {
-      const first = classesOfClient[0];
-      if (first) setSelectedClass(first.id);
-    }
-  }, [selectedClientId, classes, selectedClass]);
-
   const refreshData = () => {
     refetchAll();
   };
@@ -273,7 +254,23 @@ export default function GameManagementPage() {
               </label>
               <select
                 value={selectedClientId}
-                onChange={(e) => setSelectedClientId(e.target.value)}
+                onChange={(e) => {
+                  const newClientId = e.target.value;
+                  setSelectedClientId(newClientId);
+                  // 고객사 변경 시 해당 고객사의 첫 클래스 자동 선택
+                  if (newClientId) {
+                    const classesOfClient = classes.filter(
+                      (c: any) => c.client?.id === newClientId
+                    );
+                    if (classesOfClient.length > 0) {
+                      setSelectedClass(classesOfClient[0].id);
+                    } else {
+                      setSelectedClass("");
+                    }
+                  } else {
+                    setSelectedClass("");
+                  }
+                }}
                 className="w-full p-2 border rounded"
               >
                 <option value="">고객사를 선택하세요</option>
