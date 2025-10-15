@@ -13,15 +13,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   updateClassCurrentDay,
   incrementDayAndPayAllowance,
-  type ClassWithRelations,
 } from "@/actions/classActions";
-import { DayAdjustmentModal } from "./components/DayAdjustmentModal";
 import { DaySelectionModal } from "./components/DaySelectionModal";
 import { getGameManagementData } from "@/actions/gameActions";
-import { getNews } from "@/actions/newsActions";
 import GameDayManagement from "@/components/game/GameDayManagement";
 import PriceManagement from "@/components/game/PriceManagement";
-import { ClassStockPrice, Stock } from "@/types";
+import { Stock } from "@/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function GameManagementPage() {
@@ -39,7 +36,6 @@ export default function GameManagementPage() {
   const {
     data,
     isLoading,
-    refetch: refetchAll,
   } = useQuery({
     queryKey: ["game-management", { classId: selectedClass, day: selectedDay }],
     queryFn: () =>
@@ -71,65 +67,6 @@ export default function GameManagementPage() {
       }
     }
   }, [classes]);
-
-  const refreshData = () => {
-    refetchAll();
-  };
-
-  const handleNextDay = async () => {
-    if (!selectedClass) return;
-
-    const selectedClassData = classes.find((c) => c.id === selectedClass);
-    const totalDays = selectedClassData?.totalDays;
-
-    if (!totalDays) {
-      alert("클래스의 최대 Day가 설정되지 않았습니다.");
-      return;
-    }
-
-    if (selectedDay >= totalDays) {
-      alert(`최대 Day는 ${totalDays}입니다. 더 이상 진행할 수 없습니다.`);
-      return;
-    }
-
-    try {
-      const [allNews, currentPrices] = await Promise.all([
-        getNews(),
-        Promise.resolve(prices), // 이미 로드된 데이터 사용
-      ]);
-
-      const currentDayNews = allNews.filter(
-        (news) => news.classId === selectedClass && news.day === selectedDay
-      );
-
-      const isLastDay = selectedDay === totalDays - 1;
-
-      if (isLastDay) {
-        if (currentDayNews.length === 0) {
-          alert(`Day ${selectedDay}에 뉴스가 1개 이상 필요합니다.`);
-          return;
-        }
-        if (currentPrices.length === 0) {
-          alert(`Day ${selectedDay}에 가격이 설정된 주식이 1개 이상 필요합니다.`);
-          return;
-        }
-      } else {
-        if (currentDayNews.length === 0) {
-          alert(`Day ${selectedDay}에 뉴스가 1개 이상 필요합니다.`);
-          return;
-        }
-        if (currentPrices.length === 0) {
-          alert(`Day ${selectedDay}에 가격이 설정된 주식이 1개 이상 필요합니다.`);
-          return;
-        }
-      }
-
-      setSelectedDay(selectedDay + 1);
-    } catch (error) {
-      console.error("Day 검증 실패:", error);
-      alert("Day 검증에 실패했습니다.");
-    }
-  };
 
   const getCurrentDay = () => {
     const selectedClassData = classes.find((c) => c.id === selectedClass);
@@ -355,19 +292,25 @@ export default function GameManagementPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stocks.map((stock: Stock) => (
-                        <div
-                          key={stock.id}
-                          className="p-3 border rounded flex justify-between items-center"
-                        >
-                          <div>
-                            <p className="font-medium">{stock.name}</p>
-                            <p className="text-sm text-gray-500">
-                              {stock.symbol}
-                            </p>
+                      {stocks.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-4">
+                          등록된 주식 종목이 없습니다.
+                        </p>
+                      ) : (
+                        stocks.map((stock: Stock) => (
+                          <div
+                            key={stock.id}
+                            className="p-3 border rounded flex justify-between items-center"
+                          >
+                            <div>
+                              <p className="font-medium">{stock.name}</p>
+                              <p className="text-sm text-gray-500">
+                                {stock.industrySector} · {stock.marketCountryCode}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -377,10 +320,7 @@ export default function GameManagementPage() {
                 <GameDayManagement
                   selectedClass={selectedClass}
                   selectedDay={selectedDay}
-                  setSelectedDay={setSelectedDay}
                   stocks={stocks}
-                  onNextDay={handleNextDay}
-                  onRefresh={refreshData}
                 />
               </TabsContent>
 
@@ -388,10 +328,8 @@ export default function GameManagementPage() {
                 <PriceManagement
                   selectedClass={selectedClass}
                   selectedDay={selectedDay}
-                  setSelectedDay={setSelectedDay}
                   stocks={stocks}
                   prices={prices}
-                  onRefresh={refreshData}
                   maxDay={gameProgress?.maxDay || 0}
                 />
               </TabsContent>
