@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,6 +32,7 @@ export default function GameManagementPage() {
     isOpen: false,
     newDay: 1,
   });
+  const isInitialized = useRef(false);
 
   // 단일 쿼리로 모든 데이터 조회
   const {
@@ -53,9 +54,10 @@ export default function GameManagementPage() {
   const gameProgress = useMemo(() => data?.gameProgress || null, [data?.gameProgress]);
   const prices = useMemo(() => data?.prices || [], [data?.prices]);
 
-  // 초기 선택 설정
+  // 초기 선택 설정 (한 번만 실행)
   useEffect(() => {
-    if (classes.length > 0 && !selectedClass) {
+    if (classes.length > 0 && !isInitialized.current) {
+      isInitialized.current = true;
       const firstClientId = (classes[0] as any)?.client?.id;
       if (firstClientId) {
         setSelectedClientId(firstClientId);
@@ -67,12 +69,11 @@ export default function GameManagementPage() {
         setSelectedClass(classes[0]?.id || "");
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classes]);
 
   // 선택된 고객사 변경 시 첫 클래스 자동 선택
   useEffect(() => {
-    if (!selectedClientId) return;
+    if (!selectedClientId || !isInitialized.current) return;
     const classesOfClient = classes.filter(
       (c) => (c as any)?.client?.id === selectedClientId
     );
@@ -87,8 +88,7 @@ export default function GameManagementPage() {
       const first = classesOfClient[0];
       if (first) setSelectedClass(first.id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClientId, classes]);
+  }, [selectedClientId, classes, selectedClass]);
 
   const refreshData = () => {
     refetchAll();
