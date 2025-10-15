@@ -16,6 +16,7 @@ import {
   type ClassWithRelations,
 } from "@/actions/classActions";
 import { DayAdjustmentModal } from "./components/DayAdjustmentModal";
+import { DaySelectionModal } from "./components/DaySelectionModal";
 import { getGameManagementData } from "@/actions/gameActions";
 import { getNews } from "@/actions/newsActions";
 import GameDayManagement from "@/components/game/GameDayManagement";
@@ -400,9 +401,10 @@ export default function GameManagementPage() {
       </Card>
 
       {/* Day 선택 모달 */}
-      <DayAdjustmentModal
+      <DaySelectionModal
         isOpen={dayAdjustmentModal.isOpen}
         currentDay={dayAdjustmentModal.newDay}
+        maxDay={gameProgress?.maxDay || 100}
         onClose={() =>
           setDayAdjustmentModal({ ...dayAdjustmentModal, isOpen: false })
         }
