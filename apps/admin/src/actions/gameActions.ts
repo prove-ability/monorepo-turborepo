@@ -299,8 +299,9 @@ export async function getGameManagementData(params?: {
 
     const userClassIds = userClasses.map((c) => c.id);
 
-    // 2. 종목 목록 조회 (전체)
+    // 2. 종목 목록 조회 (사용자가 생성한 것만)
     const allStocks = await db.query.stocks.findMany({
+      where: eq(stocks.createdBy, userId),
       orderBy: [desc(stocks.createdAt)],
     });
 
