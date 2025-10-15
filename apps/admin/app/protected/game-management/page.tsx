@@ -340,9 +340,6 @@ export default function GameManagementPage() {
               <Button onClick={handleDayAdjustment} variant="secondary">
                 Day 직접 조정
               </Button>
-              <Button onClick={refreshData} variant="outline">
-                새로고침
-              </Button>
             </div>
           )}
 
