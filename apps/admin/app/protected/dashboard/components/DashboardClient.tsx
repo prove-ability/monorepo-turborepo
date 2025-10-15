@@ -64,7 +64,6 @@ type DashboardAllSuccess = {
     recentSurveys: RecentSurvey[];
   };
 };
-type DashboardAll = Awaited<ReturnType<typeof getDashboardAll>>;
 
 export function DashboardClient() {
   const { data, isLoading } = useQuery<any>({
@@ -72,8 +71,6 @@ export function DashboardClient() {
     queryFn: () => getDashboardAll(),
     staleTime: 60_000,
   });
-
-  console.log(data);
 
   const loading = useMemo(() => isLoading, [isLoading]);
   const payload = data?.success
