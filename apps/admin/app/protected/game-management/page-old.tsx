@@ -610,6 +610,7 @@ export default function GameManagementPage() {
             selectedClass={selectedClass}
             selectedDay={selectedDay}
             stocks={stocks}
+            maxDay={gameProgress?.maxDay || 0}
             onRefresh={refreshData}
           />
         </TabsContent>

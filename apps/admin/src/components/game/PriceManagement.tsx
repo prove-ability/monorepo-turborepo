@@ -42,6 +42,7 @@ interface PriceManagementProps {
   selectedClass: string;
   selectedDay: number;
   stocks: Stock[];
+  maxDay: number;
   onRefresh: () => void;
 }
 
@@ -50,6 +51,7 @@ export default function PriceManagement({
   selectedClass,
   selectedDay,
   stocks,
+  maxDay,
   onRefresh,
 }: PriceManagementProps) {
   const queryClient = useQueryClient();

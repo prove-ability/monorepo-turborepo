@@ -110,7 +110,7 @@ export default function GameManagementPage() {
     const newDay = currentDay + 1;
 
     try {
-      await incrementDayAndPayAllowance(selectedClass, newDay);
+      await incrementDayAndPayAllowance(selectedClass);
       queryClient.invalidateQueries({ queryKey: ["game-management"] });
       alert(`Day ${newDay}로 진행되었으며, 용돈이 지급되었습니다.`);
     } catch (error) {
@@ -321,6 +321,12 @@ export default function GameManagementPage() {
                   selectedClass={selectedClass}
                   selectedDay={selectedDay}
                   stocks={stocks}
+                  totalDays={gameProgress?.maxDay || 100}
+                  onRefresh={() =>
+                    queryClient.invalidateQueries({
+                      queryKey: ["game-management"],
+                    })
+                  }
                 />
               </TabsContent>
 
@@ -331,6 +337,11 @@ export default function GameManagementPage() {
                   stocks={stocks}
                   prices={prices}
                   maxDay={gameProgress?.maxDay || 0}
+                  onRefresh={() =>
+                    queryClient.invalidateQueries({
+                      queryKey: ["game-management"],
+                    })
+                  }
                 />
               </TabsContent>
             </Tabs>
