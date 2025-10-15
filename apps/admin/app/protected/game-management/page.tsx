@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -54,7 +54,7 @@ export default function GameManagementPage() {
   const prices = useMemo(() => data?.prices || [], [data?.prices]);
 
   // 초기 선택 설정
-  useMemo(() => {
+  useEffect(() => {
     if (classes.length > 0 && !selectedClass) {
       const firstClientId = (classes[0] as any)?.client?.id;
       if (firstClientId) {
@@ -70,7 +70,7 @@ export default function GameManagementPage() {
   }, [classes, selectedClass]);
 
   // 선택된 고객사 변경 시 첫 클래스 자동 선택
-  useMemo(() => {
+  useEffect(() => {
     if (!selectedClientId) return;
     const classesOfClient = classes.filter(
       (c) => (c as any)?.client?.id === selectedClientId
