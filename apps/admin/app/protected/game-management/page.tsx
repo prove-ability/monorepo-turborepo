@@ -67,7 +67,8 @@ export default function GameManagementPage() {
         setSelectedClass(classes[0]?.id || "");
       }
     }
-  }, [classes, selectedClass]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classes]);
 
   // 선택된 고객사 변경 시 첫 클래스 자동 선택
   useEffect(() => {
@@ -86,7 +87,8 @@ export default function GameManagementPage() {
       const first = classesOfClient[0];
       if (first) setSelectedClass(first.id);
     }
-  }, [selectedClientId, classes, selectedClass]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClientId, classes]);
 
   const refreshData = () => {
     refetchAll();
