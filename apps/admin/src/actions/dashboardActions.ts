@@ -100,6 +100,135 @@ export const getDashboardStats = withAuth(async (user) => {
 });
 
 /**
+ * 대시보드 일괄 조회 (한 번의 호출로 모든 데이터 수집)
+ */
+export const getDashboardAll = withAuth(async (user) => {
+  try {
+    const adminId = user.id;
+
+    // 관리자의 클래스 목록 미리 조회 (여러 쿼리에서 재사용)
+    const adminClasses = await db
+      .select({ id: classes.id })
+      .from(classes)
+      .where(eq(classes.createdBy, adminId));
+    const classIds = adminClasses.map((c) => c.id);
+
+    // 통계 관련 쿼리들 병렬 수행
+    const [clientCountP, classCountP, activeGamesP, recentClassesCountP] = await Promise.all([
+      db.select({ count: count() }).from(clients).where(eq(clients.createdBy, adminId)),
+      db.select({ count: count() }).from(classes).where(eq(classes.createdBy, adminId)),
+      db
+        .select({ count: count() })
+        .from(classes)
+        .where(sql`${classes.createdBy} = ${adminId} AND ${classes.currentDay} >= 1`),
+      (async () => {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return db
+          .select({ count: count() })
+          .from(classes)
+          .where(
+            sql`${classes.createdBy} = ${adminId} AND ${classes.createdAt} >= ${sevenDaysAgo}`
+          );
+      })(),
+    ]);
+
+    // classIds 의존 카운트 값 계산
+    let guestCountRow: { count: number } = { count: 0 };
+    let surveyCountRow: { count: number } = { count: 0 };
+    let transactionCountRow: { count: number } = { count: 0 };
+    let avgRatingRow: { avg: number } = { avg: 0 };
+
+    if (classIds.length > 0) {
+      const [guestCountArr, surveyCountArr, transactionCountArr, avgRatingArr] = await Promise.all([
+        db.select({ count: count() }).from(guests).where(sql`${guests.classId} = ANY(${classIds})`),
+        db.select({ count: count() }).from(surveys).where(sql`${surveys.classId} = ANY(${classIds})`),
+        db
+          .select({ count: count() })
+          .from(transactions)
+          .where(sql`${transactions.classId} = ANY(${classIds})`),
+        db
+          .select({ avg: sql<number>`COALESCE(AVG(${surveys.rating}), 0)` })
+          .from(surveys)
+          .where(sql`${surveys.classId} = ANY(${classIds})`),
+      ]);
+      guestCountRow = guestCountArr[0] ?? guestCountRow;
+      surveyCountRow = surveyCountArr[0] ?? surveyCountRow;
+      transactionCountRow = transactionCountArr[0] ?? transactionCountRow;
+      avgRatingRow = avgRatingArr[0] ?? avgRatingRow;
+    }
+
+    // 리스트 데이터 병렬 수집
+    const [recentClasses, recentGuests, classProgress, recentSurveys] = await Promise.all([
+      db.query.classes.findMany({
+        where: eq(classes.createdBy, adminId),
+        with: {
+          client: { columns: { name: true } },
+          manager: { columns: { name: true } },
+        },
+        orderBy: [desc(classes.createdAt)],
+        limit: 5,
+      }),
+      classIds.length === 0
+        ? Promise.resolve([])
+        : db.query.guests.findMany({
+            where: sql`${guests.classId} = ANY(${classIds})`,
+            with: {
+              class: { columns: { name: true } },
+            },
+            orderBy: [desc(guests.createdAt)],
+            limit: 10,
+          }),
+      db.query.classes.findMany({
+        where: eq(classes.createdBy, adminId),
+        with: {
+          client: { columns: { name: true } },
+        },
+        orderBy: [desc(classes.currentDay)],
+        limit: 10,
+      }),
+      classIds.length === 0
+        ? Promise.resolve([])
+        : db.query.surveys.findMany({
+            where: sql`${surveys.classId} = ANY(${classIds})`,
+            with: {
+              guest: { columns: { name: true, nickname: true } },
+              class: { columns: { name: true } },
+            },
+            orderBy: [desc(surveys.createdAt)],
+            limit: 5,
+          }),
+    ]);
+
+    return {
+      success: true as const,
+      data: {
+        stats: {
+          totalClients: clientCountP[0]?.count || 0,
+          totalClasses: classCountP[0]?.count || 0,
+          totalGuests: guestCountRow.count || 0,
+          totalSurveys: surveyCountRow.count || 0,
+          totalTransactions: transactionCountRow.count || 0,
+          activeGames: activeGamesP[0]?.count || 0,
+          averageRating: Math.round(Number(avgRatingRow.avg || 0) * 10) / 10,
+          recentClassesCount: recentClassesCountP[0]?.count || 0,
+        },
+        recentClasses,
+        recentGuests,
+        classProgress,
+        recentSurveys,
+      },
+    };
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error("An unknown error occurred");
+    return {
+      success: false as const,
+      error: `대시보드 일괄 조회 실패: ${error.message}`,
+    };
+  }
+});
+
+/**
  * 최근 생성된 클래스 조회 (관리자별)
  */
 export const getRecentClasses = withAuth(async (user, limit: number = 5) => {

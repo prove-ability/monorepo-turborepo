@@ -14,66 +14,68 @@ import {
   Gamepad2,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  getDashboardStats,
-  getRecentClasses,
-  getRecentGuests,
-  getClassProgress,
-  getRecentSurveys,
-} from "@/actions/dashboardActions";
+import { getDashboardAll } from "@/actions/dashboardActions";
 import { useQuery } from "@tanstack/react-query";
 
-type DashboardStats = Awaited<ReturnType<typeof getDashboardStats>>;
-type RecentClasses = Awaited<ReturnType<typeof getRecentClasses>>;
-type RecentGuests = Awaited<ReturnType<typeof getRecentGuests>>;
-type ClassProgress = Awaited<ReturnType<typeof getClassProgress>>;
-type RecentSurveys = Awaited<ReturnType<typeof getRecentSurveys>>;
+// 최소 응답 타입 정의 (컴포넌트에서 사용하는 필드만)
+type RecentClass = {
+  id: string;
+  name: string;
+  createdAt: string | Date;
+  client: { name: string };
+  manager: { name: string };
+};
+type ClassProgressItem = {
+  id: string;
+  name: string;
+  currentDay: number;
+  client: { name: string };
+};
+type RecentGuest = {
+  id: string;
+  name: string;
+  createdAt: string | Date;
+  class?: { name: string } | null;
+};
+type RecentSurvey = {
+  id: string;
+  rating: number;
+  feedback?: string | null;
+  createdAt: string | Date;
+  guest?: { name?: string | null } | null;
+  class?: { name?: string | null } | null;
+};
+type DashboardAllSuccess = {
+  success: true;
+  data: {
+    stats: {
+      totalClients: number;
+      totalClasses: number;
+      totalGuests: number;
+      totalSurveys: number;
+      totalTransactions: number;
+      activeGames: number;
+      averageRating: number;
+      recentClassesCount: number;
+    };
+    recentClasses: RecentClass[];
+    recentGuests: RecentGuest[];
+    classProgress: ClassProgressItem[];
+    recentSurveys: RecentSurvey[];
+  };
+};
+type DashboardAll = Awaited<ReturnType<typeof getDashboardAll>>;
 
 export function DashboardClient() {
-  const { data: stats, isLoading: isStatsLoading } = useQuery<DashboardStats>({
-    queryKey: ["dashboard", "stats"],
-    queryFn: () => getDashboardStats(),
+  const { data, isLoading } = useQuery<any>({
+    queryKey: ["dashboard", "all"],
+    queryFn: () => getDashboardAll(),
+    staleTime: 60_000,
+    refetchOnMount: false,
   });
 
-  const { data: recentClasses, isLoading: isRecentClassesLoading } =
-    useQuery<RecentClasses>({
-      queryKey: ["dashboard", "recent-classes", { limit: 5 }],
-      queryFn: () => getRecentClasses(5),
-    });
-
-  const { data: recentGuests, isLoading: isRecentGuestsLoading } =
-    useQuery<RecentGuests>({
-      queryKey: ["dashboard", "recent-guests", { limit: 10 }],
-      queryFn: () => getRecentGuests(10),
-    });
-
-  const { data: classProgress, isLoading: isClassProgressLoading } =
-    useQuery<ClassProgress>({
-      queryKey: ["dashboard", "class-progress"],
-      queryFn: () => getClassProgress(),
-    });
-
-  const { data: recentSurveys, isLoading: isRecentSurveysLoading } =
-    useQuery<RecentSurveys>({
-      queryKey: ["dashboard", "recent-surveys", { limit: 5 }],
-      queryFn: () => getRecentSurveys(5),
-    });
-
-  const loading = useMemo(
-    () =>
-      isStatsLoading ||
-      isRecentClassesLoading ||
-      isRecentGuestsLoading ||
-      isClassProgressLoading ||
-      isRecentSurveysLoading,
-    [
-      isStatsLoading,
-      isRecentClassesLoading,
-      isRecentGuestsLoading,
-      isClassProgressLoading,
-      isRecentSurveysLoading,
-    ]
-  );
+  const loading = useMemo(() => isLoading, [isLoading]);
+  const payload = data?.success && "data" in data ? (data.data as DashboardAllSuccess["data"]) : null;
 
   if (loading) {
     return (
@@ -114,7 +116,7 @@ export function DashboardClient() {
       </div>
 
       {/* 주요 통계 카드 */}
-      {stats?.success && "data" in stats && stats.data && (
+      {payload && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* 총 클라이언트 수 */}
           <Link href="/protected/clients">
@@ -128,9 +130,7 @@ export function DashboardClient() {
               <h3 className="text-sm font-medium text-blue-900 mb-1">
                 총 클라이언트
               </h3>
-              <p className="text-3xl font-bold text-blue-600">
-                {stats.data.totalClients}
-              </p>
+              <p className="text-3xl font-bold text-blue-600">{payload.stats.totalClients}</p>
             </div>
           </Link>
 
@@ -146,12 +146,8 @@ export function DashboardClient() {
               <h3 className="text-sm font-medium text-green-900 mb-1">
                 총 클래스
               </h3>
-              <p className="text-3xl font-bold text-green-600">
-                {stats.data.totalClasses}
-              </p>
-              <p className="text-xs text-green-700 mt-2">
-                최근 7일: +{stats.data.recentClassesCount}
-              </p>
+              <p className="text-3xl font-bold text-green-600">{payload.stats.totalClasses}</p>
+              <p className="text-xs text-green-700 mt-2">최근 7일: +{payload.stats.recentClassesCount}</p>
             </div>
           </Link>
 
@@ -165,11 +161,9 @@ export function DashboardClient() {
             <h3 className="text-sm font-medium text-purple-900 mb-1">
               총 학생 수
             </h3>
-            <p className="text-3xl font-bold text-purple-600">
-              {stats.data.totalGuests}
-            </p>
+            <p className="text-3xl font-bold text-purple-600">{payload.stats.totalGuests}</p>
             <p className="text-xs text-purple-700 mt-2">
-              거래 {stats.data.totalTransactions.toLocaleString()}건
+              거래 {payload.stats.totalTransactions.toLocaleString()}건
             </p>
           </div>
 
@@ -185,9 +179,7 @@ export function DashboardClient() {
               <h3 className="text-sm font-medium text-orange-900 mb-1">
                 활성 게임
               </h3>
-              <p className="text-3xl font-bold text-orange-600">
-                {stats.data.activeGames}
-              </p>
+              <p className="text-3xl font-bold text-orange-600">{payload.stats.activeGames}</p>
             </div>
           </Link>
         </div>
@@ -196,7 +188,7 @@ export function DashboardClient() {
       {/* 서베이 통계 및 최근 활동 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 서베이 통계 */}
-        {stats?.success && "data" in stats && stats.data && (
+        {payload && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-6">
               <MessageSquare className="w-6 h-6 text-blue-500" />
@@ -208,9 +200,7 @@ export function DashboardClient() {
               <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
                 <div>
                   <p className="text-sm text-gray-600">총 응답 수</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.data.totalSurveys}
-                  </p>
+                  <p className="text-2xl font-bold text-gray-900">{payload.stats.totalSurveys}</p>
                 </div>
                 <MessageSquare className="w-12 h-12 text-yellow-500" />
               </div>
@@ -218,9 +208,7 @@ export function DashboardClient() {
                 <div>
                   <p className="text-sm text-gray-600">평균 평점</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stats.data.averageRating}
-                    </p>
+                    <p className="text-2xl font-bold text-gray-900">{payload.stats.averageRating}</p>
                     <span className="text-sm text-gray-600">/ 5.0</span>
                   </div>
                 </div>
@@ -232,13 +220,11 @@ export function DashboardClient() {
                   <div className="flex-1 bg-gray-200 rounded-full h-3">
                     <div
                       className="bg-gradient-to-r from-green-400 to-green-500 h-3 rounded-full"
-                      style={{
-                        width: `${(stats.data.averageRating / 5) * 100}%`,
-                      }}
+                      style={{ width: `${(payload.stats.averageRating / 5) * 100}%` }}
                     ></div>
                   </div>
                   <span className="text-lg font-bold text-green-600">
-                    {Math.round((stats.data.averageRating / 5) * 100)}%
+                    {Math.round((payload.stats.averageRating / 5) * 100)}%
                   </span>
                 </div>
               </div>
@@ -247,7 +233,7 @@ export function DashboardClient() {
         )}
 
         {/* 클래스 진행 상황 */}
-        {classProgress?.success && "data" in classProgress && classProgress.data && (
+        {payload && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-6">
               <Activity className="w-6 h-6 text-green-500" />
@@ -256,7 +242,7 @@ export function DashboardClient() {
               </h2>
             </div>
             <div className="space-y-3 max-h-[300px] overflow-y-auto">
-              {classProgress.data.slice(0, 5).map((classItem) => (
+              {payload.classProgress.slice(0, 5).map((classItem: ClassProgressItem) => (
                 <Link
                   key={classItem.id}
                   href={`/protected/classes/${classItem.id}`}
@@ -290,7 +276,7 @@ export function DashboardClient() {
       {/* 최근 클래스 및 학생 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 최근 생성된 클래스 */}
-        {recentClasses?.success && "data" in recentClasses && recentClasses.data && (
+        {payload && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -307,7 +293,7 @@ export function DashboardClient() {
               </Link>
             </div>
             <div className="space-y-3">
-              {recentClasses.data.map((classItem) => (
+              {payload.recentClasses.map((classItem: RecentClass) => (
                 <Link
                   key={classItem.id}
                   href={`/protected/classes/${classItem.id}`}
@@ -345,7 +331,7 @@ export function DashboardClient() {
         )}
 
         {/* 최근 등록된 학생 */}
-        {recentGuests?.success && "data" in recentGuests && recentGuests.data && (
+        {payload && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-6">
               <Users className="w-6 h-6 text-purple-500" />
@@ -354,7 +340,7 @@ export function DashboardClient() {
               </h2>
             </div>
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {recentGuests.data.map((guest) => (
+              {payload.recentGuests.map((guest: RecentGuest) => (
                 <div
                   key={guest.id}
                   className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors"
@@ -386,7 +372,7 @@ export function DashboardClient() {
       </div>
 
       {/* 최근 서베이 응답 */}
-      {recentSurveys?.success && "data" in recentSurveys && recentSurveys.data && (
+      {payload && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-6">
             <MessageSquare className="w-6 h-6 text-yellow-500" />
@@ -395,7 +381,7 @@ export function DashboardClient() {
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentSurveys.data.map((survey) => (
+            {payload.recentSurveys.map((survey: RecentSurvey) => (
               <div
                 key={survey.id}
                 className="p-4 border border-gray-200 rounded-lg hover:border-yellow-300 hover:bg-yellow-50 transition-colors"
