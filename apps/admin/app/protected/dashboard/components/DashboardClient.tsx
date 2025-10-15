@@ -71,11 +71,10 @@ export function DashboardClient() {
     queryKey: ["dashboard", "all"],
     queryFn: () => getDashboardAll(),
     staleTime: 60_000,
-    refetchOnMount: false,
   });
 
   const loading = useMemo(() => isLoading, [isLoading]);
-  const payload = data?.success && "data" in data ? (data.data as DashboardAllSuccess["data"]) : null;
+  const payload = data?.success ? (data.data as DashboardAllSuccess["data"]) : null;
 
   if (loading) {
     return (
