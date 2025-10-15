@@ -181,14 +181,11 @@ export default function GameManagementPage() {
     }
   };
 
-  const handleDayAdjustment = () => {
-    const currentDay = getCurrentDay();
-    setDayAdjustmentModal({ isOpen: true, newDay: currentDay });
+  const handleDaySelection = () => {
+    setDayAdjustmentModal({ isOpen: true, newDay: selectedDay });
   };
 
-  const confirmDayAdjustment = async () => {
-    if (!selectedClass) return;
-
+  const confirmDaySelection = () => {
     const newDay = dayAdjustmentModal.newDay;
     const selectedClassData = classes.find((c) => c.id === selectedClass);
     const totalDays = selectedClassData?.totalDays;
@@ -203,15 +200,8 @@ export default function GameManagementPage() {
       return;
     }
 
-    try {
-      await updateClassCurrentDay(selectedClass, newDay);
-      queryClient.invalidateQueries({ queryKey: ["game-management"] });
-      setDayAdjustmentModal({ ...dayAdjustmentModal, isOpen: false });
-      alert(`현재 Day가 ${newDay}로 업데이트되었습니다.`);
-    } catch (error) {
-      console.error("Day 조정 실패:", error);
-      alert("Day 조정에 실패했습니다.");
-    }
+    setSelectedDay(newDay);
+    setDayAdjustmentModal({ ...dayAdjustmentModal, isOpen: false });
   };
 
   if (isLoading) {
@@ -332,13 +322,13 @@ export default function GameManagementPage() {
           {selectedClass && (
             <div className="mb-6 flex gap-2">
               <Button onClick={handleDayDecrease} variant="outline">
-                Day 감소 (-1)
+                클래스 Day -1
               </Button>
               <Button onClick={handleDayIncrease}>
-                Day 증가 (+1, 용돈 지급)
+                게임 진행 (Day +1, 용돈 지급)
               </Button>
-              <Button onClick={handleDayAdjustment} variant="secondary">
-                Day 직접 조정
+              <Button onClick={handleDaySelection} variant="secondary">
+                조회할 Day 선택
               </Button>
             </div>
           )}
@@ -409,15 +399,15 @@ export default function GameManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Day 조정 모달 */}
+      {/* Day 선택 모달 */}
       <DayAdjustmentModal
         isOpen={dayAdjustmentModal.isOpen}
         currentDay={dayAdjustmentModal.newDay}
         onClose={() =>
           setDayAdjustmentModal({ ...dayAdjustmentModal, isOpen: false })
         }
-        onConfirm={confirmDayAdjustment}
-        onDayChange={(day) =>
+        onConfirm={confirmDaySelection}
+        onDayChange={(day: number) =>
           setDayAdjustmentModal({ ...dayAdjustmentModal, newDay: day })
         }
       />
