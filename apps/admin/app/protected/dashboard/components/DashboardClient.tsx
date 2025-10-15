@@ -73,8 +73,12 @@ export function DashboardClient() {
     staleTime: 60_000,
   });
 
+  console.log(data);
+
   const loading = useMemo(() => isLoading, [isLoading]);
-  const payload = data?.success ? (data.data as DashboardAllSuccess["data"]) : null;
+  const payload = data?.success
+    ? (data.data as DashboardAllSuccess["data"])
+    : null;
 
   if (loading) {
     return (
@@ -129,7 +133,9 @@ export function DashboardClient() {
               <h3 className="text-sm font-medium text-blue-900 mb-1">
                 총 클라이언트
               </h3>
-              <p className="text-3xl font-bold text-blue-600">{payload.stats.totalClients}</p>
+              <p className="text-3xl font-bold text-blue-600">
+                {payload.stats.totalClients}
+              </p>
             </div>
           </Link>
 
@@ -145,8 +151,12 @@ export function DashboardClient() {
               <h3 className="text-sm font-medium text-green-900 mb-1">
                 총 클래스
               </h3>
-              <p className="text-3xl font-bold text-green-600">{payload.stats.totalClasses}</p>
-              <p className="text-xs text-green-700 mt-2">최근 7일: +{payload.stats.recentClassesCount}</p>
+              <p className="text-3xl font-bold text-green-600">
+                {payload.stats.totalClasses}
+              </p>
+              <p className="text-xs text-green-700 mt-2">
+                최근 7일: +{payload.stats.recentClassesCount}
+              </p>
             </div>
           </Link>
 
@@ -160,7 +170,9 @@ export function DashboardClient() {
             <h3 className="text-sm font-medium text-purple-900 mb-1">
               총 학생 수
             </h3>
-            <p className="text-3xl font-bold text-purple-600">{payload.stats.totalGuests}</p>
+            <p className="text-3xl font-bold text-purple-600">
+              {payload.stats.totalGuests}
+            </p>
             <p className="text-xs text-purple-700 mt-2">
               거래 {payload.stats.totalTransactions.toLocaleString()}건
             </p>
@@ -178,7 +190,9 @@ export function DashboardClient() {
               <h3 className="text-sm font-medium text-orange-900 mb-1">
                 활성 게임
               </h3>
-              <p className="text-3xl font-bold text-orange-600">{payload.stats.activeGames}</p>
+              <p className="text-3xl font-bold text-orange-600">
+                {payload.stats.activeGames}
+              </p>
             </div>
           </Link>
         </div>
@@ -199,7 +213,9 @@ export function DashboardClient() {
               <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
                 <div>
                   <p className="text-sm text-gray-600">총 응답 수</p>
-                  <p className="text-2xl font-bold text-gray-900">{payload.stats.totalSurveys}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {payload.stats.totalSurveys}
+                  </p>
                 </div>
                 <MessageSquare className="w-12 h-12 text-yellow-500" />
               </div>
@@ -207,7 +223,9 @@ export function DashboardClient() {
                 <div>
                   <p className="text-sm text-gray-600">평균 평점</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <p className="text-2xl font-bold text-gray-900">{payload.stats.averageRating}</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {payload.stats.averageRating}
+                    </p>
                     <span className="text-sm text-gray-600">/ 5.0</span>
                   </div>
                 </div>
@@ -219,7 +237,9 @@ export function DashboardClient() {
                   <div className="flex-1 bg-gray-200 rounded-full h-3">
                     <div
                       className="bg-gradient-to-r from-green-400 to-green-500 h-3 rounded-full"
-                      style={{ width: `${(payload.stats.averageRating / 5) * 100}%` }}
+                      style={{
+                        width: `${(payload.stats.averageRating / 5) * 100}%`,
+                      }}
                     ></div>
                   </div>
                   <span className="text-lg font-bold text-green-600">
@@ -241,32 +261,34 @@ export function DashboardClient() {
               </h2>
             </div>
             <div className="space-y-3 max-h-[300px] overflow-y-auto">
-              {payload.classProgress.slice(0, 5).map((classItem: ClassProgressItem) => (
-                <Link
-                  key={classItem.id}
-                  href={`/protected/classes/${classItem.id}`}
-                >
-                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer border border-gray-100">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-900 truncate">
-                        {classItem.name}
-                      </h4>
-                      <p className="text-sm text-gray-500 truncate">
-                        {classItem.client.name}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">진행 Day</p>
-                        <p className="text-lg font-bold text-blue-600">
-                          {classItem.currentDay}
+              {payload.classProgress
+                .slice(0, 5)
+                .map((classItem: ClassProgressItem) => (
+                  <Link
+                    key={classItem.id}
+                    href={`/protected/classes/${classItem.id}`}
+                  >
+                    <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer border border-gray-100">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 truncate">
+                          {classItem.name}
+                        </h4>
+                        <p className="text-sm text-gray-500 truncate">
+                          {classItem.client.name}
                         </p>
                       </div>
-                      <TrendingUp className="w-5 h-5 text-blue-500" />
+                      <div className="flex items-center gap-2 ml-4">
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">진행 Day</p>
+                          <p className="text-lg font-bold text-blue-600">
+                            {classItem.currentDay}
+                          </p>
+                        </div>
+                        <TrendingUp className="w-5 h-5 text-blue-500" />
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
             </div>
           </div>
         )}

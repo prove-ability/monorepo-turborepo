@@ -1,7 +1,7 @@
 "use server";
 
 import { db, clients, classes, guests, surveys, transactions } from "@repo/db";
-import { desc, count, sql, eq } from "drizzle-orm";
+import { desc, count, sql, eq, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
 
 /**
@@ -141,16 +141,16 @@ export const getDashboardAll = withAuth(async (user) => {
 
     if (classIds.length > 0) {
       const [guestCountArr, surveyCountArr, transactionCountArr, avgRatingArr] = await Promise.all([
-        db.select({ count: count() }).from(guests).where(sql`${guests.classId} = ANY(${classIds})`),
-        db.select({ count: count() }).from(surveys).where(sql`${surveys.classId} = ANY(${classIds})`),
+        db.select({ count: count() }).from(guests).where(inArray(guests.classId, classIds)),
+        db.select({ count: count() }).from(surveys).where(inArray(surveys.classId, classIds)),
         db
           .select({ count: count() })
           .from(transactions)
-          .where(sql`${transactions.classId} = ANY(${classIds})`),
+          .where(inArray(transactions.classId, classIds)),
         db
           .select({ avg: sql<number>`COALESCE(AVG(${surveys.rating}), 0)` })
           .from(surveys)
-          .where(sql`${surveys.classId} = ANY(${classIds})`),
+          .where(inArray(surveys.classId, classIds)),
       ]);
       guestCountRow = guestCountArr[0] ?? guestCountRow;
       surveyCountRow = surveyCountArr[0] ?? surveyCountRow;
@@ -172,7 +172,7 @@ export const getDashboardAll = withAuth(async (user) => {
       classIds.length === 0
         ? Promise.resolve([])
         : db.query.guests.findMany({
-            where: sql`${guests.classId} = ANY(${classIds})`,
+            where: inArray(guests.classId, classIds),
             with: {
               class: { columns: { name: true } },
             },
@@ -190,7 +190,7 @@ export const getDashboardAll = withAuth(async (user) => {
       classIds.length === 0
         ? Promise.resolve([])
         : db.query.surveys.findMany({
-            where: sql`${surveys.classId} = ANY(${classIds})`,
+            where: inArray(surveys.classId, classIds),
             with: {
               guest: { columns: { name: true, nickname: true } },
               class: { columns: { name: true } },
