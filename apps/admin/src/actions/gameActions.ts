@@ -6,8 +6,10 @@ import {
   dbWithTransaction,
   classStockPrices,
   news as newsSchema,
+  classes,
+  stocks,
 } from "@repo/db";
-import { eq, and, desc, count, sql, lte } from "drizzle-orm";
+import { eq, and, desc, count, sql, lte, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/safe-action";
 import { ClassStockPrice, ClassStockPriceInput, News } from "@/types";
 
@@ -250,6 +252,108 @@ export async function getGameProgress(classId: string): Promise<{
   } catch (error) {
     throw new Error(
       `게임 진행 상황 조회 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`
+    );
+  }
+}
+
+/**
+ * 게임 관리 페이지 전체 데이터 일괄 조회
+ * - 클래스 목록
+ * - 종목 목록  
+ * - 선택된 클래스의 게임 진행 상황
+ * - 선택된 클래스/Day의 가격 데이터
+ */
+export async function getGameManagementData(params?: {
+  selectedClassId?: string;
+  selectedDay?: number;
+}): Promise<{
+  classes: any[];
+  stocks: any[];
+  gameProgress: { maxDay: number; totalNews: number; totalPrices: number } | null;
+  prices: ClassStockPrice[];
+}> {
+  const { stackServerApp } = await import("@/stack/server");
+  const user = await stackServerApp.getUser();
+
+  if (!user) {
+    throw new Error("사용자 인증에 실패했습니다.");
+  }
+
+  try {
+    const userId = user.id;
+    const { selectedClassId, selectedDay } = params || {};
+
+    // 1. 사용자의 클래스 목록 조회
+    const userClasses = await db.query.classes.findMany({
+      where: eq(classes.createdBy, userId),
+      with: {
+        client: {
+          columns: { id: true, name: true },
+        },
+        manager: {
+          columns: { id: true, name: true },
+        },
+      },
+      orderBy: [desc(classes.createdAt)],
+    });
+
+    const userClassIds = userClasses.map((c) => c.id);
+
+    // 2. 종목 목록 조회 (전체)
+    const allStocks = await db.query.stocks.findMany({
+      orderBy: [desc(stocks.createdAt)],
+    });
+
+    // 3. 선택된 클래스의 게임 진행 상황 (병렬 조회)
+    let gameProgress: { maxDay: number; totalNews: number; totalPrices: number } | null = null;
+    
+    if (selectedClassId && userClassIds.includes(selectedClassId)) {
+      const [maxDayResult, newsCountResult, priceCountResult] = await Promise.all([
+        db
+          .select({ value: sql`max(${classStockPrices.day})`.mapWith(Number) })
+          .from(classStockPrices)
+          .where(eq(classStockPrices.classId, selectedClassId)),
+        db
+          .select({ value: count() })
+          .from(newsSchema)
+          .where(eq(newsSchema.classId, selectedClassId)),
+        db
+          .select({ value: count() })
+          .from(classStockPrices)
+          .where(eq(classStockPrices.classId, selectedClassId)),
+      ]);
+
+      gameProgress = {
+        maxDay: maxDayResult[0]?.value || 0,
+        totalNews: newsCountResult[0]?.value || 0,
+        totalPrices: priceCountResult[0]?.value || 0,
+      };
+    }
+
+    // 4. 선택된 클래스/Day의 가격 데이터
+    let pricesData: ClassStockPrice[] = [];
+    
+    if (selectedClassId && userClassIds.includes(selectedClassId)) {
+      const conditions = [eq(classStockPrices.classId, selectedClassId)];
+      if (selectedDay !== undefined) {
+        conditions.push(eq(classStockPrices.day, selectedDay));
+      }
+      
+      pricesData = await db.query.classStockPrices.findMany({
+        where: and(...conditions),
+        orderBy: [desc(classStockPrices.day)],
+      });
+    }
+
+    return {
+      classes: userClasses,
+      stocks: allStocks,
+      gameProgress,
+      prices: pricesData,
+    };
+  } catch (error) {
+    throw new Error(
+      `게임 관리 데이터 조회 실패: ${error instanceof Error ? error.message : "알 수 없는 오류"}`
     );
   }
 }
