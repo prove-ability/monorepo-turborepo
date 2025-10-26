@@ -17,6 +17,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { withAuth } from "@/lib/safe-action";
+import { randomUUID } from "crypto";
 import { Class, Manager, Client } from "@/types";
 
 export interface ClassWithRelations extends Class {
@@ -34,6 +35,7 @@ const classSchema = z.object({
     .default(8),
   managerId: z.string().min(1, "매니저 선택은 필수입니다."),
   clientId: z.string().min(1, "클라이언트 선택은 필수입니다."),
+  loginMethod: z.enum(["account", "qr"]).default("account"),
   currentDay: z.coerce
     .number()
     .min(1, "현재 Day는 1 이상이어야 합니다.")
@@ -88,6 +90,7 @@ export const createClass = withAuth(async (user, formData: FormData) => {
         totalDays: validation.data.totalDays,
         managerId: validation.data.managerId,
         clientId: validation.data.clientId,
+        loginMethod: validation.data.loginMethod,
         currentDay: validation.data.currentDay,
         createdBy: user.id,
       })
@@ -493,3 +496,49 @@ export const incrementDayAndPayAllowance = withAuth(
     }
   }
 );
+
+// QR 코드 토큰 생성
+export const generateQRToken = withAuth(async (user, classId: string) => {
+  try {
+    // 클래스 조회
+    const classData = await db.query.classes.findFirst({
+      where: eq(classes.id, classId),
+    });
+
+    if (!classData) {
+      return { error: "클래스를 찾을 수 없습니다." };
+    }
+
+    // QR 로그인 방식이 아닌 경우
+    if (classData.loginMethod !== "qr") {
+      return { error: "이 클래스는 QR 로그인 방식이 아닙니다." };
+    }
+
+    // 새로운 토큰 생성 (UUID)
+    const qrToken = randomUUID();
+    
+    // 만료 시간 설정 (12시간)
+    const qrExpiresAt = new Date();
+    qrExpiresAt.setHours(qrExpiresAt.getHours() + 12);
+
+    // DB 업데이트
+    await db
+      .update(classes)
+      .set({
+        qrToken,
+        qrExpiresAt,
+      })
+      .where(eq(classes.id, classId));
+
+    revalidatePath(`/admin/classes/${classId}`);
+    
+    return {
+      success: true,
+      qrToken,
+      qrExpiresAt: qrExpiresAt.toISOString(),
+    };
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error("An unknown error occurred");
+    return { error: error.message };
+  }
+});

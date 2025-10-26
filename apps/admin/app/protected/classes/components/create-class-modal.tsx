@@ -279,6 +279,45 @@ export function CreateClassModal({
             </select>
           </div>
 
+          {/* 로그인 방식 선택 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              로그인 방식 *
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-start gap-3 p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name="loginMethod"
+                  value="account"
+                  defaultChecked
+                  className="mt-1 w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">계정 기반 로그인</div>
+                  <div className="text-sm text-gray-500">
+                    학생들이 수업 코드, 아이디, 비밀번호를 입력하여 로그인합니다.
+                  </div>
+                </div>
+              </label>
+              
+              <label className="flex items-start gap-3 p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name="loginMethod"
+                  value="qr"
+                  className="mt-1 w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">QR 코드 로그인</div>
+                  <div className="text-sm text-gray-500">
+                    강사가 QR 코드를 표시하면 학생들이 스캔하여 바로 접속합니다.
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
           {/* 게임 데이터 자동 생성 옵션 */}
           <div className="border-t pt-4">
             <div className="mb-3">

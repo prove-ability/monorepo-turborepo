@@ -9,6 +9,7 @@ import {
   Building2,
   Trash2,
   MessageSquare,
+  QrCode,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ import { StudentBulkUpload } from "./StudentBulkUpload";
 import { StudentHistoryModal } from "./StudentHistoryModal";
 import { CreateUserModal } from "../../components/create-user-modal";
 import { ClassSurveyView } from "./ClassSurveyView";
+import { QRDisplayModal } from "../../components/qr-display-modal";
 import { Class, Client, Manager } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 
@@ -63,6 +65,7 @@ export function ClassDetailClient({
     name: string;
   } | null>(null);
   const [isCreateStudentOpen, setIsCreateStudentOpen] = useState(false);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
   const {
     data,
@@ -221,6 +224,17 @@ export function ClassDetailClient({
           </Button>
           <h1 className="text-3xl font-bold text-gray-900">{classData.name}</h1>
         </div>
+        
+        {/* QR 로그인 방식인 경우 QR 코드 버튼 표시 */}
+        {classData.loginMethod === "qr" && (
+          <Button
+            onClick={() => setIsQRModalOpen(true)}
+            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <QrCode className="w-5 h-5" />
+            <span>QR 코드 표시</span>
+          </Button>
+        )}
       </div>
 
       {/* 클래스 정보 카드 */}
@@ -550,6 +564,15 @@ export function ClassDetailClient({
           onClose={() => setSelectedStudent(null)}
         />
       )}
+
+      {/* QR 코드 표시 모달 */}
+      <QRDisplayModal
+        isOpen={isQRModalOpen}
+        setIsOpen={setIsQRModalOpen}
+        classId={classId}
+        className={classData.name}
+        webAppUrl={process.env.NEXT_PUBLIC_WEB_APP_URL || "http://localhost:3000"}
+      />
     </div>
   );
 }
