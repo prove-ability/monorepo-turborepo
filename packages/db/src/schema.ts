@@ -44,7 +44,7 @@ export const guests = pgTable("guests", {
   classId: uuid("class_id")
     .references((): AnyPgColumn => classes.id)
     .notNull(),
-  loginId: text("login_id").notNull().unique(),
+  loginId: text("login_id").notNull(),
   password: text("password").notNull(),
 });
 
@@ -57,6 +57,7 @@ export const classes = pgTable("classes", {
     .$onUpdate(() => new Date())
     .notNull(),
   name: text("name").notNull(),
+  code: text("code").notNull().unique(),
   totalDays: integer("total_days").notNull(),
   currentDay: integer("current_day").notNull().default(1),
   status: classStatusEnum("status").default("setting").notNull(),
