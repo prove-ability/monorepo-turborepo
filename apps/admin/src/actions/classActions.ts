@@ -40,6 +40,33 @@ const classSchema = z.object({
     .optional(),
 });
 
+/**
+ * 고유한 6자리 클래스 코드 생성
+ */
+async function generateUniqueClassCode(): Promise<string> {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code: string;
+  let isUnique = false;
+
+  while (!isUnique) {
+    // 6자리 랜덤 코드 생성
+    code = Array.from({ length: 6 }, () =>
+      characters.charAt(Math.floor(Math.random() * characters.length))
+    ).join("");
+
+    // 중복 체크
+    const existingClass = await db.query.classes.findFirst({
+      where: eq(classes.code, code),
+    });
+
+    if (!existingClass) {
+      isUnique = true;
+    }
+  }
+
+  return code!;
+}
+
 // CREATE: 새로운 클래스 생성
 export const createClass = withAuth(async (user, formData: FormData) => {
   const rawData = Object.fromEntries(formData.entries());
@@ -50,17 +77,21 @@ export const createClass = withAuth(async (user, formData: FormData) => {
   }
 
   try {
+    // 고유한 클래스 코드 생성
+    const classCode = await generateUniqueClassCode();
+
     const [newClass] = await db
       .insert(classes)
       .values({
         name: validation.data.name,
+        code: classCode,
         totalDays: validation.data.totalDays,
         managerId: validation.data.managerId,
         clientId: validation.data.clientId,
         currentDay: validation.data.currentDay,
         createdBy: user.id,
       })
-      .returning({ id: classes.id });
+      .returning({ id: classes.id, code: classes.code });
 
     if (!newClass) {
       throw new Error("클래스 생성 후 ID를 반환받지 못했습니다.");
@@ -75,7 +106,10 @@ export const createClass = withAuth(async (user, formData: FormData) => {
     });
 
     revalidatePath("/admin/classes");
-    return { message: "수업이 생성되었습니다.", data };
+    return { 
+      message: `수업이 생성되었습니다.\n수업 코드: ${classCode}`, 
+      data: { ...data, code: classCode } 
+    };
   } catch (e) {
     const error =
       e instanceof Error ? e : new Error("An unknown error occurred");

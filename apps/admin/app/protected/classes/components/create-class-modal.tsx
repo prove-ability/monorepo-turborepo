@@ -123,7 +123,7 @@ export function CreateClassModal({
         return;
       }
 
-      if (!("data" in result) || !result.data) {
+      if (!("data" in result) || !result.data || !result.data.id) {
         alert("클래스 생성 후 데이터를 가져오지 못했습니다.");
         return;
       }
@@ -139,7 +139,7 @@ export function CreateClassModal({
         );
 
         const gameDataResult = await generateGameData({
-          classId: createdClass.id,
+          classId: createdClass.id!,
           totalDays,
           stocks: selectedStocks.map((s) => ({
             id: s.id,
