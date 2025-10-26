@@ -27,6 +27,10 @@ export const classStatusEnum = pgEnum("class_status", [
   "active", // 진행중
   "ended", // 종료
 ]);
+export const loginMethodEnum = pgEnum("login_method", [
+  "account", // 계정 기반 로그인
+  "qr", // QR 코드 로그인
+]);
 
 export const guests = pgTable("guests", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -61,6 +65,9 @@ export const classes = pgTable("classes", {
   totalDays: integer("total_days").notNull(),
   currentDay: integer("current_day").notNull().default(1),
   status: classStatusEnum("status").default("setting").notNull(),
+  loginMethod: loginMethodEnum("login_method").default("account").notNull(),
+  qrToken: text("qr_token"),
+  qrExpiresAt: timestamp("qr_expires_at", { withTimezone: true }),
   createdBy: uuid("created_by").notNull(),
   clientId: uuid("client_id")
     .references((): AnyPgColumn => clients.id)

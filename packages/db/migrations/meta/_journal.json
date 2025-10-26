@@ -225,6 +225,13 @@
       "when": 1761457099991,
       "tag": "0031_nifty_ogun",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1761461856058,
+      "tag": "0032_stale_puff_adder",
+      "breakpoints": true
     }
   ]
 }
