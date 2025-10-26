@@ -7,14 +7,18 @@ import { createSession, deleteSession } from "@/lib/session";
 export async function login(formData: FormData) {
   const loginId = formData.get("loginId") as string;
   const password = formData.get("password") as string;
+  const classCode = formData.get("classCode") as string;
 
-  if (!loginId || !password) {
-    return { error: "아이디와 비밀번호를 입력해주세요." };
+  if (!loginId || !password || !classCode) {
+    return { error: "모든 항목을 입력해주세요." };
   }
 
-  const result = await verifyCredentials(loginId, password);
+  const result = await verifyCredentials(loginId, password, classCode);
 
   if (!result.success) {
+    if (result.reason === "invalid_class_code") {
+      return { error: "수업 코드가 올바르지 않습니다." };
+    }
     if (result.reason === "class_not_active") {
       return { error: "이 클래스는 현재 진행 중이 아닙니다. 관리자에게 문의하세요." };
     }

@@ -45,12 +45,29 @@ export default function LoginPage() {
             반가워요!
           </h1>
           <p className="text-sm text-gray-600">
-            아이디와 비밀번호를 입력해주세요
+            수업 코드, 아이디, 비밀번호를 입력해주세요
           </p>
         </div>
 
         <form action={handleSubmit} className="space-y-4" aria-label="로그인 폼">
           <div className="space-y-4 rounded-3xl bg-white p-6 shadow-sm border border-emerald-100">
+            <div>
+              <Label htmlFor="classCode" className="text-sm font-medium text-gray-700">
+                수업 코드
+              </Label>
+              <Input
+                id="classCode"
+                name="classCode"
+                type="text"
+                required
+                placeholder="수업 코드를 입력해주세요"
+                className="mt-1.5 rounded-xl border-gray-200 focus:border-emerald-500 focus:ring-emerald-500 uppercase"
+                disabled={loading}
+                aria-describedby={error ? "login-error" : undefined}
+                maxLength={6}
+              />
+            </div>
+
             <div>
               <Label htmlFor="loginId" className="text-sm font-medium text-gray-700">
                 아이디
