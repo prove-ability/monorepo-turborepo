@@ -1,8 +1,11 @@
 "use server";
 
-import { db, classes, guests } from "@repo/db";
+import { db, dbWithTransaction, classes, guests, wallets, transactions } from "@repo/db";
 import { eq, and } from "drizzle-orm";
 import { createSession } from "@/lib/session";
+
+// 초기 지갑 잔액 (200만원)
+const INITIAL_WALLET_BALANCE = "2000000";
 
 export type QRVerifyResult =
   | { success: true; classId: string; className: string }
@@ -85,41 +88,70 @@ export async function createQRGuestSession(
       return { success: false, error: "이미 사용 중인 닉네임입니다." };
     }
 
-    // 3. 임시 게스트 계정 생성
+    // 3. 트랜잭션으로 계정, 지갑, 초기 지원금 생성
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     const loginId = `qr_${timestamp}_${randomSuffix}`;
     const password = Math.random().toString(36).substring(2, 15);
 
-    const [newGuest] = await db
-      .insert(guests)
-      .values({
-        name: nickname, // 이름을 닉네임으로 사용
-        nickname: nickname,
-        loginId: loginId,
-        password: password,
+    const result = await dbWithTransaction.transaction(async (tx) => {
+      // 3-1. 게스트 계정 생성
+      const [newGuest] = await tx
+        .insert(guests)
+        .values({
+          name: nickname, // 이름을 닉네임으로 사용
+          nickname: nickname,
+          loginId: loginId,
+          password: password,
+          classId: classId,
+          mobilePhone: "", // QR 로그인은 전화번호 불필요
+          affiliation: "QR 로그인",
+          grade: "",
+        })
+        .returning({
+          id: guests.id,
+          name: guests.name,
+          loginId: guests.loginId,
+          classId: guests.classId,
+        });
+
+      if (!newGuest) {
+        throw new Error("계정 생성에 실패했습니다.");
+      }
+
+      // 3-2. 지갑 생성 (초기 잔액 200만원)
+      const [newWallet] = await tx
+        .insert(wallets)
+        .values({
+          guestId: newGuest.id,
+          balance: INITIAL_WALLET_BALANCE,
+        })
+        .returning();
+
+      if (!newWallet) {
+        throw new Error("지갑 생성에 실패했습니다.");
+      }
+
+      // 3-3. 초기 지원금 거래 내역 기록
+      await tx.insert(transactions).values({
+        walletId: newWallet.id,
+        type: "deposit",
+        subType: "benefit",
+        quantity: 0,
+        price: INITIAL_WALLET_BALANCE,
+        day: 1,
         classId: classId,
-        mobilePhone: "", // QR 로그인은 전화번호 불필요
-        affiliation: "QR 로그인",
-        grade: "",
-      })
-      .returning({
-        id: guests.id,
-        name: guests.name,
-        loginId: guests.loginId,
-        classId: guests.classId,
       });
 
-    if (!newGuest) {
-      return { success: false, error: "계정 생성에 실패했습니다." };
-    }
+      return newGuest;
+    });
 
     // 4. 세션 생성
     await createSession({
-      id: newGuest.id,
-      name: newGuest.name,
-      loginId: newGuest.loginId,
-      classId: newGuest.classId,
+      id: result.id,
+      name: result.name,
+      loginId: result.loginId,
+      classId: result.classId,
     });
 
     return { success: true };
