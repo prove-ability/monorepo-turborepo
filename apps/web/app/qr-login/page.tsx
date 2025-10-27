@@ -1,21 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { verifyQRToken, createQRGuestSession } from "@/actions/qr-auth";
 
-export default function QRLoginPage() {
-  const searchParams = useSearchParams();
+function QRLoginContent() {
   const router = useRouter();
   const [status, setStatus] = useState<"verifying" | "verified" | "error">("verifying");
   const [error, setError] = useState<string | null>(null);
   const [classInfo, setClassInfo] = useState<{ id: string; name: string } | null>(null);
   const [nickname, setNickname] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // URL 파라미터를 useState로 초기화 (Next.js 15 호환)
+  const [urlParams] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return { 
+        token: params.get("token"), 
+        classId: params.get("classId") 
+      };
+    }
+    return { token: null, classId: null };
+  });
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    const classId = searchParams.get("classId");
+    const { token, classId } = urlParams;
 
     if (!token || !classId) {
       setStatus("error");
@@ -48,7 +58,8 @@ export default function QRLoginPage() {
         }
       }
     });
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // urlParams는 초기화 시에만 설정되므로 dependency 불필요
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,5 +196,20 @@ export default function QRLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function QRLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 px-4">
+        <div className="w-full max-w-md space-y-6 text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600 mx-auto"></div>
+          <p className="text-lg text-gray-700">페이지 로딩 중...</p>
+        </div>
+      </div>
+    }>
+      <QRLoginContent />
+    </Suspense>
   );
 }

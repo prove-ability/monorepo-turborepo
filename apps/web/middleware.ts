@@ -3,8 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 로그인 페이지는 항상 접근 가능
-  if (pathname === "/login") {
+  // 로그인 페이지와 QR 로그인 페이지는 항상 접근 가능
+  if (pathname === "/login" || pathname === "/qr-login") {
     return NextResponse.next();
   }
 
