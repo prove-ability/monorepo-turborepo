@@ -458,12 +458,12 @@ export async function getStudentGameHistory(guestId: string) {
     }
 
     // 거래 내역 조회 (주식 정보 포함)
-    const transactionsList = await db.query.transactions.findMany({
-      where: guest.wallet?.id
-        ? eq(transactions.walletId, guest.wallet.id)
-        : undefined,
-      orderBy: [desc(transactions.day), desc(transactions.createdAt)],
-    });
+    const transactionsList = guest.wallet?.id
+      ? await db.query.transactions.findMany({
+          where: eq(transactions.walletId, guest.wallet.id),
+          orderBy: [desc(transactions.day), desc(transactions.createdAt)],
+        })
+      : []; // wallet이 없으면 빈 배열 반환
 
     // 주식 정보 조회
     const stockIds = transactionsList
