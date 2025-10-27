@@ -13,8 +13,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // BottomNav를 숨길 페이지들
   const hideBottomNav =
-    ["/login", "/qr-login", "/setup", "/onboarding", "/invest/trade"].some((path) =>
-      pathname.startsWith(path)
+    ["/login", "/qr-login", "/setup", "/onboarding", "/invest/trade"].some(
+      (path) => pathname.startsWith(path)
     ) || pathname.startsWith("/handler");
 
   // 게임 진행 상태 조회 (로그인된 페이지에서만)
@@ -22,8 +22,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     queryKey: ["gameProgress"],
     queryFn: getGameProgress,
     enabled: !hideBottomNav, // 로그인 페이지 등에서는 조회하지 않음
-    staleTime: 30 * 1000, // 30초
+    staleTime: 60 * 1000, // 1분 - refetchInterval과 동일
     refetchInterval: 60 * 1000, // 1분마다 자동 갱신
+    refetchOnWindowFocus: true, // 추가: 탭 전환 시에도 갱신
   });
 
   return (
