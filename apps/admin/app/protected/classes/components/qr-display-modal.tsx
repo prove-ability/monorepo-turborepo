@@ -25,6 +25,7 @@ export function QRDisplayModal({
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   const generateToken = async () => {
     setIsLoading(true);
@@ -34,13 +35,24 @@ export function QRDisplayModal({
       const result = await generateQRToken(classId);
 
       if ("error" in result && result.error) {
-        setError(typeof result.error === "string" ? result.error : "오류가 발생했습니다.");
+        setError(
+          typeof result.error === "string"
+            ? result.error
+            : "오류가 발생했습니다."
+        );
         return;
       }
 
-      if ("success" in result && result.success && "qrToken" in result && result.qrToken) {
+      if (
+        "success" in result &&
+        result.success &&
+        "qrToken" in result &&
+        result.qrToken
+      ) {
         setQrToken(result.qrToken);
-        setExpiresAt("qrExpiresAt" in result ? result.qrExpiresAt || null : null);
+        setExpiresAt(
+          "qrExpiresAt" in result ? result.qrExpiresAt || null : null
+        );
       }
     } catch (err) {
       setError("QR 코드 생성 중 오류가 발생했습니다.");
@@ -77,6 +89,16 @@ export function QRDisplayModal({
     });
   };
 
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(qrUrl);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error("클립보드 복사 실패:", err);
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -105,7 +127,9 @@ export function QRDisplayModal({
                 📱 학생들에게 QR 코드를 보여주세요
               </h3>
               <ul className="text-sm text-blue-800 space-y-1">
-                <li>• 학생들이 휴대폰으로 QR 코드를 스캔하면 자동으로 접속됩니다</li>
+                <li>
+                  • 학생들이 휴대폰으로 QR 코드를 스캔하면 자동으로 접속됩니다
+                </li>
                 <li>• 닉네임만 입력하면 바로 게임을 시작할 수 있습니다</li>
                 <li>• 이 QR 코드는 12시간 동안 유효합니다</li>
               </ul>
@@ -172,9 +196,20 @@ export function QRDisplayModal({
                 <p className="text-xs text-gray-600 mb-1">
                   QR 스캔이 안 되는 경우 아래 링크를 직접 입력하세요:
                 </p>
-                <code className="text-xs break-all bg-white p-2 rounded border block">
-                  {qrUrl}
-                </code>
+                <div className="relative">
+                  <code
+                    onClick={copyToClipboard}
+                    className="text-xs break-all bg-white p-2 rounded border block cursor-pointer hover:bg-gray-100 transition-colors"
+                    title="클릭하여 복사"
+                  >
+                    {qrUrl}
+                  </code>
+                  {isCopied && (
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-600 text-white text-xs px-3 py-1 rounded shadow-lg">
+                      ✓ 복사됨!
+                    </div>
+                  )}
+                </div>
               </div>
             </details>
           </>
