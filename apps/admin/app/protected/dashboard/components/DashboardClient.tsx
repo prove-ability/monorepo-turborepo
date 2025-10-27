@@ -10,6 +10,7 @@ import {
   Activity,
   Clock,
   Star,
+  StarHalf,
   ArrowRight,
   Gamepad2,
 } from "lucide-react";
@@ -89,18 +90,40 @@ export function DashboardClient() {
   }
 
   const renderStars = (rating: number) => {
+    // 10점 만점을 5개 별로 표현 (1점 = 반별)
+    const normalizedRating = rating / 2; // 10점 → 5점 척도로 변환
+    const fullStars = Math.floor(normalizedRating);
+    const hasHalfStar = normalizedRating % 1 >= 0.5;
+    
     return (
       <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`w-3 h-3 ${
-              star <= rating
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-gray-300"
-            }`}
-          />
-        ))}
+        {[1, 2, 3, 4, 5].map((star) => {
+          if (star <= fullStars) {
+            // 채워진 별
+            return (
+              <Star
+                key={star}
+                className="w-3 h-3 fill-yellow-400 text-yellow-400"
+              />
+            );
+          } else if (star === fullStars + 1 && hasHalfStar) {
+            // 반별
+            return (
+              <StarHalf
+                key={star}
+                className="w-3 h-3 fill-yellow-400 text-yellow-400"
+              />
+            );
+          } else {
+            // 빈 별
+            return (
+              <Star
+                key={star}
+                className="w-3 h-3 text-gray-300"
+              />
+            );
+          }
+        })}
       </div>
     );
   };
@@ -223,27 +246,47 @@ export function DashboardClient() {
                     <p className="text-2xl font-bold text-gray-900">
                       {payload.stats.averageRating}
                     </p>
-                    <span className="text-sm text-gray-600">/ 5.0</span>
+                    <span className="text-sm text-gray-600">/ 10.0</span>
                   </div>
                 </div>
                 <Star className="w-12 h-12 text-yellow-500" />
               </div>
-              <div className="p-4 bg-green-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">만족도</p>
+              <section
+                className="p-4 bg-green-50 rounded-lg"
+                aria-labelledby="satisfaction-heading"
+              >
+                <h3
+                  id="satisfaction-heading"
+                  className="text-sm text-gray-600 mb-2"
+                >
+                  만족도
+                </h3>
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-gray-200 rounded-full h-3">
+                  <div
+                    className="flex-1 bg-gray-200 rounded-full h-3"
+                    role="progressbar"
+                    aria-valuenow={Math.round(
+                      (payload.stats.averageRating / 10) * 100
+                    )}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label="만족도 게이지"
+                  >
                     <div
-                      className="bg-gradient-to-r from-green-400 to-green-500 h-3 rounded-full"
+                      className="bg-gradient-to-r from-green-400 to-green-500 h-3 rounded-full transition-all duration-300"
                       style={{
-                        width: `${(payload.stats.averageRating / 5) * 100}%`,
+                        width: `${(payload.stats.averageRating / 10) * 100}%`,
                       }}
                     ></div>
                   </div>
-                  <span className="text-lg font-bold text-green-600">
-                    {Math.round((payload.stats.averageRating / 5) * 100)}%
-                  </span>
+                  <output
+                    className="text-lg font-bold text-green-600"
+                    htmlFor="satisfaction-heading"
+                  >
+                    {Math.round((payload.stats.averageRating / 10) * 100)}%
+                  </output>
                 </div>
-              </div>
+              </section>
             </div>
           </div>
         )}

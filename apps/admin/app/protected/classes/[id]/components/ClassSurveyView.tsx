@@ -131,7 +131,7 @@ export function ClassSurveyView({ classId }: ClassSurveyViewProps) {
             <p className="text-4xl font-bold text-yellow-600">
               {statistics.averageRating}
             </p>
-            <span className="text-lg text-yellow-700">/ 5.0</span>
+            <span className="text-lg text-yellow-700">/ 10.0</span>
           </div>
         </div>
 
