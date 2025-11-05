@@ -34,10 +34,7 @@ export default function GameManagementPage() {
   const isInitialized = useRef(false);
 
   // 단일 쿼리로 모든 데이터 조회
-  const {
-    data,
-    isLoading,
-  } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["game-management", { classId: selectedClass, day: selectedDay }],
     queryFn: () =>
       getGameManagementData({
@@ -49,7 +46,10 @@ export default function GameManagementPage() {
 
   const classes = useMemo(() => data?.classes || [], [data?.classes]);
   const stocks = useMemo(() => data?.stocks || [], [data?.stocks]);
-  const gameProgress = useMemo(() => data?.gameProgress || null, [data?.gameProgress]);
+  const gameProgress = useMemo(
+    () => data?.gameProgress || null,
+    [data?.gameProgress]
+  );
   const prices = useMemo(() => data?.prices || [], [data?.prices]);
 
   // 초기 선택 설정 (한 번만 실행)
@@ -84,7 +84,7 @@ export default function GameManagementPage() {
     setIsDayOperationLoading(true);
     try {
       await updateClassCurrentDay(selectedClass, newDay);
-      queryClient.invalidateQueries({ queryKey: ["game-management"] });
+      await queryClient.invalidateQueries({ queryKey: ["game-management"] });
       alert(`현재 Day가 ${newDay}로 업데이트되었습니다.`);
     } catch (error) {
       console.error("Day 감소 실패:", error);
@@ -116,7 +116,7 @@ export default function GameManagementPage() {
     setIsDayOperationLoading(true);
     try {
       await incrementDayAndPayAllowance(selectedClass);
-      queryClient.invalidateQueries({ queryKey: ["game-management"] });
+      await queryClient.invalidateQueries({ queryKey: ["game-management"] });
       alert(`Day ${newDay}로 진행되었으며, 용돈이 지급되었습니다.`);
     } catch (error) {
       console.error("Day 증가 실패:", error);
@@ -222,27 +222,105 @@ export default function GameManagementPage() {
                 <label className="block text-sm font-medium mb-2">
                   클래스 선택
                 </label>
-                <select
-                  value={selectedClass}
-                  onChange={(e) => setSelectedClass(e.target.value)}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">클래스를 선택하세요</option>
-                  {classesOfSelectedClient.map((cls: any) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.name} (현재 Day: {cls.currentDay})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={selectedClass}
+                    onChange={(e) => setSelectedClass(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    disabled={isDayOperationLoading}
+                  >
+                    <option value="">클래스를 선택하세요</option>
+                    {classesOfSelectedClient.map((cls: any) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name} (현재 Day: {cls.currentDay})
+                      </option>
+                    ))}
+                  </select>
+                  {isDayOperationLoading && (
+                    <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                      <svg
+                        className="animate-spin h-5 w-5 text-blue-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                {isDayOperationLoading && (
+                  <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                    <svg
+                      className="animate-spin h-3 w-3"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Day 업데이트 중... 잠시만 기다려주세요
+                  </p>
+                )}
               </div>
             )}
           </div>
 
           {/* 게임 진행 상황 */}
           {selectedClass && gameProgress && (
-            <Card className="mb-6 bg-blue-50">
+            <Card
+              className={`mb-6 bg-blue-50 relative ${isDayOperationLoading ? "opacity-60" : ""}`}
+            >
               <CardHeader>
-                <CardTitle className="text-lg">게임 진행 상황</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  게임 진행 상황
+                  {isDayOperationLoading && (
+                    <svg
+                      className="animate-spin h-5 w-5 text-blue-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-4">
@@ -252,13 +330,44 @@ export default function GameManagementPage() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">총 뉴스</p>
-                    <p className="text-2xl font-bold">{gameProgress.totalNews}개</p>
+                    <p className="text-2xl font-bold">
+                      {gameProgress.totalNews}개
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">총 가격 데이터</p>
-                    <p className="text-2xl font-bold">{gameProgress.totalPrices}개</p>
+                    <p className="text-2xl font-bold">
+                      {gameProgress.totalPrices}개
+                    </p>
                   </div>
                 </div>
+                {isDayOperationLoading && (
+                  <div className="mt-3 pt-3 border-t border-blue-200">
+                    <p className="text-xs text-blue-600 flex items-center gap-1">
+                      <svg
+                        className="animate-spin h-3 w-3"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      데이터 업데이트 중입니다...
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -266,23 +375,23 @@ export default function GameManagementPage() {
           {/* Day 조정 버튼 */}
           {selectedClass && (
             <div className="mb-6 flex gap-2">
-              <Button 
-                onClick={handleDayDecrease} 
+              <Button
+                onClick={handleDayDecrease}
                 variant="outline"
                 isLoading={isDayOperationLoading}
                 disabled={isDayOperationLoading}
               >
                 클래스 Day -1
               </Button>
-              <Button 
+              <Button
                 onClick={handleDayIncrease}
                 isLoading={isDayOperationLoading}
                 disabled={isDayOperationLoading}
               >
                 게임 진행 (Day +1, 용돈 지급)
               </Button>
-              <Button 
-                onClick={handleDaySelection} 
+              <Button
+                onClick={handleDaySelection}
                 variant="secondary"
                 disabled={isDayOperationLoading}
               >
@@ -325,7 +434,8 @@ export default function GameManagementPage() {
                             <div>
                               <p className="font-medium">{stock.name}</p>
                               <p className="text-sm text-gray-500">
-                                {stock.industrySector} · {stock.marketCountryCode}
+                                {stock.industrySector} ·{" "}
+                                {stock.marketCountryCode}
                               </p>
                             </div>
                           </div>
