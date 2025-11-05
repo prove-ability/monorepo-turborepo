@@ -30,8 +30,7 @@ export default function GameManagementPage() {
     isOpen: false,
     newDay: 1,
   });
-  const [isDecreasing, setIsDecreasing] = useState(false);
-  const [isIncreasing, setIsIncreasing] = useState(false);
+  const [isDayOperationLoading, setIsDayOperationLoading] = useState(false);
   const isInitialized = useRef(false);
 
   // 단일 쿼리로 모든 데이터 조회
@@ -76,13 +75,13 @@ export default function GameManagementPage() {
   };
 
   const handleDayDecrease = async () => {
-    if (!selectedClass || isDecreasing) return;
+    if (!selectedClass || isDayOperationLoading) return;
 
     const currentDay = getCurrentDay();
     const newDay = Math.max(1, currentDay - 1);
     if (newDay === currentDay) return;
 
-    setIsDecreasing(true);
+    setIsDayOperationLoading(true);
     try {
       await updateClassCurrentDay(selectedClass, newDay);
       queryClient.invalidateQueries({ queryKey: ["game-management"] });
@@ -91,12 +90,12 @@ export default function GameManagementPage() {
       console.error("Day 감소 실패:", error);
       alert("Day 감소에 실패했습니다.");
     } finally {
-      setIsDecreasing(false);
+      setIsDayOperationLoading(false);
     }
   };
 
   const handleDayIncrease = async () => {
-    if (!selectedClass || isIncreasing) return;
+    if (!selectedClass || isDayOperationLoading) return;
 
     const currentDay = getCurrentDay();
     const selectedClassData = classes.find((c) => c.id === selectedClass);
@@ -114,7 +113,7 @@ export default function GameManagementPage() {
 
     const newDay = currentDay + 1;
 
-    setIsIncreasing(true);
+    setIsDayOperationLoading(true);
     try {
       await incrementDayAndPayAllowance(selectedClass);
       queryClient.invalidateQueries({ queryKey: ["game-management"] });
@@ -123,7 +122,7 @@ export default function GameManagementPage() {
       console.error("Day 증가 실패:", error);
       alert("Day 증가에 실패했습니다.");
     } finally {
-      setIsIncreasing(false);
+      setIsDayOperationLoading(false);
     }
   };
 
@@ -270,17 +269,23 @@ export default function GameManagementPage() {
               <Button 
                 onClick={handleDayDecrease} 
                 variant="outline"
-                isLoading={isDecreasing}
+                isLoading={isDayOperationLoading}
+                disabled={isDayOperationLoading}
               >
                 클래스 Day -1
               </Button>
               <Button 
                 onClick={handleDayIncrease}
-                isLoading={isIncreasing}
+                isLoading={isDayOperationLoading}
+                disabled={isDayOperationLoading}
               >
                 게임 진행 (Day +1, 용돈 지급)
               </Button>
-              <Button onClick={handleDaySelection} variant="secondary">
+              <Button 
+                onClick={handleDaySelection} 
+                variant="secondary"
+                disabled={isDayOperationLoading}
+              >
                 조회할 Day 선택
               </Button>
             </div>
