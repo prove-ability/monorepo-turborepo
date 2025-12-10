@@ -176,16 +176,6 @@ export const getStocksForInvest = withAuth(async (user) => {
     });
     const totalDays = maxDayResult[0]?.day || 0;
 
-    // 투자 페이지에 필요한 주식 정보만 조회 (최적화)
-    const allStocks = await db.query.stocks.findMany({
-      orderBy: [asc(stocks.name)],
-      columns: {
-        id: true,
-        name: true,
-        marketCountryCode: true,
-      },
-    });
-
     // 현재 Day의 가격 조회
     const currentPrices = await db.query.classStockPrices.findMany({
       where: and(
@@ -193,6 +183,28 @@ export const getStocksForInvest = withAuth(async (user) => {
         eq(classStockPrices.day, currentDay)
       ),
     });
+
+    // 해당 클래스에 속한 주식 ID 목록 추출
+    const classStockIds = Array.from(
+      new Set(currentPrices.map((p) => p.stockId))
+    );
+
+    // 해당 클래스에 속한 주식만 조회
+    const allStocks =
+      classStockIds.length > 0
+        ? await db.query.stocks.findMany({
+            where: inArray(
+              stocks.id,
+              classStockIds.filter((id): id is string => id !== null)
+            ),
+            orderBy: [asc(stocks.name)],
+            columns: {
+              id: true,
+              name: true,
+              marketCountryCode: true,
+            },
+          })
+        : [];
 
     // 전날 가격 조회 (등락률 계산용)
     const previousPrices =
