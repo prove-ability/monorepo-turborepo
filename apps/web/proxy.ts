@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 로그인 페이지와 QR 로그인 페이지는 항상 접근 가능
@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
     JSON.parse(sessionCookie.value);
   } catch (error) {
     // 세션 파싱 실패 시 로그인 페이지로
-    console.error("Middleware error:", error);
+    console.error("Proxy error:", error);
     const loginUrl = new URL("/login", request.url);
     const response = NextResponse.redirect(loginUrl);
     response.cookies.delete("guests_session");
@@ -40,3 +40,4 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
+
