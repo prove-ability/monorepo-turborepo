@@ -58,8 +58,13 @@ export const generateGameData = withAuth(
 
 **⚠️ 매우 중요: 주식 ID는 아래 목록의 정확한 UUID만 사용하세요!**
 
-**사용 가능한 주식 ID 목록 (이 ID들만 사용!):**
+**사용 가능한 주식 ID 목록 (이 ID들만 사용! 절대로 다른 주식은 포함하지 마세요!):**
 ${stocks.map((s) => `- "${s.id}" → ${s.name} (${s.marketCountryCode}/${s.industrySector})`).join("\n")}
+
+**🚨 절대 금지:**
+- 위 목록에 없는 주식 ID를 절대로 사용하지 마세요!
+- 위 목록에 있는 주식만 가격 정보를 생성하세요!
+- 위 목록에 있는 주식만 뉴스의 relatedStockIds에 포함하세요!
 
 **요구사항:**
 1. 각 날짜마다 8개의 뉴스를 생성하되, 마지막 날(${totalDays}일)은 뉴스가 없어야 합니다.
@@ -79,7 +84,7 @@ ${stocks.map((s) => `- "${s.id}" → ${s.name} (${s.marketCountryCode}/${s.indus
    - 주식 가격은 첫날을 제외하고 전날 관련 뉴스 영향을 받아야 해
    - 해외 주식의 경우 환율을 고려해서 원화로 수정한 뒤 값을 저장해줘, 이떄 최소 단위는 천원 단위로 부탁해
 6. 뉴스의 영향력이 다음날 가격에 명확히 반영되어야 합니다.
-7. 모든 주식은 매일 가격 정보가 있어야 합니다.
+7. 위 목록에 있는 주식만 매일 가격 정보를 생성하세요. 목록에 없는 주식은 절대 포함하지 마세요.
 
 **응답 형식 (JSON):**
 {
@@ -173,32 +178,48 @@ ${stocks.map((s) => `- "${s.id}" → ${s.name} (${s.marketCountryCode}/${s.indus
         lastDay.news = []; // 마지막 날은 뉴스 제거
       }
 
-      // DB에 저장
+      // DB에 저장 (선택된 주식만 필터링하여 저장)
       for (const dayData of gameData.days) {
-        // 뉴스 저장 (마지막 날 제외)
+        // 뉴스 저장 (마지막 날 제외, 선택된 주식과 관련된 뉴스만)
         if (dayData.news && dayData.news.length > 0) {
           for (const newsItem of dayData.news) {
-            await db.insert(news).values({
-              classId,
-              day: dayData.day,
-              title: newsItem.title,
-              content: newsItem.content,
-              relatedStockIds: newsItem.relatedStockIds,
-              createdBy: user.id,
-              updatedAt: new Date(),
-            });
+            // 뉴스의 relatedStockIds가 선택된 주식 중 하나라도 포함되어 있는지 확인
+            const hasValidStock = newsItem.relatedStockIds?.some((stockId) =>
+              validStockIds.has(stockId)
+            );
+
+            // 선택된 주식과 관련된 뉴스만 저장
+            if (hasValidStock) {
+              // relatedStockIds를 선택된 주식만 필터링
+              const filteredRelatedStockIds = newsItem.relatedStockIds.filter(
+                (stockId) => validStockIds.has(stockId)
+              );
+
+              await db.insert(news).values({
+                classId,
+                day: dayData.day,
+                title: newsItem.title,
+                content: newsItem.content,
+                relatedStockIds: filteredRelatedStockIds,
+                createdBy: user.id,
+                updatedAt: new Date(),
+              });
+            }
           }
         }
 
-        // 가격 정보 저장
+        // 가격 정보 저장 (선택된 주식만)
         for (const priceItem of dayData.prices) {
-          await db.insert(classStockPrices).values({
-            classId,
-            stockId: priceItem.stockId,
-            day: dayData.day,
-            price: priceItem.price.toString(),
-            updatedAt: new Date(),
-          });
+          // 선택된 주식인지 확인
+          if (validStockIds.has(priceItem.stockId)) {
+            await db.insert(classStockPrices).values({
+              classId,
+              stockId: priceItem.stockId,
+              day: dayData.day,
+              price: priceItem.price.toString(),
+              updatedAt: new Date(),
+            });
+          }
         }
       }
 
