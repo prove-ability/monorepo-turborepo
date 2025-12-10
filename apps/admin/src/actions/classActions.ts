@@ -109,9 +109,9 @@ export const createClass = withAuth(async (user, formData: FormData) => {
     });
 
     revalidatePath("/admin/classes");
-    return { 
-      message: `수업이 생성되었습니다.\n수업 코드: ${classCode}`, 
-      data: { ...data, code: classCode } 
+    return {
+      message: `수업이 생성되었습니다.\n수업 코드: ${classCode}`,
+      data: { ...data, code: classCode },
     };
   } catch (e) {
     const error =
@@ -173,11 +173,11 @@ export const deleteClass = withAuth(async (user, classId: string) => {
           await tx
             .delete(transactions)
             .where(eq(transactions.walletId, guest.wallet.id));
-          
+
           // 2-2. 지갑 삭제 (guestId 참조)
           await tx.delete(wallets).where(eq(wallets.guestId, guest.id));
         }
-        
+
         // 2-3. 보유 주식 삭제 (guestId 참조)
         await tx.delete(holdings).where(eq(holdings.guestId, guest.id));
       }
@@ -187,10 +187,10 @@ export const deleteClass = withAuth(async (user, classId: string) => {
         .delete(classStockPrices)
         .where(eq(classStockPrices.classId, classId));
       await tx.delete(news).where(eq(news.classId, classId));
-      
+
       // 4. 게스트 삭제
       await tx.delete(guests).where(eq(guests.classId, classId));
-      
+
       // 5. 클래스 삭제
       await tx.delete(classes).where(eq(classes.id, classId));
     });
@@ -257,7 +257,7 @@ export const getClasses = withAuth(async (user) => {
           orderBy: (classStockPrices, { desc }) => [desc(classStockPrices.day)],
           limit: 1,
         });
-        
+
         return {
           ...classItem,
           totalDays: maxDayResult[0]?.day || 0,
@@ -355,23 +355,23 @@ export const updateClassStatus = withAuth(
 
       // 상태 변경 유효성 검사
       if (currentClass.status === "setting" && newStatus !== "active") {
-        return { 
-          success: false, 
-          error: "설정 중인 클래스는 진행 상태로만 변경할 수 있습니다." 
+        return {
+          success: false,
+          error: "설정 중인 클래스는 진행 상태로만 변경할 수 있습니다.",
         };
       }
 
       if (currentClass.status === "active" && newStatus !== "ended") {
-        return { 
-          success: false, 
-          error: "진행 중인 클래스는 종료 상태로만 변경할 수 있습니다." 
+        return {
+          success: false,
+          error: "진행 중인 클래스는 종료 상태로만 변경할 수 있습니다.",
         };
       }
 
       if (currentClass.status === "ended") {
-        return { 
-          success: false, 
-          error: "이미 종료된 클래스는 상태를 변경할 수 없습니다." 
+        return {
+          success: false,
+          error: "이미 종료된 클래스는 상태를 변경할 수 없습니다.",
         };
       }
 
@@ -382,11 +382,11 @@ export const updateClassStatus = withAuth(
         .where(eq(classes.id, classId));
 
       revalidatePath("/admin/classes");
-      
+
       const statusText = newStatus === "active" ? "진행 중" : "종료";
-      return { 
-        success: true, 
-        message: `클래스 상태가 '${statusText}'로 변경되었습니다.` 
+      return {
+        success: true,
+        message: `클래스 상태가 '${statusText}'로 변경되었습니다.`,
       };
     } catch (e) {
       const error =
@@ -516,7 +516,7 @@ export const generateQRToken = withAuth(async (user, classId: string) => {
 
     // 새로운 토큰 생성 (UUID)
     const qrToken = randomUUID();
-    
+
     // 만료 시간 설정 (12시간)
     const qrExpiresAt = new Date();
     qrExpiresAt.setHours(qrExpiresAt.getHours() + 12);
@@ -531,14 +531,15 @@ export const generateQRToken = withAuth(async (user, classId: string) => {
       .where(eq(classes.id, classId));
 
     revalidatePath(`/admin/classes/${classId}`);
-    
+
     return {
       success: true,
       qrToken,
       qrExpiresAt: qrExpiresAt.toISOString(),
     };
   } catch (e) {
-    const error = e instanceof Error ? e : new Error("An unknown error occurred");
+    const error =
+      e instanceof Error ? e : new Error("An unknown error occurred");
     return { error: error.message };
   }
 });

@@ -6,6 +6,7 @@
       "@repo/db": ["../../packages/db/src"],
       "@/*": ["./src/*", "./*"]
     },
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
     "plugins": [
       {
         "name": "next"
@@ -19,7 +20,5 @@
     "next.config.js",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

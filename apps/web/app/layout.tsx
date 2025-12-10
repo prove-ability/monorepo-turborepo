@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import AppLayout from "@/components/AppLayout";
 import PWAInstaller from "@/components/PWAInstaller";
 import { ToastProvider } from "@/contexts/ToastContext";
@@ -6,17 +6,18 @@ import QueryProvider from "@/contexts/QueryProvider";
 import "./globals.css";
 import "driver.js/dist/driver.css";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1.0,
+  maximumScale: 1.0,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#07726a",
+};
+
 export const metadata: Metadata = {
   title: "유스핀랩 | 모의 투자 게임",
   description: "학생용 주식 투자 시뮬레이션 게임",
-  viewport: {
-    width: "device-width",
-    initialScale: 1.0,
-    maximumScale: 1.0,
-    userScalable: false,
-    viewportFit: "cover",
-  },
-  themeColor: "#07726a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
