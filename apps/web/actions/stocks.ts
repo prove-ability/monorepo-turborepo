@@ -11,6 +11,7 @@ import {
   news,
 } from "@repo/db";
 import { eq, and, inArray, lte, asc } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { withAuth } from "@/lib/with-auth";
 import { checkClassStatus } from "@/lib/class-status";
 
@@ -176,13 +177,20 @@ export const getStocksForInvest = withAuth(async (user) => {
     });
     const totalDays = maxDayResult[0]?.day || 0;
 
-    // 현재 Day의 가격 조회
-    const currentPrices = await db.query.classStockPrices.findMany({
-      where: and(
-        eq(classStockPrices.classId, user.classId),
-        eq(classStockPrices.day, currentDay)
-      ),
-    });
+    // 현재 Day의 가격 조회 (캐싱 적용 - Day별 가격은 변경되지 않음)
+    const currentPrices = await unstable_cache(
+      async () => db.query.classStockPrices.findMany({
+        where: and(
+          eq(classStockPrices.classId, user.classId),
+          eq(classStockPrices.day, currentDay)
+        ),
+      }),
+      [`stock-prices-${user.classId}-day-${currentDay}`],
+      {
+        revalidate: 3600, // 1시간 TTL (Day별 가격은 변경 없음)
+        tags: [`stock-prices-${user.classId}`, `day-data-${user.classId}-${currentDay}`],
+      }
+    )();
 
     // 해당 클래스에 속한 주식 ID 목록 추출
     const classStockIds = Array.from(
@@ -206,15 +214,22 @@ export const getStocksForInvest = withAuth(async (user) => {
           })
         : [];
 
-    // 전날 가격 조회 (등락률 계산용)
+    // 전날 가격 조회 (등락률 계산용, 캐싱 적용)
     const previousPrices =
       currentDay > 1
-        ? await db.query.classStockPrices.findMany({
-            where: and(
-              eq(classStockPrices.classId, user.classId),
-              eq(classStockPrices.day, currentDay - 1)
-            ),
-          })
+        ? await unstable_cache(
+            async () => db.query.classStockPrices.findMany({
+              where: and(
+                eq(classStockPrices.classId, user.classId),
+                eq(classStockPrices.day, currentDay - 1)
+              ),
+            }),
+            [`stock-prices-${user.classId}-day-${currentDay - 1}`],
+            {
+              revalidate: 3600, // 1시간 TTL
+              tags: [`stock-prices-${user.classId}`, `day-data-${user.classId}-${currentDay - 1}`],
+            }
+          )()
         : [];
 
     // 현재 Day의 뉴스만 조회 (주식별 뉴스 개수 계산용 - 최적화)

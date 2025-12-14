@@ -2,6 +2,7 @@
 
 import { db, news, classes, stocks } from "@repo/db";
 import { eq, and, lte, inArray, asc } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { withAuth } from "@/lib/with-auth";
 import { checkClassStatus } from "@/lib/class-status";
 
@@ -23,14 +24,25 @@ export const getCurrentDayNews = withAuth(async (user) => {
       return [];
     }
 
-    // current_day의 뉴스만 조회
-    const allNews = await db.query.news.findMany({
-      where: and(
-        eq(news.classId, user.classId),
-        eq(news.day, classInfo.currentDay)
-      ),
-      orderBy: [asc(news.createdAt)],
-    });
+    // current_day의 뉴스만 조회 (캐싱 적용)
+    const allNews = await unstable_cache(
+      async () =>
+        db.query.news.findMany({
+          where: and(
+            eq(news.classId, user.classId),
+            eq(news.day, classInfo.currentDay)
+          ),
+          orderBy: [asc(news.createdAt)],
+        }),
+      [`news-${user.classId}-day-${classInfo.currentDay}`],
+      {
+        revalidate: 3600, // 1시간 TTL (Day별 뉴스는 변경 없음)
+        tags: [
+          `news-${user.classId}`,
+          `day-data-${user.classId}-${classInfo.currentDay}`,
+        ],
+      }
+    )();
 
     // 모든 관련 주식 ID 수집
     const allStockIds = new Set<string>();
@@ -130,7 +142,7 @@ export const getAllNews = withAuth(async (user) => {
   // 클래스 상태 확인
   await checkClassStatus();
 
-  try{
+  try {
     // 클래스의 current_day 조회
     const classInfo = await db.query.classes.findFirst({
       where: eq(classes.id, user.classId),
@@ -143,14 +155,25 @@ export const getAllNews = withAuth(async (user) => {
       return { news: [], currentDay: 1 };
     }
 
-    // 현재 Day까지의 뉴스만 조회
-    const allNews = await db.query.news.findMany({
-      where: and(
-        eq(news.classId, user.classId),
-        lte(news.day, classInfo.currentDay)
-      ),
-      orderBy: [asc(news.day), asc(news.createdAt)],
-    });
+    // 현재 Day까지의 뉴스만 조회 (캐싱 적용)
+    const allNews = await unstable_cache(
+      async () =>
+        db.query.news.findMany({
+          where: and(
+            eq(news.classId, user.classId),
+            lte(news.day, classInfo.currentDay)
+          ),
+          orderBy: [asc(news.day), asc(news.createdAt)],
+        }),
+      [`all-news-${user.classId}-until-day-${classInfo.currentDay}`],
+      {
+        revalidate: 3600, // 1시간 TTL
+        tags: [
+          `news-${user.classId}`,
+          `all-news-${user.classId}-${classInfo.currentDay}`,
+        ],
+      }
+    )();
 
     // 모든 관련 주식 ID 수집
     const allStockIds = new Set<string>();

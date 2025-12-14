@@ -1,7 +1,7 @@
 "use server";
 
 import { db, transactions, wallets, stocks } from "@repo/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { withAuth } from "@/lib/with-auth";
 import { checkClassStatus } from "@/lib/class-status";
 
@@ -36,30 +36,41 @@ export const getTransactionHistory = withAuth(async (user) => {
       orderBy: [desc(transactions.day), desc(transactions.createdAt)],
     });
 
-    // 각 거래의 주식 정보 조회
-    const formattedTransactions: TransactionItem[] = await Promise.all(
-      transactionList.map(async (tx) => {
-        let stockName: string | null = null;
-        
-        if (tx.stockId) {
-          const stock = await db.query.stocks.findFirst({
-            where: eq(stocks.id, tx.stockId),
-          });
-          stockName = stock?.name || null;
-        }
+    // N+1 쿼리 문제 해결: 모든 주식 ID를 한 번에 조회
+    const stockIds = [
+      ...new Set(
+        transactionList
+          .map((tx) => tx.stockId)
+          .filter((id): id is string => id !== null)
+      ),
+    ];
 
-        return {
-          id: tx.id,
-          type: tx.type as "deposit" | "withdrawal",
-          subType: tx.subType as "buy" | "sell" | "benefit",
-          stockName,
-          quantity: tx.quantity,
-          price: tx.price,
-          day: tx.day,
-          createdAt: tx.createdAt,
-        };
-      })
-    );
+    // 주식 정보 일괄 조회
+    const stocksData =
+      stockIds.length > 0
+        ? await db.query.stocks.findMany({
+            where: inArray(stocks.id, stockIds),
+            columns: {
+              id: true,
+              name: true,
+            },
+          })
+        : [];
+
+    // 주식 ID -> 이름 맵 생성
+    const stockMap = new Map(stocksData.map((s) => [s.id, s.name]));
+
+    // 거래 내역 포맷팅 (메모리에서 처리)
+    const formattedTransactions: TransactionItem[] = transactionList.map((tx) => ({
+      id: tx.id,
+      type: tx.type as "deposit" | "withdrawal",
+      subType: tx.subType as "buy" | "sell" | "benefit",
+      stockName: tx.stockId ? stockMap.get(tx.stockId) || null : null,
+      quantity: tx.quantity,
+      price: tx.price,
+      day: tx.day,
+      createdAt: tx.createdAt,
+    }));
 
     return formattedTransactions;
   } catch (error) {

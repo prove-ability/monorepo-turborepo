@@ -8,6 +8,7 @@ import {
   classes,
 } from "@repo/db";
 import { eq, and } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { withAuth } from "@/lib/with-auth";
 
 export interface TradeResult {
@@ -147,6 +148,10 @@ export const buyStock = withAuth(
           .set({ balance: newBalance })
           .where(eq(wallets.id, userWallet.id));
 
+        // 7. 캐시 무효화 (랭킹 데이터)
+        revalidateTag(`ranking-${user.classId}`);
+        revalidateTag(`ranking-${user.classId}-day-${currentDay}`);
+
         return {
           success: true,
           message: `매수 완료: ${quantity}주를 ${totalCost.toLocaleString()}원에 구매했습니다.`,
@@ -277,6 +282,10 @@ export const sellStock = withAuth(
           .update(wallets)
           .set({ balance: newBalance })
           .where(eq(wallets.id, userWallet.id));
+
+        // 7. 캐시 무효화 (랭킹 데이터)
+        revalidateTag(`ranking-${user.classId}`);
+        revalidateTag(`ranking-${user.classId}-day-${currentDay}`);
 
         return {
           success: true,
