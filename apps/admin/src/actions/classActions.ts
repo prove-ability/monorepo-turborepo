@@ -13,7 +13,7 @@ import {
   transactions,
   holdings,
 } from "@repo/db";
-import { eq } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { withAuth } from "@/lib/safe-action";
@@ -423,9 +423,12 @@ export const incrementDayAndPayAllowance = withAuth(
           .set({ currentDay: newDay })
           .where(eq(classes.id, classId));
 
-        // 3. 해당 클래스의 모든 게스트 조회
+        // 3. 해당 클래스의 모든 게스트 ID 조회
         const classGuests = await tx.query.guests.findMany({
           where: eq(guests.classId, classId),
+          columns: {
+            id: true,
+          },
         });
 
         if (classGuests.length === 0) {
@@ -437,44 +440,47 @@ export const incrementDayAndPayAllowance = withAuth(
           };
         }
 
-        // 4. 각 게스트의 지갑에 100,000원 추가 및 거래내역 기록
-        const allowanceAmount = "100000";
-        let paidCount = 0;
+        const guestIds = classGuests.map((g) => g.id);
 
-        for (const guest of classGuests) {
-          // 지갑 조회
-          const wallet = await tx.query.wallets.findFirst({
-            where: eq(wallets.guestId, guest.id),
-          });
+        // 4. 모든 지갑 일괄 조회 (N+1 쿼리 해결)
+        const allWallets = await tx.query.wallets.findMany({
+          where: inArray(wallets.guestId, guestIds),
+        });
 
-          if (!wallet) {
-            console.warn(`지갑을 찾을 수 없습니다: guest ${guest.id}`);
-            continue;
-          }
-
-          // 지갑 잔액 업데이트
-          const currentBalance = parseFloat(wallet.balance || "0");
-          const newBalance = (currentBalance + 100000).toFixed(2);
-
-          await tx
-            .update(wallets)
-            .set({ balance: newBalance })
-            .where(eq(wallets.id, wallet.id));
-
-          // 거래내역 기록 (지원금 = 입금 + benefit subType)
-          await tx.insert(transactions).values({
-            walletId: wallet.id,
-            stockId: null,
-            type: "deposit",
-            subType: "benefit",
-            quantity: 0,
-            price: allowanceAmount,
-            day: newDay,
-            classId: classId,
-          });
-
-          paidCount++;
+        if (allWallets.length === 0) {
+          console.warn("지갑을 찾을 수 없습니다.");
+          return {
+            success: true,
+            message: `Day ${newDay}로 증가했습니다. (지갑 없음)`,
+            newDay,
+            paidCount: 0,
+          };
         }
+
+        // 5. SQL로 모든 지갑 잔액 일괄 업데이트 (100,000원 추가, 소수점 2자리로 제한)
+        const allowanceAmount = 100000;
+        await tx
+          .update(wallets)
+          .set({
+            balance: sql`ROUND(CAST(COALESCE(${wallets.balance}, '0') AS NUMERIC) + ${allowanceAmount}, 2)`,
+          })
+          .where(inArray(wallets.guestId, guestIds));
+
+        // 6. 거래내역 일괄 삽입
+        const transactionValues = allWallets.map((wallet) => ({
+          walletId: wallet.id,
+          stockId: null,
+          type: "deposit",
+          subType: "benefit",
+          quantity: 0,
+          price: allowanceAmount.toString(),
+          day: newDay,
+          classId: classId,
+        })) satisfies Array<typeof transactions.$inferInsert>;
+
+        await tx.insert(transactions).values(transactionValues);
+
+        const paidCount = allWallets.length;
 
         return {
           success: true,
