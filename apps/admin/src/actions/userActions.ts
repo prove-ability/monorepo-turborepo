@@ -393,7 +393,7 @@ export const deleteGuests = withAuth(
 
       let deletedCount = 0;
 
-      // 2. 각 학생별로 관련 데이터 삭제
+      // 2. 각 학생별로 관련 데이터 삭제 (개별 에러 처리 유지)
       for (const guest of guestsToDelete) {
         try {
           // 2-1. 거래내역 삭제 (wallet이 있는 경우)
@@ -411,7 +411,7 @@ export const deleteGuests = withAuth(
             await db.delete(wallets).where(eq(wallets.id, guest.wallet.id));
           }
 
-          // 2-4. 학생 삭제 (surveys는 ON DELETE CASCADE로 자동 보존됨)
+          // 2-4. 학생 삭제 (surveys는 ON DELETE SET NULL로 자동 보존됨)
           await db.delete(guests).where(eq(guests.id, guest.id));
 
           deletedCount++;
@@ -491,18 +491,25 @@ export async function getStudentGameHistory(guestId: string) {
       where: eq(holdings.guestId, guestId),
     });
 
-    // 보유 주식에 주식 정보 추가
-    const holdingsWithStock = await Promise.all(
-      holdingsList.map(async (holding) => {
-        const stock = await db.query.stocks.findFirst({
-          where: eq(stocks.id, holding.stockId!),
-        });
-        return {
-          ...holding,
-          stock,
-        };
-      })
-    );
+    // 보유 주식 정보 일괄 조회 (N+1 쿼리 해결)
+    const holdingStockIds = holdingsList
+      .map((h) => h.stockId)
+      .filter((id): id is string => id !== null);
+
+    const holdingStocks =
+      holdingStockIds.length > 0
+        ? await db.query.stocks.findMany({
+            where: inArray(stocks.id, holdingStockIds),
+          })
+        : [];
+
+    const holdingStockMap = new Map(holdingStocks.map((s) => [s.id, s]));
+
+    // 보유 주식에 주식 정보 추가 (메모리에서 매칭)
+    const holdingsWithStock = holdingsList.map((holding) => ({
+      ...holding,
+      stock: holding.stockId ? holdingStockMap.get(holding.stockId) : undefined,
+    }));
 
     return {
       success: true,

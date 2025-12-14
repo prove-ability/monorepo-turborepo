@@ -249,21 +249,37 @@ export const getClasses = withAuth(async (user) => {
       orderBy: (classes, { desc }) => [desc(classes.createdAt)],
     });
 
-    // 각 클래스의 totalDays 조회
-    const classesWithTotalDays = await Promise.all(
-      classesData.map(async (classItem) => {
-        const maxDayResult = await db.query.classStockPrices.findMany({
-          where: eq(classStockPrices.classId, classItem.id),
-          orderBy: (classStockPrices, { desc }) => [desc(classStockPrices.day)],
-          limit: 1,
-        });
+    if (classesData.length === 0) {
+      return {
+        data: [],
+        error: null,
+        success: true,
+      };
+    }
 
-        return {
-          ...classItem,
-          totalDays: maxDayResult[0]?.day || 0,
-        };
+    // 모든 클래스의 totalDays 일괄 조회 (N+1 쿼리 해결)
+    const classIds = classesData.map((c) => c.id);
+
+    // SQL로 각 클래스의 최대 Day 한 번에 조회
+    const maxDaysResult = await db
+      .select({
+        classId: classStockPrices.classId,
+        maxDay: sql<number>`MAX(${classStockPrices.day})`,
       })
+      .from(classStockPrices)
+      .where(inArray(classStockPrices.classId, classIds))
+      .groupBy(classStockPrices.classId);
+
+    // 맵으로 변환
+    const maxDayMap = new Map(
+      maxDaysResult.map((r) => [r.classId, r.maxDay || 0])
     );
+
+    // 클래스 데이터에 totalDays 추가 (메모리에서 매칭)
+    const classesWithTotalDays = classesData.map((classItem) => ({
+      ...classItem,
+      totalDays: maxDayMap.get(classItem.id) || 0,
+    }));
 
     return {
       data: classesWithTotalDays,
