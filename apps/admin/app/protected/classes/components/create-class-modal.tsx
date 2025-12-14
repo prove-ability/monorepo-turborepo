@@ -108,7 +108,7 @@ export function CreateClassModal({
     setGenerationProgress(0);
 
     // 예상 시간 계산
-    const estimated = Math.ceil(totalDays * selectedStocks.length * 0.8 + 20);
+    const estimated = Math.ceil(totalDays * selectedStocks.length * 1.5 + 20);
     setEstimatedTime(estimated);
 
     // 프로그레스바 시뮬레이션
